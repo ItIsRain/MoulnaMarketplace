@@ -4,19 +4,35 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, ArrowLeft, CheckCircle, RefreshCw, Sparkles } from "lucide-react";
+import { Mail, ArrowLeft, CheckCircle, RefreshCw, Sparkles, Loader2 } from "lucide-react";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function VerifyEmailPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user } = useAuthStore();
   const [code, setCode] = React.useState(["", "", "", "", "", ""]);
   const [isVerified, setIsVerified] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isSending, setIsSending] = React.useState(false);
   const [resendCooldown, setResendCooldown] = React.useState(0);
+  const [error, setError] = React.useState("");
+  const [hasSentInitial, setHasSentInitial] = React.useState(false);
   const inputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
 
-  const email = "ahmed@example.com"; // Mock - would come from auth context
+  const email = searchParams.get("email") || user?.email || "";
+
+  // Code is already sent by the register route.
+  // Start the resend cooldown so user doesn't double-send immediately.
+  React.useEffect(() => {
+    if (email && !hasSentInitial) {
+      setHasSentInitial(true);
+      setResendCooldown(60);
+    }
+  }, [email, hasSentInitial]);
 
   React.useEffect(() => {
     if (resendCooldown > 0) {
@@ -24,6 +40,24 @@ export default function VerifyEmailPage() {
       return () => clearTimeout(timer);
     }
   }, [resendCooldown]);
+
+  const sendVerificationCode = async () => {
+    setIsSending(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/send-verification", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to send verification code");
+      } else {
+        setResendCooldown(60);
+      }
+    } catch {
+      setError("Failed to send verification code. Please try again.");
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   const handleInput = (index: number, value: string) => {
     if (value.length > 1) return;
@@ -47,17 +81,45 @@ export default function VerifyEmailPage() {
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pasted.length === 6) {
+      const newCode = pasted.split("");
+      setCode(newCode);
+      inputRefs.current[5]?.focus();
+      handleVerify(pasted);
+    }
+  };
+
   const handleVerify = async (verificationCode: string) => {
     setIsLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    setIsVerified(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: verificationCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Verification failed");
+        setCode(["", "", "", "", "", ""]);
+        inputRefs.current[0]?.focus();
+      } else {
+        setIsVerified(true);
+      }
+    } catch {
+      setError("Verification failed. Please try again.");
+      setCode(["", "", "", "", "", ""]);
+      inputRefs.current[0]?.focus();
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleResend = () => {
-    setResendCooldown(60);
-    // Trigger resend API
+    sendVerificationCode();
   };
 
   return (
@@ -72,7 +134,7 @@ export default function VerifyEmailPage() {
           {/* Logo */}
           <Link href="/" className="inline-block mb-8">
             <Image
-              src="/Moulna.svg"
+              src="/moulna-logo.svg"
               alt="Moulna"
               width={120}
               height={40}
@@ -88,8 +150,14 @@ export default function VerifyEmailPage() {
               <h1 className="text-2xl font-bold mb-2 text-center">Verify your email</h1>
               <p className="text-muted-foreground mb-8 text-center">
                 We sent a 6-digit code to{" "}
-                <span className="font-medium text-foreground">{email}</span>
+                <span className="font-medium text-foreground">{email || "your email"}</span>
               </p>
+
+              {error && (
+                <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 text-sm mb-6 text-center">
+                  {error}
+                </div>
+              )}
 
               {/* Code Input */}
               <div className="flex justify-center gap-3 mb-8">
@@ -101,8 +169,9 @@ export default function VerifyEmailPage() {
                     inputMode="numeric"
                     maxLength={1}
                     value={digit}
-                    onChange={(e) => handleInput(index, e.target.value)}
+                    onChange={(e) => handleInput(index, e.target.value.replace(/\D/g, ""))}
                     onKeyDown={(e) => handleKeyDown(index, e)}
+                    onPaste={index === 0 ? handlePaste : undefined}
                     className="w-12 h-14 text-center text-2xl font-bold"
                     disabled={isLoading}
                   />
@@ -114,7 +183,11 @@ export default function VerifyEmailPage() {
                 disabled={isLoading || code.some(c => !c)}
                 onClick={() => handleVerify(code.join(""))}
               >
-                {isLoading ? "Verifying..." : "Verify Email"}
+                {isLoading ? (
+                  <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Verifying...</>
+                ) : (
+                  "Verify Email"
+                )}
               </Button>
 
               <div className="text-center">
@@ -125,9 +198,14 @@ export default function VerifyEmailPage() {
                 ) : (
                   <button
                     onClick={handleResend}
-                    className="text-sm text-moulna-gold hover:underline inline-flex items-center gap-1"
+                    disabled={isSending}
+                    className="text-sm text-moulna-gold hover:underline inline-flex items-center gap-1 disabled:opacity-50"
                   >
-                    <RefreshCw className="w-4 h-4" />
+                    {isSending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-4 h-4" />
+                    )}
                     Resend code
                   </button>
                 )}
@@ -153,14 +231,31 @@ export default function VerifyEmailPage() {
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
               <h1 className="text-2xl font-bold mb-2">Email Verified!</h1>
-              <p className="text-muted-foreground mb-8">
-                Your email has been successfully verified. You can now access all features.
-              </p>
-              <Button asChild className="w-full bg-moulna-gold hover:bg-moulna-gold-dark">
-                <Link href="/dashboard">
-                  Go to Dashboard
-                </Link>
-              </Button>
+              {user?.role === "seller" ? (
+                <>
+                  <p className="text-muted-foreground mb-8">
+                    Your email is verified! One more step — verify your identity to start listing on Moulna.
+                  </p>
+                  <Button
+                    onClick={() => router.push("/seller")}
+                    className="w-full bg-moulna-gold hover:bg-moulna-gold-dark"
+                  >
+                    Continue to ID Verification
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="text-muted-foreground mb-8">
+                    Your email has been successfully verified. You can now access all features.
+                  </p>
+                  <Button
+                    onClick={() => router.push("/dashboard")}
+                    className="w-full bg-moulna-gold hover:bg-moulna-gold-dark"
+                  >
+                    Go to Dashboard
+                  </Button>
+                </>
+              )}
             </motion.div>
           )}
         </motion.div>
@@ -174,7 +269,7 @@ export default function VerifyEmailPage() {
             Almost there!
           </h2>
           <p className="text-white/70">
-            Verify your email to unlock the full Moulna experience including rewards, purchases, and exclusive offers.
+            Verify your email to unlock the full Moulna experience including rewards, deals, and exclusive offers.
           </p>
         </div>
       </div>

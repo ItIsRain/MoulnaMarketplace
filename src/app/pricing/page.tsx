@@ -83,7 +83,7 @@ const BUYER_PERKS = [
   {
     level: 3,
     title: "Regular",
-    perks: ["5% XP bonus on purchases", "Unlock new avatar styles", "Access to flash sales"],
+    perks: ["5% XP bonus on deals", "Unlock new avatar styles", "Access to flash sales"],
   },
   {
     level: 5,
@@ -98,7 +98,7 @@ const BUYER_PERKS = [
   {
     level: 10,
     title: "Legend",
-    perks: ["20% XP bonus", "Free shipping on all orders", "Golden crown avatar accessory"],
+    perks: ["20% XP bonus", "Unlimited free listings", "Golden crown avatar accessory"],
   },
 ];
 
@@ -117,11 +117,11 @@ const FAQS = [
   },
   {
     question: "What's included in the transaction fee?",
-    answer: "The transaction fee covers payment processing, fraud protection, and platform maintenance. There are no hidden fees.",
+    answer: "The transaction fee covers platform maintenance, listing infrastructure, and seller support. There are no hidden fees.",
   },
   {
     question: "Do buyers need to pay for anything?",
-    answer: "Never! Buying on Moulna is completely free. Buyers earn XP and unlock perks just by shopping and engaging with the platform.",
+    answer: "Never! Browsing and contacting sellers on Moulna is completely free. Buyers earn XP and unlock perks just by exploring and engaging with the platform.",
   },
 ];
 
@@ -283,7 +283,7 @@ export default function PricingPage() {
                 <h2 className="font-display text-2xl font-bold">Buyer Rewards</h2>
               </div>
               <p className="text-muted-foreground">
-                Shopping on Moulna is always free — plus you earn rewards just for being active!
+                Browsing on Moulna is always free — plus you earn rewards just for being active!
               </p>
             </div>
 

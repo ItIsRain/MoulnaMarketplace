@@ -22,7 +22,7 @@ const CONVERSATIONS = [
       avatar: "fatima-msg",
       isOnline: true,
     },
-    lastMessage: "Thank you! Can't wait to receive my order.",
+    lastMessage: "Thank you! Can't wait to pick it up.",
     timestamp: "10:30 AM",
     unread: 0,
     isStarred: true,
@@ -48,7 +48,7 @@ const CONVERSATIONS = [
       avatar: "sara-msg",
       isOnline: true,
     },
-    lastMessage: "Perfect, I'll place the order now",
+    lastMessage: "Perfect, let's arrange a meetup",
     timestamp: "Yesterday",
     unread: 0,
     isStarred: false,
@@ -61,7 +61,7 @@ const CONVERSATIONS = [
       avatar: "omar-msg",
       isOnline: false,
     },
-    lastMessage: "Is this product available for pickup?",
+    lastMessage: "Is this item still available?",
     timestamp: "Yesterday",
     unread: 1,
     isStarred: false,
@@ -79,7 +79,7 @@ const MESSAGES = [
   {
     id: "2",
     sender: "seller",
-    content: "Wa alaikum assalam! Yes, we have it in stock. Would you like me to tell you more about it?",
+    content: "Wa alaikum assalam! Yes, it's still available. Would you like me to tell you more about it?",
     timestamp: "10:05 AM",
   },
   {
@@ -97,13 +97,13 @@ const MESSAGES = [
   {
     id: "5",
     sender: "customer",
-    content: "That sounds perfect! I'll place my order now.",
+    content: "That sounds perfect! Let's arrange a meetup.",
     timestamp: "10:25 AM",
   },
   {
     id: "6",
     sender: "customer",
-    content: "Thank you! Can't wait to receive my order.",
+    content: "Thank you! Can't wait to pick it up.",
     timestamp: "10:30 AM",
   },
 ];

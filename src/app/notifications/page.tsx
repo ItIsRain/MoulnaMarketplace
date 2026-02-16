@@ -9,22 +9,22 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
-  Bell, Package, Star, Gift, MessageSquare, Heart, Truck,
-  AlertCircle, CheckCircle, Settings, Trash2
+  Bell, Package, Star, Gift, MessageSquare, Heart,
+  AlertCircle, CheckCircle, Settings, Trash2, Eye
 } from "lucide-react";
 
 const NOTIFICATIONS = [
   {
     id: "1",
-    type: "order",
-    title: "Order Shipped!",
-    message: "Your order #MN-2024-8923 has been shipped and is on its way.",
+    type: "listing",
+    title: "New inquiry on your listing!",
+    message: "Someone is interested in your Arabian Oud Perfume listing.",
     time: "5 minutes ago",
     read: false,
-    icon: Truck,
+    icon: Eye,
     color: "text-blue-600",
     bg: "bg-blue-100",
-    link: "/dashboard/orders/MN-2024-8923",
+    link: "/seller/orders",
   },
   {
     id: "2",
@@ -42,7 +42,7 @@ const NOTIFICATIONS = [
     id: "3",
     type: "message",
     title: "New message from Arabian Scents",
-    message: "Thank you for your purchase! We hope you enjoy...",
+    message: "Thanks for reaching out! The item is still available...",
     time: "2 hours ago",
     read: false,
     icon: MessageSquare,
@@ -76,15 +76,15 @@ const NOTIFICATIONS = [
   },
   {
     id: "6",
-    type: "order",
-    title: "Order Delivered",
-    message: "Your order #MN-2024-8901 has been delivered.",
+    type: "listing",
+    title: "Listing Renewed",
+    message: "Your listing 'Premium Oud Set' has been automatically renewed.",
     time: "2 days ago",
     read: true,
     icon: CheckCircle,
     color: "text-green-600",
     bg: "bg-green-100",
-    link: "/dashboard/orders/MN-2024-8901",
+    link: "/seller/products",
   },
   {
     id: "7",
@@ -103,7 +103,7 @@ const NOTIFICATIONS = [
 const FILTER_OPTIONS = [
   { id: "all", label: "All" },
   { id: "unread", label: "Unread" },
-  { id: "orders", label: "Orders" },
+  { id: "listings", label: "Listings" },
   { id: "rewards", label: "Rewards" },
   { id: "messages", label: "Messages" },
 ];
@@ -117,7 +117,7 @@ export default function NotificationsPage() {
   const filteredNotifications = notifications.filter((n) => {
     if (selectedFilter === "all") return true;
     if (selectedFilter === "unread") return !n.read;
-    return n.type === selectedFilter.slice(0, -1); // Remove 's' from 'orders' etc.
+    return n.type === selectedFilter.slice(0, -1); // Remove 's' from 'listings' etc.
   });
 
   const markAllRead = () => {

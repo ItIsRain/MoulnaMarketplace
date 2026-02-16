@@ -11,10 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  Package, ArrowLeft, Upload, X, Plus, Sparkles,
-  Info, Tag, DollarSign, Boxes, Image as ImageIcon,
-  FileText, Settings, Eye, Save, Send
+  Package, ArrowLeft, Upload, X, Sparkles,
+  Info, DollarSign, Boxes, Image as ImageIcon,
+  FileText, Settings, Eye, Save, Send, Loader2,
+  ShieldCheck
 } from "lucide-react";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const CATEGORIES = [
   "Jewelry", "Home Décor", "Arabic Calligraphy", "Perfumes & Oud",
@@ -27,21 +29,143 @@ const TAGS = [
   "New Arrival", "Gift Ready", "Customizable", "Local UAE"
 ];
 
+const LISTING_DURATIONS = [
+  { label: "30 days", value: 30 },
+  { label: "60 days", value: 60 },
+  { label: "90 days", value: 90 },
+  { label: "Until manually removed", value: 0 },
+];
+
+const CONDITIONS = [
+  { label: "New", value: "new" },
+  { label: "Like New", value: "like_new" },
+  { label: "Good", value: "good" },
+  { label: "Fair", value: "fair" },
+];
+
 export default function NewProductPage() {
   const router = useRouter();
+  const { user } = useAuthStore();
+  const [kycLoading, setKycLoading] = React.useState(false);
   const [step, setStep] = React.useState(1);
-  const [images, setImages] = React.useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  const kycStatus = user?.kycStatus || "none";
+
+  // Block listing creation if KYC not approved
+  if (kycStatus !== "approved") {
+    const handleStartKYC = async () => {
+      setKycLoading(true);
+      try {
+        const res = await fetch("/api/kyc/create-session", { method: "POST" });
+        const data = await res.json();
+        if (data.verificationUrl) {
+          window.location.href = data.verificationUrl;
+        }
+      } catch (err) {
+        console.error("Failed to start KYC:", err);
+      } finally {
+        setKycLoading(false);
+      }
+    };
+
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="max-w-md w-full p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-moulna-gold/10 flex items-center justify-center mx-auto mb-6">
+            <ShieldCheck className="w-8 h-8 text-moulna-gold" />
+          </div>
+          <h1 className="font-display text-2xl font-bold mb-2">
+            Complete ID Verification
+          </h1>
+          <p className="text-muted-foreground mb-6">
+            You need to verify your identity before you can create listings. This helps keep our marketplace safe and trusted.
+          </p>
+          <div className="space-y-3">
+            <Button
+              variant="gold"
+              size="lg"
+              className="w-full"
+              onClick={handleStartKYC}
+              disabled={kycLoading}
+            >
+              {kycLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin me-2" />
+              ) : (
+                <ShieldCheck className="w-4 h-4 me-2" />
+              )}
+              {kycStatus === "none" ? "Verify Identity" :
+               (kycStatus === "pending" || kycStatus === "in_progress") ? "Continue Verification" :
+               "Try Again"}
+            </Button>
+            <Button variant="outline" size="lg" className="w-full" asChild>
+              <Link href="/seller">
+                <ArrowLeft className="w-4 h-4 me-2" />
+                Back to Dashboard
+              </Link>
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Form state
+  const [title, setTitle] = React.useState("");
+  const [description, setDescription] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("");
   const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
   const [isHandmade, setIsHandmade] = React.useState(true);
 
-  const handleImageUpload = () => {
-    // Mock image upload
-    const mockImages = [
-      "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400",
-      "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400",
-    ];
-    setImages([...images, mockImages[images.length % 2]]);
+  // Media
+  const [images, setImages] = React.useState<string[]>([]);
+  const [uploading, setUploading] = React.useState(false);
+
+  // Pricing (AED inputs, converted to fils on submit)
+  const [priceAED, setPriceAED] = React.useState("");
+  const [compareAtPriceAED, setCompareAtPriceAED] = React.useState("");
+  const [costAED, setCostAED] = React.useState("");
+
+  // Details
+  const [sku, setSku] = React.useState("");
+  const [condition, setCondition] = React.useState("new");
+  const [listingDuration, setListingDuration] = React.useState(30);
+  const [autoRenew, setAutoRenew] = React.useState(true);
+  const [allowOffers, setAllowOffers] = React.useState(true);
+
+  // Settings
+  const [processingTime, setProcessingTime] = React.useState("1-2 business days");
+  const [meetupPreference, setMeetupPreference] = React.useState("flexible");
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    setError("");
+
+    for (const file of Array.from(files)) {
+      if (images.length >= 8) break;
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "products");
+
+      try {
+        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        setImages((prev) => [...prev, data.url]);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Upload failed");
+      }
+    }
+
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const removeImage = (index: number) => {
@@ -56,6 +180,81 @@ export default function NewProductPage() {
     );
   };
 
+  const buildPayload = (status: "active" | "draft") => {
+    const priceFils = Math.round(parseFloat(priceAED) * 100);
+    const compareAtPriceFils = compareAtPriceAED
+      ? Math.round(parseFloat(compareAtPriceAED) * 100)
+      : undefined;
+    const costFils = costAED
+      ? Math.round(parseFloat(costAED) * 100)
+      : undefined;
+
+    return {
+      title,
+      description,
+      category: selectedCategory || undefined,
+      tags: selectedTags,
+      isHandmade,
+      images,
+      priceFils,
+      compareAtPriceFils,
+      costFils,
+      sku: sku || undefined,
+      condition,
+      status,
+      listingDuration: listingDuration || undefined,
+      autoRenew,
+      allowOffers,
+      processingTime,
+      meetupPreference,
+    };
+  };
+
+  const handleSubmit = async (status: "active" | "draft") => {
+    setError("");
+
+    if (!title || title.length < 3) {
+      setError("Title must be at least 3 characters");
+      setStep(1);
+      return;
+    }
+
+    const price = parseFloat(priceAED);
+    if (!price || price <= 0) {
+      setError("Price must be greater than 0");
+      setStep(3);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch("/api/seller/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildPayload(status)),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      router.push("/seller/products");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create listing");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const checklist = [
+    { label: "Title added", done: title.length >= 3 },
+    { label: "Description written", done: description.length > 0 },
+    { label: "Category selected", done: !!selectedCategory },
+    { label: "At least 1 photo", done: images.length > 0 },
+    { label: "5+ photos (bonus XP)", done: images.length >= 5 },
+    { label: "Price set", done: parseFloat(priceAED) > 0 },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -69,28 +268,30 @@ export default function NewProductPage() {
           <div>
             <h1 className="font-display text-2xl font-bold flex items-center gap-3">
               <Package className="w-6 h-6" />
-              Add New Product
+              Add New Listing
             </h1>
             <p className="text-muted-foreground">
-              List a new product in your shop
+              List a new item in your shop
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline">
-            <Eye className="w-4 h-4 me-2" />
-            Preview
-          </Button>
-          <Button variant="outline">
+          <Button variant="outline" disabled={isSubmitting} onClick={() => handleSubmit("draft")}>
             <Save className="w-4 h-4 me-2" />
             Save Draft
           </Button>
-          <Button variant="gold">
-            <Send className="w-4 h-4 me-2" />
+          <Button variant="gold" disabled={isSubmitting} onClick={() => handleSubmit("active")}>
+            {isSubmitting ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Send className="w-4 h-4 me-2" />}
             Publish
           </Button>
         </div>
       </div>
+
+      {error && (
+        <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm">
+          {error}
+        </div>
+      )}
 
       {/* Progress Steps */}
       <Card className="p-4">
@@ -99,7 +300,7 @@ export default function NewProductPage() {
             { num: 1, label: "Basic Info", icon: FileText },
             { num: 2, label: "Media", icon: ImageIcon },
             { num: 3, label: "Pricing", icon: DollarSign },
-            { num: 4, label: "Inventory", icon: Boxes },
+            { num: 4, label: "Details", icon: Boxes },
             { num: 5, label: "Settings", icon: Settings },
           ].map((s, i) => (
             <React.Fragment key={s.num}>
@@ -133,7 +334,7 @@ export default function NewProductPage() {
         <div className="flex items-center gap-3">
           <Sparkles className="w-5 h-5 text-moulna-gold" />
           <div>
-            <p className="font-medium">Earn +25 XP for listing a new product!</p>
+            <p className="font-medium">Earn +25 XP for creating a new listing!</p>
             <p className="text-sm text-muted-foreground">
               Add 5+ photos for an extra +10 XP bonus
             </p>
@@ -160,11 +361,13 @@ export default function NewProductPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium mb-1.5 block">
-                      Product Title *
+                      Listing Title *
                     </label>
                     <Input
                       placeholder="e.g., Handcrafted Arabian Oud Perfume - 100ml"
                       className="text-lg"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       Be specific and include key details
@@ -177,8 +380,10 @@ export default function NewProductPage() {
                     </label>
                     <textarea
                       rows={6}
-                      placeholder="Describe your product in detail. Include materials, dimensions, care instructions, and what makes it special..."
+                      placeholder="Describe your item in detail. Include materials, dimensions, care instructions, and what makes it special..."
                       className="w-full rounded-lg border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-moulna-gold"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
                     />
                   </div>
 
@@ -262,11 +467,19 @@ export default function NewProductPage() {
               <Card className="p-6">
                 <h2 className="font-semibold mb-4 flex items-center gap-2">
                   <ImageIcon className="w-5 h-5" />
-                  Product Media
+                  Listing Media
                 </h2>
 
                 <div className="space-y-4">
-                  {/* Image Upload Area */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {images.map((img, index) => (
                       <div
@@ -294,11 +507,18 @@ export default function NewProductPage() {
                     ))}
                     {images.length < 8 && (
                       <button
-                        onClick={handleImageUpload}
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
                         className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 hover:border-moulna-gold hover:bg-moulna-gold/5 transition-colors"
                       >
-                        <Upload className="w-8 h-8 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">Add Image</span>
+                        {uploading ? (
+                          <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+                        ) : (
+                          <Upload className="w-8 h-8 text-muted-foreground" />
+                        )}
+                        <span className="text-sm text-muted-foreground">
+                          {uploading ? "Uploading..." : "Add Image"}
+                        </span>
                       </button>
                     )}
                   </div>
@@ -308,23 +528,11 @@ export default function NewProductPage() {
                     <div className="text-sm">
                       <p className="font-medium text-blue-700 dark:text-blue-400">Photo Tips</p>
                       <ul className="text-blue-600 dark:text-blue-300 mt-1 space-y-1">
-                        <li>• Use natural lighting for best results</li>
-                        <li>• Show your product from multiple angles</li>
-                        <li>• Include a photo showing scale/size</li>
-                        <li>• Minimum 800x800 pixels recommended</li>
+                        <li>Use natural lighting for best results</li>
+                        <li>Show your product from multiple angles</li>
+                        <li>Include a photo showing scale/size</li>
+                        <li>Minimum 800x800 pixels recommended</li>
                       </ul>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium mb-1.5 block">
-                      Product Video (Optional)
-                    </label>
-                    <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-8 text-center">
-                      <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground">
-                        Upload a video (max 30 seconds, 50MB)
-                      </p>
                     </div>
                   </div>
                 </div>
@@ -368,6 +576,10 @@ export default function NewProductPage() {
                           type="number"
                           placeholder="0.00"
                           className="ps-14"
+                          value={priceAED}
+                          onChange={(e) => setPriceAED(e.target.value)}
+                          min="0"
+                          step="0.01"
                         />
                       </div>
                     </div>
@@ -383,6 +595,10 @@ export default function NewProductPage() {
                           type="number"
                           placeholder="0.00"
                           className="ps-14"
+                          value={compareAtPriceAED}
+                          onChange={(e) => setCompareAtPriceAED(e.target.value)}
+                          min="0"
+                          step="0.01"
                         />
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
@@ -403,6 +619,10 @@ export default function NewProductPage() {
                         type="number"
                         placeholder="0.00"
                         className="ps-14"
+                        value={costAED}
+                        onChange={(e) => setCostAED(e.target.value)}
+                        min="0"
+                        step="0.01"
                       />
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -410,22 +630,10 @@ export default function NewProductPage() {
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <h3 className="font-medium mb-3">Moulna Fees</h3>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Platform fee</span>
-                        <span>5%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Payment processing</span>
-                        <span>2.5%</span>
-                      </div>
-                      <div className="flex justify-between pt-2 border-t font-medium">
-                        <span>Your earnings (est.)</span>
-                        <span className="text-emerald-600">AED 0.00</span>
-                      </div>
-                    </div>
+                  <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                    <p className="text-sm text-blue-700 dark:text-blue-400">
+                      Pricing is shown to buyers as your asking price. All transactions happen directly between you and the buyer.
+                    </p>
                   </div>
                 </div>
               </Card>
@@ -435,13 +643,13 @@ export default function NewProductPage() {
                   Back
                 </Button>
                 <Button variant="gold" onClick={() => setStep(4)}>
-                  Continue to Inventory
+                  Continue to Details
                 </Button>
               </div>
             </motion.div>
           )}
 
-          {/* Step 4: Inventory */}
+          {/* Step 4: Listing Details */}
           {step === 4 && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -451,54 +659,64 @@ export default function NewProductPage() {
               <Card className="p-6">
                 <h2 className="font-semibold mb-4 flex items-center gap-2">
                   <Boxes className="w-5 h-5" />
-                  Inventory
+                  Listing Details
                 </h2>
 
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium mb-1.5 block">
-                        SKU
+                        Reference ID (Optional)
                       </label>
-                      <Input placeholder="e.g., OUD-001" />
+                      <Input
+                        placeholder="e.g., OUD-001"
+                        value={sku}
+                        onChange={(e) => setSku(e.target.value)}
+                      />
                     </div>
                     <div>
                       <label className="text-sm font-medium mb-1.5 block">
-                        Barcode (Optional)
+                        Condition
                       </label>
-                      <Input placeholder="ISBN, UPC, etc." />
+                      <select
+                        value={condition}
+                        onChange={(e) => setCondition(e.target.value)}
+                        className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-moulna-gold"
+                      >
+                        {CONDITIONS.map((c) => (
+                          <option key={c.value} value={c.value}>{c.label}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">
-                        Quantity *
-                      </label>
-                      <Input type="number" placeholder="0" min="0" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">
-                        Low Stock Alert
-                      </label>
-                      <Input type="number" placeholder="5" min="0" />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Get notified when stock falls below this
-                      </p>
-                    </div>
+                  <div>
+                    <label className="text-sm font-medium mb-1.5 block">
+                      Listing Duration
+                    </label>
+                    <select
+                      value={listingDuration}
+                      onChange={(e) => setListingDuration(parseInt(e.target.value))}
+                      className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-moulna-gold"
+                    >
+                      {LISTING_DURATIONS.map((d) => (
+                        <option key={d.value} value={d.value}>{d.label}</option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
                     <input
                       type="checkbox"
-                      id="trackInventory"
-                      defaultChecked
+                      id="autoRenew"
+                      checked={autoRenew}
+                      onChange={(e) => setAutoRenew(e.target.checked)}
                       className="w-5 h-5 rounded border-moulna-gold text-moulna-gold focus:ring-moulna-gold"
                     />
-                    <label htmlFor="trackInventory" className="flex-1">
-                      <span className="font-medium">Track inventory</span>
+                    <label htmlFor="autoRenew" className="flex-1">
+                      <span className="font-medium">Auto-renew listing</span>
                       <p className="text-sm text-muted-foreground">
-                        Automatically update stock when orders are placed
+                        Automatically renew when the listing expires
                       </p>
                     </label>
                   </div>
@@ -506,13 +724,15 @@ export default function NewProductPage() {
                   <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
                     <input
                       type="checkbox"
-                      id="allowBackorder"
+                      id="allowOffers"
+                      checked={allowOffers}
+                      onChange={(e) => setAllowOffers(e.target.checked)}
                       className="w-5 h-5 rounded border-moulna-gold text-moulna-gold focus:ring-moulna-gold"
                     />
-                    <label htmlFor="allowBackorder" className="flex-1">
-                      <span className="font-medium">Continue selling when out of stock</span>
+                    <label htmlFor="allowOffers" className="flex-1">
+                      <span className="font-medium">Accept offers</span>
                       <p className="text-sm text-muted-foreground">
-                        Allow customers to order even when stock is 0
+                        Allow buyers to send price offers on this listing
                       </p>
                     </label>
                   </div>
@@ -548,7 +768,11 @@ export default function NewProductPage() {
                     <label className="text-sm font-medium mb-1.5 block">
                       Processing Time
                     </label>
-                    <select className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-moulna-gold">
+                    <select
+                      value={processingTime}
+                      onChange={(e) => setProcessingTime(e.target.value)}
+                      className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-moulna-gold"
+                    >
                       <option>1-2 business days</option>
                       <option>3-5 business days</option>
                       <option>1-2 weeks</option>
@@ -558,42 +782,29 @@ export default function NewProductPage() {
 
                   <div>
                     <label className="text-sm font-medium mb-1.5 block">
-                      Shipping
+                      Meetup Preference
                     </label>
                     <div className="space-y-2">
-                      <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:border-moulna-gold transition-colors">
-                        <input type="radio" name="shipping" defaultChecked className="text-moulna-gold focus:ring-moulna-gold" />
-                        <div>
-                          <span className="font-medium">Use shop shipping profile</span>
-                          <p className="text-sm text-muted-foreground">Standard UAE shipping rates</p>
-                        </div>
-                      </label>
-                      <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:border-moulna-gold transition-colors">
-                        <input type="radio" name="shipping" className="text-moulna-gold focus:ring-moulna-gold" />
-                        <div>
-                          <span className="font-medium">Free shipping</span>
-                          <p className="text-sm text-muted-foreground">You cover shipping costs</p>
-                        </div>
-                      </label>
-                      <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:border-moulna-gold transition-colors">
-                        <input type="radio" name="shipping" className="text-moulna-gold focus:ring-moulna-gold" />
-                        <div>
-                          <span className="font-medium">Custom shipping</span>
-                          <p className="text-sm text-muted-foreground">Set specific rates for this product</p>
-                        </div>
-                      </label>
+                      {[
+                        { value: "saved_locations", label: "Use saved locations", desc: "Default meetup spots from your profile" },
+                        { value: "buyer_comes", label: "Buyer comes to me", desc: "Buyer visits your shop or location" },
+                        { value: "flexible", label: "Flexible", desc: "Arrange meetup location with each buyer" },
+                      ].map((option) => (
+                        <label key={option.value} className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:border-moulna-gold transition-colors">
+                          <input
+                            type="radio"
+                            name="meetup"
+                            checked={meetupPreference === option.value}
+                            onChange={() => setMeetupPreference(option.value)}
+                            className="text-moulna-gold focus:ring-moulna-gold"
+                          />
+                          <div>
+                            <span className="font-medium">{option.label}</span>
+                            <p className="text-sm text-muted-foreground">{option.desc}</p>
+                          </div>
+                        </label>
+                      ))}
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium mb-1.5 block">
-                      Product Visibility
-                    </label>
-                    <select className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-moulna-gold">
-                      <option>Published (visible to everyone)</option>
-                      <option>Draft (only visible to you)</option>
-                      <option>Hidden (unlisted, only accessible via direct link)</option>
-                    </select>
                   </div>
                 </div>
               </Card>
@@ -603,13 +814,13 @@ export default function NewProductPage() {
                   Back
                 </Button>
                 <div className="flex gap-2">
-                  <Button variant="outline">
+                  <Button variant="outline" disabled={isSubmitting} onClick={() => handleSubmit("draft")}>
                     <Save className="w-4 h-4 me-2" />
                     Save Draft
                   </Button>
-                  <Button variant="gold">
-                    <Send className="w-4 h-4 me-2" />
-                    Publish Product
+                  <Button variant="gold" disabled={isSubmitting} onClick={() => handleSubmit("active")}>
+                    {isSubmitting ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Send className="w-4 h-4 me-2" />}
+                    Publish Listing
                   </Button>
                 </div>
               </div>
@@ -620,7 +831,7 @@ export default function NewProductPage() {
         {/* Sidebar Preview */}
         <div className="lg:col-span-1">
           <Card className="p-6 sticky top-24">
-            <h3 className="font-semibold mb-4">Product Preview</h3>
+            <h3 className="font-semibold mb-4">Listing Preview</h3>
             <div className="rounded-lg overflow-hidden border">
               <div className="aspect-square bg-muted flex items-center justify-center">
                 {images.length > 0 ? (
@@ -637,7 +848,7 @@ export default function NewProductPage() {
               </div>
               <div className="p-4">
                 <p className="font-medium line-clamp-2 mb-1">
-                  Your product title will appear here
+                  {title || "Your listing title will appear here"}
                 </p>
                 <div className="flex items-center gap-2 mb-2">
                   {isHandmade && (
@@ -647,22 +858,16 @@ export default function NewProductPage() {
                     <Badge variant="outline" className="text-xs">{selectedCategory}</Badge>
                   )}
                 </div>
-                <p className="text-lg font-bold text-moulna-gold">AED 0.00</p>
+                <p className="text-lg font-bold text-moulna-gold">
+                  AED {priceAED ? parseFloat(priceAED).toFixed(2) : "0.00"}
+                </p>
               </div>
             </div>
 
             <div className="mt-4 pt-4 border-t">
               <h4 className="text-sm font-medium mb-2">Listing Checklist</h4>
               <div className="space-y-2 text-sm">
-                {[
-                  { label: "Title added", done: false },
-                  { label: "Description written", done: false },
-                  { label: "Category selected", done: !!selectedCategory },
-                  { label: "At least 1 photo", done: images.length > 0 },
-                  { label: "5+ photos (bonus XP)", done: images.length >= 5 },
-                  { label: "Price set", done: false },
-                  { label: "Stock quantity", done: false },
-                ].map((item) => (
+                {checklist.map((item) => (
                   <div key={item.label} className="flex items-center gap-2">
                     <div className={cn(
                       "w-4 h-4 rounded-full flex items-center justify-center",

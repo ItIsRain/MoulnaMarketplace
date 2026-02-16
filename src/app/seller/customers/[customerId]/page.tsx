@@ -12,8 +12,8 @@ import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
 import {
   ArrowLeft, User, Mail, Phone, MapPin, Calendar,
-  ShoppingBag, DollarSign, Star, MessageSquare, Heart,
-  Clock, Package, TrendingUp, Award, Gift
+  MessageSquare, Eye, Star, Heart,
+  Clock, TrendingUp, Award, Gift
 } from "lucide-react";
 
 const CUSTOMER_DATA = {
@@ -25,35 +25,32 @@ const CUSTOMER_DATA = {
   level: 6,
   location: "Abu Dhabi, UAE",
   joinedAt: "March 2023",
-  lastOrder: "2 days ago",
-  totalOrders: 12,
-  totalSpent: 4580,
-  avgOrderValue: 382,
+  lastInquiry: "2 days ago",
+  totalInquiries: 12,
+  listingsViewed: 45,
+  avgInquiriesPerVisit: 3.8,
   isFollower: true,
   isVIP: true,
 };
 
-const ORDER_HISTORY = [
+const INQUIRY_HISTORY = [
   {
-    id: "ORD-2024-1234",
+    id: "INQ-2024-1234",
     date: "Jan 15, 2024",
     items: ["Premium Oud Collection Set"],
-    total: 450,
-    status: "delivered",
+    status: "replied",
   },
   {
-    id: "ORD-2024-1156",
+    id: "INQ-2024-1156",
     date: "Jan 8, 2024",
     items: ["Arabian Bakhoor Set", "Traditional Perfume 50ml"],
-    total: 285,
-    status: "delivered",
+    status: "replied",
   },
   {
-    id: "ORD-2023-0892",
+    id: "INQ-2023-0892",
     date: "Dec 20, 2023",
     items: ["Luxury Gift Box"],
-    total: 890,
-    status: "delivered",
+    status: "replied",
   },
 ];
 
@@ -75,9 +72,9 @@ const REVIEWS = [
 ];
 
 const STATUS_COLORS = {
-  delivered: "bg-green-100 text-green-700",
-  processing: "bg-blue-100 text-blue-700",
-  shipped: "bg-purple-100 text-purple-700",
+  replied: "bg-green-100 text-green-700",
+  pending: "bg-blue-100 text-blue-700",
+  closed: "bg-purple-100 text-purple-700",
 };
 
 export default function CustomerDetailPage() {
@@ -95,7 +92,7 @@ export default function CustomerDetailPage() {
         <div>
           <h1 className="text-2xl font-bold">Customer Details</h1>
           <p className="text-muted-foreground">
-            View customer information and order history
+            View customer information and inquiry history
           </p>
         </div>
       </div>
@@ -158,24 +155,24 @@ export default function CustomerDetailPage() {
             <h3 className="font-semibold mb-4">Customer Stats</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center p-3 bg-muted rounded-lg">
-                <ShoppingBag className="w-5 h-5 mx-auto text-moulna-gold mb-1" />
-                <p className="text-xl font-bold">{CUSTOMER_DATA.totalOrders}</p>
-                <p className="text-xs text-muted-foreground">Total Orders</p>
+                <MessageSquare className="w-5 h-5 mx-auto text-moulna-gold mb-1" />
+                <p className="text-xl font-bold">{CUSTOMER_DATA.totalInquiries}</p>
+                <p className="text-xs text-muted-foreground">Total Inquiries</p>
               </div>
               <div className="text-center p-3 bg-muted rounded-lg">
-                <DollarSign className="w-5 h-5 mx-auto text-green-600 mb-1" />
-                <p className="text-xl font-bold">AED {CUSTOMER_DATA.totalSpent}</p>
-                <p className="text-xs text-muted-foreground">Total Spent</p>
+                <Eye className="w-5 h-5 mx-auto text-green-600 mb-1" />
+                <p className="text-xl font-bold">{CUSTOMER_DATA.listingsViewed}</p>
+                <p className="text-xs text-muted-foreground">Listings Viewed</p>
               </div>
               <div className="text-center p-3 bg-muted rounded-lg">
                 <TrendingUp className="w-5 h-5 mx-auto text-blue-600 mb-1" />
-                <p className="text-xl font-bold">AED {CUSTOMER_DATA.avgOrderValue}</p>
-                <p className="text-xs text-muted-foreground">Avg. Order</p>
+                <p className="text-xl font-bold">{CUSTOMER_DATA.avgInquiriesPerVisit}</p>
+                <p className="text-xs text-muted-foreground">Avg. Inquiries</p>
               </div>
               <div className="text-center p-3 bg-muted rounded-lg">
                 <Clock className="w-5 h-5 mx-auto text-purple-600 mb-1" />
-                <p className="text-xl font-bold">{CUSTOMER_DATA.lastOrder}</p>
-                <p className="text-xs text-muted-foreground">Last Order</p>
+                <p className="text-xl font-bold">{CUSTOMER_DATA.lastInquiry}</p>
+                <p className="text-xs text-muted-foreground">Last Inquiry</p>
               </div>
             </div>
           </Card>
@@ -210,46 +207,42 @@ export default function CustomerDetailPage() {
           </Card>
         </div>
 
-        {/* Order History & Reviews */}
+        {/* Inquiry History & Reviews */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Order History */}
+          {/* Inquiry History */}
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold">Order History</h3>
+              <h3 className="font-semibold">Inquiry History</h3>
               <Button variant="outline" size="sm">
                 View All
               </Button>
             </div>
             <div className="space-y-4">
-              {ORDER_HISTORY.map((order, index) => (
+              {INQUIRY_HISTORY.map((inquiry, index) => (
                 <motion.div
-                  key={order.id}
+                  key={inquiry.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg"
                 >
                   <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                    <Package className="w-6 h-6 text-muted-foreground" />
+                    <MessageSquare className="w-6 h-6 text-muted-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <Link
-                        href={`/seller/orders/${order.id}`}
-                        className="font-medium hover:text-moulna-gold"
-                      >
-                        {order.id}
-                      </Link>
-                      <Badge className={STATUS_COLORS[order.status as keyof typeof STATUS_COLORS]}>
-                        {order.status}
+                      <span className="font-medium">
+                        {inquiry.id}
+                      </span>
+                      <Badge className={STATUS_COLORS[inquiry.status as keyof typeof STATUS_COLORS]}>
+                        {inquiry.status}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground truncate">
-                      {order.items.join(", ")}
+                      {inquiry.items.join(", ")}
                     </p>
-                    <p className="text-xs text-muted-foreground">{order.date}</p>
+                    <p className="text-xs text-muted-foreground">{inquiry.date}</p>
                   </div>
-                  <p className="font-semibold">AED {order.total}</p>
                 </motion.div>
               ))}
             </div>

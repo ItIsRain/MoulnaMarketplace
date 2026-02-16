@@ -34,8 +34,8 @@ const LEGAL_PAGES = [
   },
   {
     href: "/refund-policy",
-    title: "Refund & Returns Policy",
-    description: "Our policies for returns, refunds, and exchanges",
+    title: "Dispute Resolution Policy",
+    description: "How we handle disputes, reporting issues, and safety guidelines",
     icon: RefreshCw,
     lastUpdated: "January 1, 2024",
   },

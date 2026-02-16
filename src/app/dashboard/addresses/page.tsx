@@ -87,7 +87,7 @@ export default function AddressesPage() {
             Saved Addresses
           </h1>
           <p className="text-muted-foreground">
-            Manage your delivery addresses
+            Manage your saved locations
           </p>
         </div>
         <Button variant="gold" onClick={() => setIsAddingNew(true)}>
@@ -273,7 +273,7 @@ export default function AddressesPage() {
                     className="rounded text-moulna-gold focus:ring-moulna-gold"
                   />
                   <label htmlFor="setDefault" className="text-sm">
-                    Set as default delivery address
+                    Set as default meetup location
                   </label>
                 </div>
 
@@ -304,7 +304,7 @@ export default function AddressesPage() {
           <MapPin className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="font-semibold mb-2">No saved addresses</h3>
           <p className="text-sm text-muted-foreground mb-6">
-            Add your first delivery address to make checkout faster
+            Add your first location to easily share meetup spots with sellers
           </p>
           <Button variant="gold" onClick={() => setIsAddingNew(true)}>
             <Plus className="w-4 h-4 me-2" />

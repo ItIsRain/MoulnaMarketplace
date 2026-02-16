@@ -1,45 +1,22 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { User, UserRole, Badge, DailyChallenge, Notification } from "@/lib/types";
+import { createClient } from "@/lib/supabase/client";
+import type { User, UserRole, Shop, DailyChallenge, Notification } from "@/lib/types";
 
-// Mock badges
-const MOCK_BADGES: Badge[] = [
-  { id: "first_buy", name: "First Purchase", icon: "🛍️", description: "Made your first purchase", category: "shopping", earnedAt: "2025-01-15", xpReward: 50 },
-  { id: "streak_7", name: "Weekly Warrior", icon: "🔥", description: "7-day login streak", category: "streak", earnedAt: "2025-01-20", xpReward: 100 },
-  { id: "first_review", name: "Critic", icon: "✍️", description: "Left your first review", category: "social", earnedAt: "2025-01-18", xpReward: 50 },
-];
-
-// Mock daily challenges
-const MOCK_CHALLENGES: DailyChallenge[] = [
-  { id: "browse_3", task: "Browse 3 different categories", xp: 30, icon: "👀", completed: true, progress: 3, target: 3 },
-  { id: "add_wishlist", task: "Add 2 items to your wishlist", xp: 20, icon: "❤️", completed: false, progress: 1, target: 2 },
-  { id: "share_product", task: "Share a product on social media", xp: 25, icon: "📤", completed: false },
-];
-
-// Mock user data
-const MOCK_USER: User = {
-  id: "user_1",
-  name: "Sara Ahmed",
-  username: "sara_uae",
-  email: "sara@example.com",
-  phone: "+971501234567",
-  role: "buyer",
-  level: 5,
-  xp: 7850,
-  badges: MOCK_BADGES,
-  streakDays: 12,
-  avatar: {
-    style: "adventurer",
-    seed: "sara_uae",
-    backgroundColor: "c7a34d",
-  },
-  location: "Dubai",
-  joinDate: "2024-06-15",
-  isVerified: true,
-};
+interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  phone?: string;
+  username?: string;
+  avatarStyle?: string;
+  avatarSeed?: string;
+}
 
 interface AuthState {
   user: User | null;
+  shop: Shop | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   challenges: DailyChallenge[];
@@ -49,6 +26,8 @@ interface AuthState {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   register: (data: RegisterData) => Promise<boolean>;
+  initialize: () => Promise<void>;
+  fetchProfile: () => Promise<User | null>;
   updateProfile: (data: Partial<User>) => void;
   addXP: (amount: number, action: string) => void;
   completeChallenge: (challengeId: string) => void;
@@ -56,92 +35,141 @@ interface AuthState {
   markNotificationRead: (id: string) => void;
 }
 
-interface RegisterData {
-  name: string;
-  email: string;
-  password: string;
-  role: UserRole;
-}
-
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
+      shop: null,
       isAuthenticated: false,
       isLoading: false,
-      challenges: MOCK_CHALLENGES,
+      challenges: [],
       notifications: [],
+
+      initialize: async () => {
+        set({ isLoading: true });
+        try {
+          const supabase = createClient();
+          const {
+            data: { user: authUser },
+          } = await supabase.auth.getUser();
+
+          if (authUser) {
+            const profile = await get().fetchProfile();
+            if (profile) {
+              set({ user: profile, isAuthenticated: true });
+            }
+          } else {
+            set({ user: null, shop: null, isAuthenticated: false });
+          }
+        } catch (error) {
+          console.error("Failed to initialize auth:", error);
+          set({ user: null, shop: null, isAuthenticated: false });
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      fetchProfile: async () => {
+        try {
+          const res = await fetch("/api/auth/me");
+          if (!res.ok) return null;
+          const data = await res.json();
+          if (data.shop) {
+            set({ shop: data.shop as Shop });
+          }
+          return data.user as User;
+        } catch {
+          return null;
+        }
+      },
 
       login: async (email: string, password: string) => {
         set({ isLoading: true });
-
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        // Mock login - accept any email with password "demo123"
-        if (password === "demo123") {
-          const user: User = {
-            ...MOCK_USER,
+        try {
+          const supabase = createClient();
+          const { error } = await supabase.auth.signInWithPassword({
             email,
-            name: email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-            username: email.split("@")[0],
-            avatar: {
-              style: "adventurer",
-              seed: email.split("@")[0],
-              backgroundColor: "c7a34d",
-            },
-          };
-
-          set({
-            user,
-            isAuthenticated: true,
-            isLoading: false,
+            password,
           });
 
-          return true;
-        }
+          if (error) {
+            set({ isLoading: false });
+            throw new Error(error.message);
+          }
 
-        set({ isLoading: false });
-        return false;
+          const profile = await get().fetchProfile();
+          if (profile) {
+            set({
+              user: profile,
+              isAuthenticated: true,
+              isLoading: false,
+            });
+            return true;
+          }
+
+          set({ isLoading: false });
+          return false;
+        } catch (error) {
+          set({ isLoading: false });
+          throw error;
+        }
       },
 
-      logout: () => {
+      logout: async () => {
+        const supabase = createClient();
+        await supabase.auth.signOut();
         set({
           user: null,
+          shop: null,
           isAuthenticated: false,
+          challenges: [],
+          notifications: [],
         });
       },
 
       register: async (data: RegisterData) => {
         set({ isLoading: true });
+        try {
+          const res = await fetch("/api/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: data.email,
+              password: data.password,
+              fullName: data.name,
+              phone: data.phone || "",
+              role: data.role,
+              username: data.username || data.email.split("@")[0],
+              avatarStyle: data.avatarStyle || "adventurer",
+              avatarSeed: data.avatarSeed || data.email.split("@")[0],
+            }),
+          });
 
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+          const result = await res.json();
 
-        const newUser: User = {
-          id: `user_${Date.now()}`,
-          name: data.name,
-          username: data.email.split("@")[0],
-          email: data.email,
-          role: data.role,
-          level: 1,
-          xp: 100, // Sign-up bonus
-          badges: [],
-          streakDays: 1,
-          avatar: {
-            style: "adventurer",
-            seed: data.email.split("@")[0],
-          },
-          joinDate: new Date().toISOString(),
-          isVerified: false,
-        };
+          if (!res.ok) {
+            set({ isLoading: false });
+            throw new Error(result.error || "Registration failed");
+          }
 
-        set({
-          user: newUser,
-          isAuthenticated: true,
-          isLoading: false,
-        });
+          // Fetch the profile after registration
+          const profile = await get().fetchProfile();
+          if (profile) {
+            set({
+              user: profile,
+              isAuthenticated: true,
+              isLoading: false,
+            });
+          } else {
+            // User created but email confirmation may be required
+            set({ isLoading: false });
+          }
 
-        return true;
+          return true;
+        } catch (error) {
+          set({ isLoading: false });
+          throw error;
+        }
       },
 
       updateProfile: (data: Partial<User>) => {
@@ -156,7 +184,6 @@ export const useAuthStore = create<AuthState>()(
         if (user) {
           const newXP = user.xp + amount;
 
-          // Create notification
           const notification: Notification = {
             id: `notif_${Date.now()}`,
             type: "xp",
@@ -208,6 +235,7 @@ export const useAuthStore = create<AuthState>()(
       name: "moulna-auth",
       partialize: (state) => ({
         user: state.user,
+        shop: state.shop,
         isAuthenticated: state.isAuthenticated,
         challenges: state.challenges,
       }),

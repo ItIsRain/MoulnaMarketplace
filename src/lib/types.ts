@@ -18,7 +18,11 @@ export interface User {
   location?: string;
   joinDate: string;
   isVerified: boolean;
+  kycStatus?: KYCStatus;
+  onboardingCompleted?: boolean;
 }
+
+export type KYCStatus = 'none' | 'pending' | 'approved' | 'declined' | 'expired' | 'abandoned' | 'in_progress' | 'in_review';
 
 export type UserRole = 'buyer' | 'seller' | 'admin' | 'both';
 
@@ -39,7 +43,7 @@ export interface Badge {
   xpReward: number;
 }
 
-export type BadgeCategory = 'shopping' | 'social' | 'seller' | 'streak' | 'seasonal';
+export type BadgeCategory = 'engagement' | 'social' | 'seller' | 'streak' | 'seasonal';
 
 export interface Level {
   level: number;
@@ -74,39 +78,71 @@ export interface LeaderboardEntry {
   badgeCount: number;
 }
 
+// Product Seller (lightweight shop info for product responses)
+export interface ProductSeller {
+  id: string;
+  shopId: string;
+  name: string;
+  slug: string;
+  avatarStyle: string;
+  avatarSeed?: string;
+  level: number;
+  rating: number;
+  totalListings: number;
+  location?: string;
+  isVerified: boolean;
+  responseTime?: string;
+}
+
 // Product Types
+export type ProductStatus = 'active' | 'draft' | 'sold' | 'expired' | 'hidden';
+export type ProductCondition = 'new' | 'like_new' | 'good' | 'fair';
+
 export interface Product {
   id: string;
+  slug: string;
+  ownerId: string;
+  shopId: string;
   title: string;
   description: string;
   shortDescription?: string;
+  category?: string;
+  tags: string[];
   images: string[];
-  price: number;
-  compareAtPrice?: number;
+  videoUrl?: string;
+  priceFils: number;
+  compareAtPriceFils?: number;
+  costFils?: number;
+  sku?: string;
+  condition?: ProductCondition;
+  variants?: ProductVariant[];
+  status: ProductStatus;
+  listingDuration?: number;
+  expiresAt?: string;
+  autoRenew: boolean;
+  allowOffers: boolean;
+  processingTime?: string;
+  meetupPreference?: string;
+  isHandmade: boolean;
+  inquiryCount: number;
+  viewCount: number;
+  xpReward: number;
   rating: number;
   reviewCount: number;
-  seller: Seller;
-  category: Category;
-  subcategory?: Category;
-  tags: string[];
-  isHandmade: boolean;
+  seller: ProductSeller;
+  badges: ProductBadge[];
+  // Derived fields (not stored in DB)
   isTrending: boolean;
   isNew: boolean;
-  stock: number;
-  variants?: ProductVariant[];
-  badges: ProductBadge[];
+  available: boolean;
   createdAt: string;
-  xpReward: number;
+  updatedAt: string;
+  publishedAt?: string;
 }
 
 export interface ProductVariant {
-  id: string;
   name: string;
-  type: 'color' | 'size' | 'material' | 'custom';
-  value: string;
-  price?: number;
-  stock: number;
-  image?: string;
+  options: string[];
 }
 
 export type ProductBadge = 'trending' | 'new' | 'flash-deal' | 'handmade' | 'top-seller';
@@ -122,7 +158,64 @@ export interface Category {
   productCount?: number;
 }
 
-// Seller/Shop Types
+// Shop Types
+export interface Shop {
+  id: string;
+  ownerId: string;
+  name: string;
+  slug: string;
+  tagline?: string;
+  description?: string;
+  category?: string;
+  avatarStyle: string;
+  avatarSeed?: string;
+  logoUrl?: string;
+  bannerUrl?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  location?: string;
+  instagram?: string;
+  facebook?: string;
+  twitter?: string;
+  youtube?: string;
+  whatsapp?: string;
+  story?: string;
+  storySections: StorySection[];
+  milestones: Milestone[];
+  coreValues: string[];
+  operatingHours: Record<string, string>;
+  policies: Record<string, string>;
+  branding: Record<string, string>;
+  listingPreferences: Record<string, unknown>;
+  rating: number;
+  reviewCount: number;
+  totalListings: number;
+  followerCount: number;
+  isVerified: boolean;
+  isArtisan: boolean;
+  responseTime?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StorySection {
+  id: string;
+  type: 'text' | 'image' | 'quote';
+  title?: string;
+  content?: string;
+  imageUrl?: string;
+  caption?: string;
+  author?: string;
+}
+
+export interface Milestone {
+  year: string;
+  title: string;
+  description: string;
+}
+
+// Seller/Shop Types (legacy, used by Product)
 export interface Seller {
   id: string;
   shopName: string;
@@ -135,7 +228,7 @@ export interface Seller {
   level: number;
   xp: number;
   rating: number;
-  totalSales: number;
+  totalListings: number;
   totalReviews: number;
   badges: Badge[];
   location: string;
@@ -146,50 +239,20 @@ export interface Seller {
   followerCount: number;
 }
 
-// Order Types
-export interface Order {
+// Inquiry Types
+export interface Inquiry {
   id: string;
-  orderNumber: string;
   buyer: User;
   seller: Seller;
-  items: OrderItem[];
-  status: OrderStatus;
-  subtotal: number;
-  shipping: number;
-  discount: number;
-  total: number;
-  shippingAddress: Address;
-  trackingNumber?: string;
-  carrier?: string;
-  paymentMethod: PaymentMethod;
+  listing: Product;
+  status: InquiryStatus;
+  messages: Message[];
   createdAt: string;
   updatedAt: string;
-  deliveredAt?: string;
   xpEarned: number;
 }
 
-export interface OrderItem {
-  id: string;
-  product: Product;
-  variant?: ProductVariant;
-  quantity: number;
-  unitPrice: number;
-  subtotal: number;
-}
-
-export type OrderStatus =
-  | 'pending'
-  | 'confirmed'
-  | 'processing'
-  | 'shipped'
-  | 'out-for-delivery'
-  | 'delivered'
-  | 'cancelled'
-  | 'refunded'
-  | 'return-requested'
-  | 'returned';
-
-export type PaymentMethod = 'card' | 'cod' | 'apple-pay';
+export type InquiryStatus = 'new' | 'replied' | 'archived' | 'sold';
 
 export interface Address {
   id: string;
@@ -214,23 +277,8 @@ export interface Review {
   photos: string[];
   helpfulCount: number;
   sellerResponse?: string;
-  isVerifiedPurchase: boolean;
   createdAt: string;
   xpEarned: number;
-}
-
-// Cart Types
-export interface CartItem {
-  id: string;
-  product: Product;
-  variant?: ProductVariant;
-  quantity: number;
-}
-
-export interface Cart {
-  items: CartItem[];
-  subtotal: number;
-  estimatedXP: number;
 }
 
 // Notification Types
@@ -247,7 +295,7 @@ export interface Notification {
 }
 
 export type NotificationType =
-  | 'order'
+  | 'inquiry'
   | 'xp'
   | 'badge'
   | 'level-up'

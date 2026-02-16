@@ -26,8 +26,8 @@ const BENEFITS = [
   },
   {
     icon: Shield,
-    title: "Lower Fees",
-    description: "Enjoy reduced commission rates exclusive to program members.",
+    title: "Free Unlimited Listings",
+    description: "Enjoy free unlimited listings exclusive to program members.",
   },
   {
     icon: Gift,
@@ -82,19 +82,19 @@ const TIERS = [
   {
     name: "Bronze Artisan",
     requirements: "0-50 sales",
-    benefits: ["Verified badge", "Standard placement", "10% commission"],
+    benefits: ["Verified badge", "Standard placement", "Free unlimited listings"],
     color: "from-amber-600 to-amber-700",
   },
   {
     name: "Silver Artisan",
     requirements: "51-200 sales",
-    benefits: ["All Bronze benefits", "Priority support", "8% commission", "Monthly features"],
+    benefits: ["All Bronze benefits", "Priority support", "Free featured boosts", "Monthly features"],
     color: "from-gray-400 to-gray-500",
   },
   {
     name: "Gold Artisan",
     requirements: "201+ sales",
-    benefits: ["All Silver benefits", "Homepage features", "6% commission", "Marketing campaigns"],
+    benefits: ["All Silver benefits", "Homepage features", "Priority placement", "Marketing campaigns"],
     color: "from-moulna-gold to-amber-500",
   },
 ];

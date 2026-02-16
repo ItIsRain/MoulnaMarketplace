@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   BarChart3, TrendingUp, TrendingDown, DollarSign,
-  ShoppingBag, Eye, Users, Package, ArrowUpRight,
+  MessageSquare, Eye, Users, Package, ArrowUpRight,
   ArrowDownRight, Calendar
 } from "lucide-react";
 
@@ -18,7 +18,7 @@ const STATS = {
     previous: 1180000,
     trend: 8.1,
   },
-  orders: {
+  inquiries: {
     current: 156,
     previous: 142,
     trend: 9.9,
@@ -36,11 +36,11 @@ const STATS = {
 };
 
 const TOP_PRODUCTS = [
-  { rank: 1, title: "Arabian Oud Perfume - 100ml", sales: 124, revenue: 558000, trend: 15 },
-  { rank: 2, title: "Rose Oud Mist", sales: 89, revenue: 249200, trend: 8 },
-  { rank: 3, title: "Premium Oud Gift Set", sales: 45, revenue: 382500, trend: -3 },
-  { rank: 4, title: "Amber & Musk Blend", sales: 67, revenue: 234500, trend: 12 },
-  { rank: 5, title: "Home Fragrance Diffuser", sales: 42, revenue: 92400, trend: 25 },
+  { rank: 1, title: "Arabian Oud Perfume - 100ml", inquiries: 124, views: 558000, trend: 15 },
+  { rank: 2, title: "Rose Oud Mist", inquiries: 89, views: 249200, trend: 8 },
+  { rank: 3, title: "Premium Oud Gift Set", inquiries: 45, views: 382500, trend: -3 },
+  { rank: 4, title: "Amber & Musk Blend", inquiries: 67, views: 234500, trend: 12 },
+  { rank: 5, title: "Home Fragrance Diffuser", inquiries: 42, views: 92400, trend: 25 },
 ];
 
 const REVENUE_DATA = [
@@ -97,10 +97,10 @@ export default function SellerAnalyticsPage() {
       {/* Key Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Revenue", value: formatAED(STATS.revenue.current), icon: DollarSign, ...STATS.revenue, color: "text-emerald-500" },
-          { label: "Orders", value: STATS.orders.current, icon: ShoppingBag, ...STATS.orders, color: "text-blue-500" },
+          { label: "Sales Revenue", value: formatAED(STATS.revenue.current), icon: DollarSign, ...STATS.revenue, color: "text-emerald-500" },
+          { label: "Inquiries", value: STATS.inquiries.current, icon: MessageSquare, ...STATS.inquiries, color: "text-blue-500" },
           { label: "Shop Views", value: STATS.views.current.toLocaleString(), icon: Eye, ...STATS.views, color: "text-purple-500" },
-          { label: "Conversion Rate", value: `${STATS.conversionRate.current}%`, icon: TrendingUp, ...STATS.conversionRate, color: "text-moulna-gold" },
+          { label: "Sold Rate", value: `${STATS.conversionRate.current}%`, icon: TrendingUp, ...STATS.conversionRate, color: "text-moulna-gold" },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -135,7 +135,7 @@ export default function SellerAnalyticsPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Revenue Chart */}
         <Card className="lg:col-span-2 p-6">
-          <h2 className="font-semibold mb-6">Revenue Overview</h2>
+          <h2 className="font-semibold mb-6">Sales Revenue Overview</h2>
           <div className="h-64 flex items-end justify-between gap-2">
             {REVENUE_DATA.map((day, index) => {
               const maxRevenue = Math.max(...REVENUE_DATA.map(d => d.revenue));
@@ -158,6 +158,7 @@ export default function SellerAnalyticsPage() {
               );
             })}
           </div>
+          <p className="text-xs text-muted-foreground mt-4">Based on your marked-as-sold listings</p>
         </Card>
 
         {/* Traffic Sources */}
@@ -194,7 +195,7 @@ export default function SellerAnalyticsPage() {
       {/* Top Products */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="font-semibold">Top Selling Products</h2>
+          <h2 className="font-semibold">Top Performing Listings</h2>
           <Button variant="outline" size="sm">
             View All
           </Button>
@@ -204,9 +205,9 @@ export default function SellerAnalyticsPage() {
             <thead>
               <tr className="border-b">
                 <th className="text-start pb-3 text-sm font-medium text-muted-foreground">Rank</th>
-                <th className="text-start pb-3 text-sm font-medium text-muted-foreground">Product</th>
-                <th className="text-start pb-3 text-sm font-medium text-muted-foreground">Sales</th>
-                <th className="text-start pb-3 text-sm font-medium text-muted-foreground">Revenue</th>
+                <th className="text-start pb-3 text-sm font-medium text-muted-foreground">Listing</th>
+                <th className="text-start pb-3 text-sm font-medium text-muted-foreground">Inquiries</th>
+                <th className="text-start pb-3 text-sm font-medium text-muted-foreground">Views</th>
                 <th className="text-start pb-3 text-sm font-medium text-muted-foreground">Trend</th>
               </tr>
             </thead>
@@ -231,8 +232,8 @@ export default function SellerAnalyticsPage() {
                     </span>
                   </td>
                   <td className="py-4 font-medium">{product.title}</td>
-                  <td className="py-4">{product.sales}</td>
-                  <td className="py-4">{formatAED(product.revenue)}</td>
+                  <td className="py-4">{product.inquiries}</td>
+                  <td className="py-4">{product.views.toLocaleString()}</td>
                   <td className="py-4">
                     <div className={cn(
                       "flex items-center text-sm font-medium",
@@ -299,8 +300,8 @@ export default function SellerAnalyticsPage() {
           </div>
           <div className="mt-6 pt-6 border-t">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Avg. Order Value</span>
-              <span className="font-bold">{formatAED(81730)}</span>
+              <span className="text-sm text-muted-foreground">Avg. Inquiries per Listing</span>
+              <span className="font-bold">18</span>
             </div>
             <div className="flex items-center justify-between mt-2">
               <span className="text-sm text-muted-foreground">Repeat Rate</span>

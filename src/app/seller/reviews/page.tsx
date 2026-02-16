@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,7 @@ const REVIEWS = [
     },
     rating: 5,
     title: "Absolutely stunning fragrance!",
-    content: "The quality of this oud is exceptional. It lasts all day and I receive compliments wherever I go. The packaging was beautiful and it arrived quickly. Will definitely order again!",
+    content: "The quality of this oud is exceptional. It lasts all day and I receive compliments wherever I go. The packaging was beautiful and the meetup was smooth. Will definitely buy again!",
     date: "2024-01-15",
     helpful: 12,
     replied: true,
@@ -45,7 +45,7 @@ const REVIEWS = [
     },
     rating: 4,
     title: "Great product, slight delay",
-    content: "The perfume is lovely and exactly as described. Only giving 4 stars because shipping took a bit longer than expected. Otherwise, very satisfied with my purchase.",
+    content: "The perfume is lovely and exactly as described. Only giving 4 stars because the meetup took a bit longer to arrange than expected. Otherwise, very satisfied overall.",
     date: "2024-01-12",
     helpful: 5,
     replied: false,
@@ -62,8 +62,8 @@ const REVIEWS = [
       image: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=100",
     },
     rating: 5,
-    title: "Best musk I've ever purchased",
-    content: "This is hands down the best musk fragrance I've ever bought. The scent is authentic and long-lasting. The seller was also very helpful in answering my questions before purchase.",
+    title: "Best musk I've ever found",
+    content: "This is hands down the best musk fragrance I've ever bought. The scent is authentic and long-lasting. The seller was also very helpful in answering my questions before we met.",
     date: "2024-01-10",
     helpful: 18,
     replied: true,
@@ -224,7 +224,7 @@ export default function SellerReviewsPage() {
                         <div className="flex items-center gap-2 mb-1">
                           {renderStars(review.rating)}
                           <span className="text-sm text-muted-foreground">
-                            {new Date(review.date).toLocaleDateString()}
+                            {formatDate(review.date)}
                           </span>
                         </div>
                         <h3 className="font-semibold">{review.title}</h3>

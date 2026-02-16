@@ -236,7 +236,7 @@ export default function CategoryPage() {
                 <div className="mb-6">
                   <p className="text-sm font-medium mb-3">Features</p>
                   <div className="space-y-2">
-                    {["Handmade", "Free Shipping", "On Sale", "New Arrivals"].map((feature) => (
+                    {["Handmade", "Verified Sellers", "On Sale", "New Arrivals"].map((feature) => (
                       <label key={feature} className="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" className="rounded text-moulna-gold focus:ring-moulna-gold" />
                         <span className="text-sm">{feature}</span>

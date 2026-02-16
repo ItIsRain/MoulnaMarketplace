@@ -7,18 +7,18 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
-  Bell, Mail, Smartphone, ShoppingBag, MessageSquare,
+  Bell, Mail, Smartphone, MessageSquare,
   Gift, Star, Users, TrendingUp, Save, Volume2
 } from "lucide-react";
 
 const NOTIFICATION_GROUPS = [
   {
-    title: "Orders & Purchases",
-    icon: ShoppingBag,
+    title: "Inquiries & Conversations",
+    icon: MessageSquare,
     settings: [
-      { id: "order_confirmation", label: "Order confirmation", description: "When you place a new order", email: true, push: true },
-      { id: "order_shipped", label: "Shipping updates", description: "When your order ships or is delivered", email: true, push: true },
-      { id: "order_review", label: "Review reminders", description: "Reminder to review products you bought", email: true, push: false },
+      { id: "inquiry_reply", label: "Seller replies", description: "When a seller responds to your inquiry", email: true, push: true },
+      { id: "inquiry_update", label: "Listing updates", description: "When a listing you inquired about is updated", email: true, push: true },
+      { id: "review_reminder", label: "Review reminders", description: "Reminder to review sellers you contacted", email: true, push: false },
     ],
   },
   {
@@ -45,8 +45,8 @@ const NOTIFICATION_GROUPS = [
     title: "Deals & Promotions",
     icon: TrendingUp,
     settings: [
-      { id: "price_drop", label: "Price drops", description: "When items in your wishlist go on sale", email: true, push: true },
-      { id: "flash_sales", label: "Flash sales", description: "Limited-time deals and offers", email: true, push: false },
+      { id: "price_drop", label: "Price drops", description: "When saved items get a price reduction", email: true, push: true },
+      { id: "new_listings", label: "New listings", description: "New listings in categories you follow", email: true, push: false },
       { id: "personalized_deals", label: "Personalized deals", description: "Deals based on your interests", email: true, push: false },
     ],
   },
@@ -54,7 +54,7 @@ const NOTIFICATION_GROUPS = [
     title: "Sellers You Follow",
     icon: Users,
     settings: [
-      { id: "new_product", label: "New products", description: "When followed shops add new items", email: false, push: true },
+      { id: "new_product", label: "New listings", description: "When followed shops add new listings", email: false, push: true },
       { id: "shop_updates", label: "Shop updates", description: "News and updates from your favorite shops", email: true, push: false },
     ],
   },

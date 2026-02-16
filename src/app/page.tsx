@@ -10,6 +10,7 @@ import {
   Star,
   Heart,
   TrendingUp,
+  Loader2,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -18,6 +19,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
+import { formatAED } from "@/lib/utils";
+import type { Product } from "@/lib/types";
 
 // Animation variants
 const fadeInUp = {
@@ -50,50 +53,7 @@ const CATEGORIES = [
   { name: "Baby & Kids", slug: "baby-kids", icon: "👶", count: 1122 },
 ];
 
-const TRENDING_PRODUCTS = [
-  {
-    id: "1",
-    title: "Handcrafted Oud Perfume",
-    price: 450,
-    originalPrice: 550,
-    image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400",
-    seller: { name: "Arabian Scents", avatar: "arabian_scents", level: 7 },
-    rating: 4.9,
-    reviews: 128,
-    badge: "trending" as const,
-  },
-  {
-    id: "2",
-    title: "Arabic Calligraphy Wall Art",
-    price: 280,
-    image: "https://images.unsplash.com/photo-1579541814924-49fef17c5be5?w=400",
-    seller: { name: "Khatt Studio", avatar: "khatt_studio", level: 6 },
-    rating: 4.8,
-    reviews: 86,
-    badge: "handmade" as const,
-  },
-  {
-    id: "3",
-    title: "Gold Plated Pearl Earrings",
-    price: 185,
-    image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400",
-    seller: { name: "Luxe Jewels", avatar: "luxe_jewels", level: 8 },
-    rating: 5.0,
-    reviews: 203,
-    badge: "new" as const,
-  },
-  {
-    id: "4",
-    title: "Handwoven Silk Scarf",
-    price: 320,
-    originalPrice: 380,
-    image: "https://images.unsplash.com/photo-1601924994987-69e26d50dc26?w=400",
-    seller: { name: "Silk & Soul", avatar: "silk_soul", level: 5 },
-    rating: 4.7,
-    reviews: 67,
-    badge: "trending" as const,
-  },
-];
+// Trending products loaded from API - see TrendingSection component below
 
 const TOP_SELLERS = [
   { name: "Arabian Scents", avatar: "arabian_scents", level: 7, xp: 25000, rating: 4.9, sales: 1247 },
@@ -125,6 +85,140 @@ const TESTIMONIALS = [
     role: "Buyer",
   },
 ];
+
+function TrendingSection() {
+  const [products, setProducts] = React.useState<Product[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch("/api/products?sort=trending&limit=8")
+      .then(res => res.json())
+      .then(data => {
+        if (data.products) setProducts(data.products);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <section className="py-16 lg:py-24 bg-background">
+      <div className="container-app">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="flex items-end justify-between mb-8"
+        >
+          <div>
+            <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-2">
+              <TrendingUp className="w-5 h-5 text-orange-500" />
+              <span className="text-sm font-medium text-orange-500">Hot Right Now</span>
+            </motion.div>
+            <motion.h2 variants={fadeInUp} className="text-3xl lg:text-4xl font-display font-bold">
+              Trending Products
+            </motion.h2>
+          </div>
+          <motion.div variants={fadeInUp}>
+            <Link href="/explore?sort=trending">
+              <Button variant="ghost" className="gap-1">
+                View All <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </motion.div>
+        </motion.div>
+
+        {loading ? (
+          <div className="py-12 text-center">
+            <Loader2 className="w-8 h-8 mx-auto animate-spin text-muted-foreground" />
+          </div>
+        ) : products.length === 0 ? (
+          <Card className="p-8 text-center">
+            <p className="text-muted-foreground">No products yet. Be the first to list!</p>
+            <Button variant="gold" className="mt-4" asChild>
+              <Link href="/seller/products/new">Add Listing</Link>
+            </Button>
+          </Card>
+        ) : (
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
+          >
+            {products.map((product) => (
+              <motion.div key={product.id} variants={scaleIn}>
+                <Link href={`/products/${product.slug}`}>
+                  <Card hover className="overflow-hidden group">
+                    {/* Image */}
+                    <div className="relative aspect-square overflow-hidden">
+                      {product.images[0] ? (
+                        <Image
+                          src={product.images[0]}
+                          alt={product.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-sm">
+                          No image
+                        </div>
+                      )}
+                      <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center hover:bg-white transition-colors">
+                        <Heart className="w-4 h-4" />
+                      </button>
+                      <div className="absolute top-3 left-3 flex flex-col gap-1">
+                        {product.isTrending && (
+                          <Badge variant="trending">Trending</Badge>
+                        )}
+                        {product.isNew && (
+                          <Badge variant="new">New</Badge>
+                        )}
+                        {product.isHandmade && (
+                          <Badge variant="handmade">Handmade</Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-4">
+                      <h3 className="font-semibold mb-1 truncate">{product.title}</h3>
+
+                      {/* Seller */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <DiceBearAvatar
+                          seed={product.seller.avatarSeed || product.seller.name}
+                          style={product.seller.avatarStyle}
+                          size="xs"
+                        />
+                        <span className="text-xs text-muted-foreground truncate">
+                          {product.seller.name}
+                        </span>
+                        <LevelBadge level={product.seller.level} size="sm" />
+                      </div>
+
+                      {/* Price */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-moulna-gold">
+                          {formatAED(product.priceFils)}
+                        </span>
+                        {product.compareAtPriceFils && (
+                          <span className="text-sm text-muted-foreground line-through">
+                            {formatAED(product.compareAtPriceFils)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </div>
+    </section>
+  );
+}
 
 export default function HomePage() {
   return (
@@ -164,7 +258,7 @@ export default function HomePage() {
                   variants={fadeInUp}
                   className="text-lg text-muted-foreground mb-8 max-w-lg mx-auto lg:mx-0"
                 >
-                  Shop from UAE's finest creators — earn rewards with every purchase.
+                  Browse UAE's finest creators — connect directly with sellers.
                   Level up, collect badges, and unlock exclusive perks!
                 </motion.p>
 
@@ -174,7 +268,7 @@ export default function HomePage() {
                 >
                   <Link href="/explore">
                     <Button size="xl" className="w-full sm:w-auto gap-2">
-                      Start Shopping
+                      Browse Listings
                       <ArrowRight className="w-5 h-5" />
                     </Button>
                   </Link>
@@ -361,108 +455,7 @@ export default function HomePage() {
         </section>
 
         {/* Trending Products */}
-        <section className="py-16 lg:py-24 bg-background">
-          <div className="container-app">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={staggerContainer}
-              className="flex items-end justify-between mb-8"
-            >
-              <div>
-                <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="w-5 h-5 text-orange-500" />
-                  <span className="text-sm font-medium text-orange-500">Hot Right Now</span>
-                </motion.div>
-                <motion.h2 variants={fadeInUp} className="text-3xl lg:text-4xl font-display font-bold">
-                  Trending Products
-                </motion.h2>
-              </div>
-              <motion.div variants={fadeInUp}>
-                <Link href="/explore/trending">
-                  <Button variant="ghost" className="gap-1">
-                    View All <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
-              </motion.div>
-            </motion.div>
-
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={staggerContainer}
-              className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
-            >
-              {TRENDING_PRODUCTS.map((product) => (
-                <motion.div key={product.id} variants={scaleIn}>
-                  <Link href={`/products/${product.id}`}>
-                    <Card hover className="overflow-hidden group">
-                      {/* Image */}
-                      <div className="relative aspect-square overflow-hidden">
-                        <img
-                          src={product.image}
-                          alt={product.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center hover:bg-white transition-colors">
-                          <Heart className="w-4 h-4" />
-                        </button>
-                        <Badge
-                          variant={product.badge}
-                          className="absolute top-3 left-3"
-                        >
-                          {product.badge === "trending" && "🔥 Trending"}
-                          {product.badge === "new" && "🆕 New"}
-                          {product.badge === "handmade" && "✋ Handmade"}
-                        </Badge>
-                      </div>
-
-                      {/* Content */}
-                      <div className="p-4">
-                        <h3 className="font-semibold mb-1 truncate">{product.title}</h3>
-
-                        {/* Seller */}
-                        <div className="flex items-center gap-2 mb-2">
-                          <DiceBearAvatar
-                            seed={product.seller.avatar}
-                            size="xs"
-                          />
-                          <span className="text-xs text-muted-foreground truncate">
-                            {product.seller.name}
-                          </span>
-                          <LevelBadge level={product.seller.level} size="sm" />
-                        </div>
-
-                        {/* Rating */}
-                        <div className="flex items-center gap-1 mb-2">
-                          <Star className="w-3.5 h-3.5 fill-moulna-gold text-moulna-gold" />
-                          <span className="text-sm font-medium">{product.rating}</span>
-                          <span className="text-xs text-muted-foreground">
-                            ({product.reviews})
-                          </span>
-                        </div>
-
-                        {/* Price */}
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-moulna-gold">
-                            AED {product.price}
-                          </span>
-                          {product.originalPrice && (
-                            <span className="text-sm text-muted-foreground line-through">
-                              AED {product.originalPrice}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
-                  </Link>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
+        <TrendingSection />
 
         {/* Top Sellers */}
         <section className="py-16 lg:py-24 bg-background">
@@ -483,9 +476,9 @@ export default function HomePage() {
                 </motion.p>
               </div>
               <motion.div variants={fadeInUp}>
-                <Link href="/explore/leaderboard">
+                <Link href="/explore/shops">
                   <Button variant="ghost" className="gap-1">
-                    View Leaderboard <ArrowRight className="w-4 h-4" />
+                    View All Shops <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
               </motion.div>

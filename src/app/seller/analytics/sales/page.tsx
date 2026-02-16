@@ -7,31 +7,31 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  TrendingUp, TrendingDown, DollarSign, ShoppingBag, Package,
+  TrendingUp, TrendingDown, MessageSquare, Package,
   Calendar, Download, Filter, ArrowUpRight, ArrowDownRight,
   BarChart3, PieChart, Target, Zap
 } from "lucide-react";
 
 const SALES_METRICS = [
   {
-    label: "Total Revenue",
-    value: "AED 45,230",
+    label: "Total Inquiries",
+    value: "452",
     change: "+12.5%",
     trend: "up",
-    icon: DollarSign,
+    icon: MessageSquare,
     color: "text-green-600",
   },
   {
-    label: "Orders",
+    label: "Conversations",
     value: "156",
     change: "+8.2%",
     trend: "up",
-    icon: ShoppingBag,
+    icon: MessageSquare,
     color: "text-blue-600",
   },
   {
-    label: "Average Order Value",
-    value: "AED 290",
+    label: "Avg. Response Time",
+    value: "2.4 hrs",
     change: "+4.1%",
     trend: "up",
     icon: Target,
@@ -47,45 +47,45 @@ const SALES_METRICS = [
   },
 ];
 
-const SALES_BY_CATEGORY = [
-  { category: "Oud", sales: 18500, percentage: 41, orders: 62 },
-  { category: "Perfumes", sales: 12300, percentage: 27, orders: 48 },
-  { category: "Bakhoor", sales: 8200, percentage: 18, orders: 31 },
-  { category: "Gift Sets", sales: 6230, percentage: 14, orders: 15 },
+const INQUIRIES_BY_CATEGORY = [
+  { category: "Oud", inquiries: 185, percentage: 41, conversations: 62 },
+  { category: "Perfumes", inquiries: 123, percentage: 27, conversations: 48 },
+  { category: "Bakhoor", inquiries: 82, percentage: 18, conversations: 31 },
+  { category: "Gift Sets", inquiries: 62, percentage: 14, conversations: 15 },
 ];
 
 const TOP_PRODUCTS = [
-  { name: "Premium Oud Collection Set", sales: 8500, orders: 28, trend: "up" },
-  { name: "Arabian Nights Perfume 100ml", sales: 6400, orders: 35, trend: "up" },
-  { name: "Traditional Bakhoor Set", sales: 4200, orders: 24, trend: "down" },
-  { name: "Luxury Oud Chips 50g", sales: 3800, orders: 19, trend: "up" },
-  { name: "Gift Sampler Collection", sales: 2900, orders: 12, trend: "down" },
+  { name: "Premium Oud Collection Set", inquiries: 85, conversations: 28, trend: "up" },
+  { name: "Arabian Nights Perfume 100ml", inquiries: 64, conversations: 35, trend: "up" },
+  { name: "Traditional Bakhoor Set", inquiries: 42, conversations: 24, trend: "down" },
+  { name: "Luxury Oud Chips 50g", inquiries: 38, conversations: 19, trend: "up" },
+  { name: "Gift Sampler Collection", inquiries: 29, conversations: 12, trend: "down" },
 ];
 
-const SALES_TIMELINE = [
-  { date: "Mar 1", sales: 1250 },
-  { date: "Mar 5", sales: 1890 },
-  { date: "Mar 10", sales: 2340 },
-  { date: "Mar 15", sales: 1980 },
-  { date: "Mar 20", sales: 2650 },
-  { date: "Mar 25", sales: 3120 },
-  { date: "Mar 30", sales: 2890 },
+const INQUIRY_TIMELINE = [
+  { date: "Mar 1", inquiries: 125 },
+  { date: "Mar 5", inquiries: 189 },
+  { date: "Mar 10", inquiries: 234 },
+  { date: "Mar 15", inquiries: 198 },
+  { date: "Mar 20", inquiries: 265 },
+  { date: "Mar 25", inquiries: 312 },
+  { date: "Mar 30", inquiries: 289 },
 ];
 
 const TIME_FILTERS = ["Today", "This Week", "This Month", "This Year", "Custom"];
 
 export default function SalesAnalyticsPage() {
   const [selectedPeriod, setSelectedPeriod] = React.useState("This Month");
-  const maxSales = Math.max(...SALES_TIMELINE.map((d) => d.sales));
+  const maxInquiries = Math.max(...INQUIRY_TIMELINE.map((d) => d.inquiries));
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Sales Analytics</h1>
+          <h1 className="text-2xl font-bold">Inquiry Analytics</h1>
           <p className="text-muted-foreground">
-            Track your sales performance and revenue
+            Track your inquiry performance and engagement
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -161,21 +161,21 @@ export default function SalesAnalyticsPage() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-moulna-gold" />
-              <h2 className="font-semibold">Sales Overview</h2>
+              <h2 className="font-semibold">Inquiry Overview</h2>
             </div>
             <Badge variant="secondary">Daily</Badge>
           </div>
 
           {/* Simple Bar Chart */}
           <div className="flex items-end justify-between gap-2 h-48">
-            {SALES_TIMELINE.map((data, index) => (
+            {INQUIRY_TIMELINE.map((data, index) => (
               <div key={data.date} className="flex-1 flex flex-col items-center gap-2">
                 <motion.div
                   className="w-full bg-moulna-gold/80 rounded-t hover:bg-moulna-gold transition-colors cursor-pointer"
                   initial={{ height: 0 }}
-                  animate={{ height: `${(data.sales / maxSales) * 100}%` }}
+                  animate={{ height: `${(data.inquiries / maxInquiries) * 100}%` }}
                   transition={{ delay: index * 0.1, duration: 0.5 }}
-                  title={`AED ${data.sales.toLocaleString()}`}
+                  title={`${data.inquiries.toLocaleString()} inquiries`}
                 />
                 <span className="text-xs text-muted-foreground">{data.date.split(" ")[1]}</span>
               </div>
@@ -187,10 +187,10 @@ export default function SalesAnalyticsPage() {
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-6">
             <PieChart className="w-5 h-5 text-moulna-gold" />
-            <h2 className="font-semibold">Sales by Category</h2>
+            <h2 className="font-semibold">Inquiries by Category</h2>
           </div>
           <div className="space-y-4">
-            {SALES_BY_CATEGORY.map((cat, index) => (
+            {INQUIRIES_BY_CATEGORY.map((cat, index) => (
               <motion.div
                 key={cat.category}
                 initial={{ opacity: 0, x: -20 }}
@@ -200,7 +200,7 @@ export default function SalesAnalyticsPage() {
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium">{cat.category}</span>
                   <span className="text-sm text-muted-foreground">
-                    AED {cat.sales.toLocaleString()}
+                    {cat.inquiries.toLocaleString()} inquiries
                   </span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -212,7 +212,7 @@ export default function SalesAnalyticsPage() {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {cat.orders} orders ({cat.percentage}%)
+                  {cat.conversations} conversations ({cat.percentage}%)
                 </p>
               </motion.div>
             ))}
@@ -225,7 +225,7 @@ export default function SalesAnalyticsPage() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <Package className="w-5 h-5 text-moulna-gold" />
-            <h2 className="font-semibold">Top Selling Products</h2>
+            <h2 className="font-semibold">Top Performing Listings</h2>
           </div>
           <Button variant="ghost" size="sm">
             View All
@@ -240,10 +240,10 @@ export default function SalesAnalyticsPage() {
                   Product
                 </th>
                 <th className="text-end py-3 text-sm font-medium text-muted-foreground">
-                  Revenue
+                  Inquiries
                 </th>
                 <th className="text-end py-3 text-sm font-medium text-muted-foreground">
-                  Orders
+                  Conversations
                 </th>
                 <th className="text-end py-3 text-sm font-medium text-muted-foreground">
                   Trend
@@ -268,10 +268,10 @@ export default function SalesAnalyticsPage() {
                     </div>
                   </td>
                   <td className="text-end py-4 font-medium">
-                    AED {product.sales.toLocaleString()}
+                    {product.inquiries}
                   </td>
                   <td className="text-end py-4 text-muted-foreground">
-                    {product.orders}
+                    {product.conversations}
                   </td>
                   <td className="text-end py-4">
                     {product.trend === "up" ? (
@@ -300,15 +300,15 @@ export default function SalesAnalyticsPage() {
             <Zap className="w-6 h-6 text-moulna-gold" />
           </div>
           <div>
-            <h3 className="font-semibold mb-2">Sales Insights</h3>
+            <h3 className="font-semibold mb-2">Inquiry Insights</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
                 <TrendingUp className="w-4 h-4 text-green-600 mt-0.5" />
-                <span>Your sales are up 12.5% compared to last month. Great job!</span>
+                <span>Your inquiries are up 12.5% compared to last month. Great job!</span>
               </li>
               <li className="flex items-start gap-2">
                 <Target className="w-4 h-4 text-blue-600 mt-0.5" />
-                <span>Premium Oud Collection is your best performer with 28 orders.</span>
+                <span>Premium Oud Collection is your best performer with 28 conversations.</span>
               </li>
               <li className="flex items-start gap-2">
                 <ArrowDownRight className="w-4 h-4 text-orange-600 mt-0.5" />

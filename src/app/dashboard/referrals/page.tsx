@@ -121,7 +121,7 @@ export default function ReferralsPage() {
                 Give AED 30, Get 100 XP!
               </h2>
               <p className="text-muted-foreground mb-4">
-                Share your referral link with friends. When they make their first purchase,
+                Share your referral link with friends. When they complete their first deal,
                 they get AED 30 off and you earn 100 XP!
               </p>
 

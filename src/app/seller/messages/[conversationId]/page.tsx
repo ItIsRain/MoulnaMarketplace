@@ -25,10 +25,10 @@ const CONVERSATION = {
     isOnline: true,
     lastSeen: "Online",
   },
-  relatedOrder: {
+  relatedInquiry: {
     id: "MN-2024-8923",
-    product: "Premium Oud Collection Set",
-    status: "delivered",
+    listing: "Premium Oud Collection Set",
+    status: "replied",
   },
 };
 
@@ -36,7 +36,7 @@ const MESSAGES = [
   {
     id: "1",
     sender: "customer",
-    content: "Assalamu alaikum! I received my order yesterday and the oud set is absolutely amazing! 🙏",
+    content: "Assalamu alaikum! I picked up the oud set yesterday and it's absolutely amazing! 🙏",
     time: "10:30 AM",
     status: "read",
   },
@@ -132,22 +132,22 @@ export default function SellerConversationPage() {
         </div>
       </div>
 
-      {/* Related Order */}
-      {CONVERSATION.relatedOrder && (
+      {/* Related Inquiry */}
+      {CONVERSATION.relatedInquiry && (
         <div className="py-3 border-b">
           <Link
-            href={`/seller/orders/${CONVERSATION.relatedOrder.id}`}
+            href={`/seller/orders/${CONVERSATION.relatedInquiry.id}`}
             className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
           >
             <Package className="w-5 h-5 text-muted-foreground" />
             <div className="flex-1">
-              <p className="text-sm font-medium">{CONVERSATION.relatedOrder.product}</p>
+              <p className="text-sm font-medium">{CONVERSATION.relatedInquiry.listing}</p>
               <p className="text-xs text-muted-foreground">
-                Order {CONVERSATION.relatedOrder.id}
+                Inquiry {CONVERSATION.relatedInquiry.id}
               </p>
             </div>
             <Badge variant="secondary" className="capitalize">
-              {CONVERSATION.relatedOrder.status}
+              {CONVERSATION.relatedInquiry.status}
             </Badge>
           </Link>
         </div>

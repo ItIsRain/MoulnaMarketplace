@@ -68,7 +68,7 @@ const REVIEWS = [
     date: "2 weeks ago",
     product: "Traditional Bakhoor Set",
     title: "Great quality, minor packaging issue",
-    content: "The bakhoor itself is excellent quality and smells amazing. Only giving 4 stars because one of the containers was slightly damaged during shipping, but the seller quickly offered a replacement.",
+    content: "The bakhoor itself is excellent quality and smells amazing. Only giving 4 stars because one of the containers was slightly damaged, but the seller quickly offered a replacement.",
     helpful: 12,
     hasPhotos: true,
     verified: true,
@@ -265,14 +265,14 @@ export default function ShopReviewsPage() {
                       {review.verified && (
                         <Badge variant="secondary" className="text-xs">
                           <CheckCircle className="w-3 h-3 me-1" />
-                          Verified Purchase
+                          Verified Buyer
                         </Badge>
                       )}
                     </div>
 
                     {/* Product */}
                     <p className="text-sm text-muted-foreground mb-2">
-                      Purchased: <span className="text-foreground">{review.product}</span>
+                      Item: <span className="text-foreground">{review.product}</span>
                     </p>
 
                     {/* Content */}

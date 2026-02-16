@@ -95,8 +95,8 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium text-sm">Order Updates</p>
-                <p className="text-xs text-muted-foreground">Get notified about your order status</p>
+                <p className="font-medium text-sm">Inquiry Updates</p>
+                <p className="text-xs text-muted-foreground">Get notified about your inquiry status</p>
               </div>
               <button
                 onClick={() => toggleNotification("orderUpdates")}

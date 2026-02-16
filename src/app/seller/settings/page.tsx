@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
   Settings, Store, User, Bell, Shield, CreditCard,
-  Truck, MapPin, Mail, Phone, Globe, Instagram,
+  Package, MapPin, Mail, Phone, Globe, Instagram,
   Camera, Save, ExternalLink
 } from "lucide-react";
 
@@ -20,7 +20,7 @@ const TABS = [
   { id: "account", label: "Account", icon: User },
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "payments", label: "Payments", icon: CreditCard },
-  { id: "shipping", label: "Shipping", icon: Truck },
+  { id: "shipping", label: "Listing Preferences", icon: Package },
   { id: "security", label: "Security", icon: Shield },
 ];
 
@@ -248,11 +248,11 @@ export default function SellerSettingsPage() {
               className="space-y-6"
             >
               <Card className="p-6">
-                <h2 className="font-semibold mb-6">Order Notifications</h2>
+                <h2 className="font-semibold mb-6">Inquiry Notifications</h2>
                 <div className="space-y-4">
                   {[
-                    { id: "new_order", label: "New order received", description: "Get notified when a customer places an order", enabled: true },
-                    { id: "order_cancelled", label: "Order cancelled", description: "Get notified when a customer cancels an order", enabled: true },
+                    { id: "new_inquiry", label: "New inquiry received", description: "Get notified when a buyer sends an inquiry", enabled: true },
+                    { id: "inquiry_archived", label: "Inquiry archived", description: "Get notified when an inquiry is archived", enabled: true },
                     { id: "review_received", label: "New review received", description: "Get notified when a customer leaves a review", enabled: true },
                   ].map((setting) => (
                     <div key={setting.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
@@ -343,7 +343,7 @@ export default function SellerSettingsPage() {
             </motion.div>
           )}
 
-          {/* Shipping */}
+          {/* Listing Preferences */}
           {activeTab === "shipping" && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -351,30 +351,30 @@ export default function SellerSettingsPage() {
               className="space-y-6"
             >
               <Card className="p-6">
-                <h2 className="font-semibold mb-6">Shipping Profiles</h2>
+                <h2 className="font-semibold mb-6">Listing Defaults</h2>
                 <div className="space-y-4">
                   <div className="p-4 rounded-lg border">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium">Standard UAE Shipping</h3>
-                      <Badge>Default</Badge>
+                      <h3 className="font-medium">Default Listing Settings</h3>
+                      <Badge>Active</Badge>
                     </div>
                     <div className="text-sm text-muted-foreground space-y-1">
-                      <p>Dubai: Free shipping</p>
-                      <p>Other Emirates: AED 15</p>
-                      <p>Processing time: 1-2 business days</p>
+                      <p>Duration: 30 days</p>
+                      <p>Auto-renew: Enabled</p>
+                      <p>Accept offers: Yes</p>
                     </div>
                     <Button variant="outline" size="sm" className="mt-3">
-                      Edit Profile
+                      Edit Settings
                     </Button>
                   </div>
                   <Button variant="outline" className="w-full">
-                    Add Shipping Profile
+                    Add Meetup Location
                   </Button>
                 </div>
               </Card>
 
               <Card className="p-6">
-                <h2 className="font-semibold mb-6">Return Address</h2>
+                <h2 className="font-semibold mb-6">Primary Meetup Location</h2>
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium mb-1.5 block">Address Line 1</label>

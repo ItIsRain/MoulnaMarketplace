@@ -4,19 +4,20 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import {
   Eye, EyeOff, Mail, Lock, User, Phone,
   Sparkles, ArrowRight, ArrowLeft, Loader2, Check,
-  RefreshCw
+  RefreshCw, ShoppingBag, Store, ShieldCheck
 } from "lucide-react";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
+import { useAuthStore } from "@/store/useAuthStore";
+import type { UserRole } from "@/lib/types";
 
 const AVATAR_STYLES = [
   "adventurer",
@@ -25,16 +26,20 @@ const AVATAR_STYLES = [
   "thumbs",
 ] as const;
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3 | 4;
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { register } = useAuthStore();
   const [step, setStep] = React.useState<Step>(1);
   const [isLoading, setIsLoading] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
+  const [error, setError] = React.useState("");
 
   // Form state
   const [formData, setFormData] = React.useState({
+    role: "" as UserRole | "",
     name: "",
     email: "",
     phone: "",
@@ -44,13 +49,15 @@ export default function RegisterPage() {
     avatarSeed: "",
   });
 
-  // Initialize avatar seed with random value
+  // Initialize avatar seed + pre-select role from URL param
   React.useEffect(() => {
+    const typeParam = searchParams.get("type");
     setFormData(prev => ({
       ...prev,
       avatarSeed: Math.random().toString(36).substring(2, 10),
+      ...(typeParam === "seller" || typeParam === "buyer" ? { role: typeParam as UserRole } : {}),
     }));
-  }, []);
+  }, [searchParams]);
 
   const updateField = (field: keyof typeof formData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -65,33 +72,49 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
-    if (step < 3) {
+    if (step < 4) {
       setStep((step + 1) as Step);
       return;
     }
 
     setIsLoading(true);
-    // Simulate registration
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    router.push("/dashboard?welcome=true");
+    try {
+      await register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role as UserRole,
+        phone: formData.phone,
+        username: formData.email.split("@")[0],
+        avatarStyle: formData.avatarStyle,
+        avatarSeed: formData.avatarSeed,
+      });
+      router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const canProceed = () => {
     switch (step) {
       case 1:
-        return formData.name && formData.email && formData.phone;
+        return formData.role !== "";
       case 2:
-        return formData.password && formData.password === formData.confirmPassword && formData.password.length >= 8;
+        return formData.name && formData.email && formData.phone;
       case 3:
+        return formData.password && formData.password === formData.confirmPassword && formData.password.length >= 8;
+      case 4:
         return true;
       default:
         return false;
     }
   };
 
-  const progress = (step / 3) * 100;
+  const progress = (step / 4) * 100;
 
   return (
     <div className="min-h-screen flex">
@@ -112,7 +135,7 @@ export default function RegisterPage() {
           {/* Progress */}
           <div className="mb-8">
             <div className="flex items-center justify-between text-sm mb-2">
-              <span className="text-muted-foreground">Step {step} of 3</span>
+              <span className="text-muted-foreground">Step {step} of 4</span>
               <span className="text-moulna-gold font-medium">+100 XP on signup</span>
             </div>
             <Progress value={progress} className="h-2" indicatorClassName="bg-moulna-gold" />
@@ -127,15 +150,103 @@ export default function RegisterPage() {
               transition={{ duration: 0.3 }}
             >
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Step 1: Basic Info */}
+                {error && (
+                  <div className="p-3 rounded-lg bg-red-600 text-white text-sm font-medium">
+                    {error}
+                  </div>
+                )}
+
+                {/* Step 1: Role Selection */}
                 {step === 1 && (
+                  <>
+                    <div>
+                      <h1 className="font-display text-3xl font-bold text-foreground mb-2">
+                        Join the Moulna marketplace
+                      </h1>
+                      <p className="text-muted-foreground">
+                        How do you want to use Moulna?
+                      </p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <button
+                        type="button"
+                        onClick={() => updateField("role", "buyer")}
+                        className={cn(
+                          "w-full p-6 rounded-xl border-2 text-left transition-all",
+                          formData.role === "buyer"
+                            ? "border-moulna-gold bg-moulna-gold/5"
+                            : "border-muted hover:border-moulna-gold/50"
+                        )}
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className={cn(
+                            "p-3 rounded-lg",
+                            formData.role === "buyer" ? "bg-moulna-gold/20 text-moulna-gold" : "bg-muted text-muted-foreground"
+                          )}>
+                            <ShoppingBag className="w-6 h-6" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-lg">Buyer</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Browse unique items from UAE artisans and local sellers
+                            </p>
+                          </div>
+                          {formData.role === "buyer" && (
+                            <div className="w-6 h-6 rounded-full bg-moulna-gold flex items-center justify-center">
+                              <Check className="w-4 h-4 text-white" />
+                            </div>
+                          )}
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => updateField("role", "seller")}
+                        className={cn(
+                          "w-full p-6 rounded-xl border-2 text-left transition-all",
+                          formData.role === "seller"
+                            ? "border-moulna-gold bg-moulna-gold/5"
+                            : "border-muted hover:border-moulna-gold/50"
+                        )}
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className={cn(
+                            "p-3 rounded-lg",
+                            formData.role === "seller" ? "bg-moulna-gold/20 text-moulna-gold" : "bg-muted text-muted-foreground"
+                          )}>
+                            <Store className="w-6 h-6" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-lg">Seller</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              List your items and connect with buyers across the UAE
+                            </p>
+                            <div className="flex items-center gap-1.5 mt-2 text-xs text-moulna-gold">
+                              <ShieldCheck className="w-3.5 h-3.5" />
+                              <span>ID verification required</span>
+                            </div>
+                          </div>
+                          {formData.role === "seller" && (
+                            <div className="w-6 h-6 rounded-full bg-moulna-gold flex items-center justify-center">
+                              <Check className="w-4 h-4 text-white" />
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {/* Step 2: Basic Info */}
+                {step === 2 && (
                   <>
                     <div>
                       <h1 className="font-display text-3xl font-bold text-foreground mb-2">
                         Create your account
                       </h1>
                       <p className="text-muted-foreground">
-                        Join thousands of shoppers and sellers on Moulna
+                        Tell us a bit about yourself
                       </p>
                     </div>
 
@@ -188,8 +299,8 @@ export default function RegisterPage() {
                   </>
                 )}
 
-                {/* Step 2: Password */}
-                {step === 2 && (
+                {/* Step 3: Password */}
+                {step === 3 && (
                   <>
                     <div>
                       <h1 className="font-display text-3xl font-bold text-foreground mb-2">
@@ -274,8 +385,8 @@ export default function RegisterPage() {
                   </>
                 )}
 
-                {/* Step 3: Avatar */}
-                {step === 3 && (
+                {/* Step 4: Avatar */}
+                {step === 4 && (
                   <>
                     <div>
                       <h1 className="font-display text-3xl font-bold text-foreground mb-2">
@@ -376,7 +487,7 @@ export default function RegisterPage() {
                   >
                     {isLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : step === 3 ? (
+                    ) : step === 4 ? (
                       <>
                         Create Account
                         <Sparkles className="w-4 h-4 ms-2" />
@@ -389,35 +500,6 @@ export default function RegisterPage() {
                     )}
                   </Button>
                 </div>
-
-                {step === 1 && (
-                  <>
-                    <div className="relative">
-                      <Separator />
-                      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-4 text-xs text-muted-foreground">
-                        or continue with
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <Button variant="outline" size="lg" type="button" className="w-full">
-                        <svg className="w-5 h-5 me-2" viewBox="0 0 24 24">
-                          <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                          <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                          <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                          <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                        </svg>
-                        Google
-                      </Button>
-                      <Button variant="outline" size="lg" type="button" className="w-full">
-                        <svg className="w-5 h-5 me-2" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z" />
-                        </svg>
-                        Facebook
-                      </Button>
-                    </div>
-                  </>
-                )}
 
                 <p className="text-center text-sm text-muted-foreground">
                   Already have an account?{" "}
@@ -448,7 +530,7 @@ export default function RegisterPage() {
 
             <div className="space-y-4">
               {[
-                { icon: "🎮", title: "Gamified Shopping", desc: "Earn XP, badges, and rewards for every action" },
+                { icon: "🎮", title: "Gamified Experience", desc: "Earn XP, badges, and rewards for every action" },
                 { icon: "🎨", title: "Support Local Artisans", desc: "Discover unique handmade products from UAE creators" },
                 { icon: "⚡", title: "Level Up", desc: "Unlock exclusive perks, discounts, and avatar styles" },
               ].map((item, i) => (

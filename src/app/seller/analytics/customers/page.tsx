@@ -10,7 +10,7 @@ import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
   Users, UserPlus, UserCheck, Heart, TrendingUp, TrendingDown,
   MapPin, Calendar, ArrowUpRight, ArrowDownRight, Star,
-  ShoppingBag, Repeat, Eye, Download
+  MessageSquare, Repeat, Eye, Download
 } from "lucide-react";
 
 const CUSTOMER_METRICS = [
@@ -52,41 +52,36 @@ const TOP_CUSTOMERS = [
   {
     name: "Sarah Ahmed",
     avatar: "sarah-ahmed",
-    orders: 12,
-    totalSpent: 4500,
-    lastOrder: "2 days ago",
+    inquiries: 12,
+    lastContact: "2 days ago",
     isVIP: true,
   },
   {
     name: "Mohammed Ali",
     avatar: "mohammed-ali",
-    orders: 8,
-    totalSpent: 3200,
-    lastOrder: "1 week ago",
+    inquiries: 8,
+    lastContact: "1 week ago",
     isVIP: true,
   },
   {
     name: "Fatima Hassan",
     avatar: "fatima-hassan",
-    orders: 6,
-    totalSpent: 2800,
-    lastOrder: "3 days ago",
+    inquiries: 6,
+    lastContact: "3 days ago",
     isVIP: false,
   },
   {
     name: "Ahmed Khalid",
     avatar: "ahmed-khalid",
-    orders: 5,
-    totalSpent: 1900,
-    lastOrder: "5 days ago",
+    inquiries: 5,
+    lastContact: "5 days ago",
     isVIP: false,
   },
   {
     name: "Layla Omar",
     avatar: "layla-omar",
-    orders: 4,
-    totalSpent: 1650,
-    lastOrder: "1 week ago",
+    inquiries: 4,
+    lastContact: "1 week ago",
     isVIP: false,
   },
 ];
@@ -206,13 +201,13 @@ export default function CustomerAnalyticsPage() {
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {customer.orders} orders · Last: {customer.lastOrder}
+                      {customer.inquiries} inquiries · Last: {customer.lastContact}
                     </p>
                   </div>
                 </div>
                 <div className="text-end">
-                  <p className="font-bold">AED {customer.totalSpent.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">Total spent</p>
+                  <p className="font-bold">{customer.inquiries} conversations</p>
+                  <p className="text-xs text-muted-foreground">Total inquiries</p>
                 </div>
               </motion.div>
             ))}
@@ -292,16 +287,16 @@ export default function CustomerAnalyticsPage() {
       {/* Customer Journey */}
       <Card className="p-6">
         <div className="flex items-center gap-2 mb-6">
-          <ShoppingBag className="w-5 h-5 text-moulna-gold" />
+          <Eye className="w-5 h-5 text-moulna-gold" />
           <h2 className="font-semibold">Customer Journey</h2>
         </div>
 
         <div className="flex items-center justify-between">
           {[
             { stage: "Visitors", count: 5420, icon: Eye },
-            { stage: "Add to Cart", count: 890, icon: ShoppingBag },
-            { stage: "Checkout", count: 456, icon: UserCheck },
-            { stage: "Purchase", count: 312, icon: ShoppingBag },
+            { stage: "Viewed Listing", count: 2340, icon: Eye },
+            { stage: "Contacted", count: 890, icon: MessageSquare },
+            { stage: "Conversation", count: 456, icon: UserCheck },
             { stage: "Repeat", count: 89, icon: Repeat },
           ].map((stage, index) => (
             <React.Fragment key={stage.stage}>

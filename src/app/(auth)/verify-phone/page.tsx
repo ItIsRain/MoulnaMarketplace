@@ -191,7 +191,7 @@ export default function VerifyPhonePage() {
                 <p className="text-sm font-medium">Why verify?</p>
                 <p className="text-xs text-muted-foreground">
                   Phone verification helps secure your account and enables
-                  features like order notifications and two-factor authentication.
+                  features like inquiry notifications and two-factor authentication.
                 </p>
               </div>
             </div>

@@ -10,8 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
-  ArrowLeft, Tag, Percent, Gift, Calendar, Package, Users,
-  Zap, Info, CheckCircle
+  ArrowLeft, Tag, Percent, Gift, Calendar, Users,
+  Zap, Info, CheckCircle, Sparkles
 } from "lucide-react";
 
 const PROMOTION_TYPES = [
@@ -27,21 +27,21 @@ const PROMOTION_TYPES = [
     name: "Fixed Amount Off",
     description: "Offer a fixed amount discount",
     icon: Tag,
-    example: "e.g., AED 50 off orders over AED 200",
+    example: "e.g., AED 50 off listings over AED 200",
   },
   {
     id: "bogo",
     name: "Buy One Get One",
-    description: "Offer free or discounted items on purchase",
+    description: "Offer free or discounted items with a deal",
     icon: Gift,
     example: "e.g., Buy 2 get 1 free",
   },
   {
-    id: "free-shipping",
-    name: "Free Shipping",
-    description: "Waive shipping fees for qualifying orders",
-    icon: Package,
-    example: "e.g., Free shipping on orders over AED 100",
+    id: "featured-boost",
+    name: "Featured Boost",
+    description: "Boost your listing to the top of search results",
+    icon: Sparkles,
+    example: "e.g., Boost listing for 7 days",
   },
 ];
 
@@ -178,7 +178,7 @@ export default function NewPromotionPage() {
 
               <div>
                 <label className="text-sm font-medium mb-1 block">
-                  Minimum Order Value (Optional)
+                  Minimum Deal Value (Optional)
                 </label>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">AED</span>
@@ -323,7 +323,7 @@ export default function NewPromotionPage() {
                 <h3 className="font-semibold text-blue-900 mb-2">Tips</h3>
                 <ul className="text-sm text-blue-800 space-y-2">
                   <li>• Use clear, memorable promotion codes</li>
-                  <li>• Set reasonable minimum order values</li>
+                  <li>• Set reasonable minimum deal values</li>
                   <li>• Time promotions with holidays or events</li>
                   <li>• Promote your deals on social media</li>
                 </ul>

@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Zap, Clock, Flame, Percent, Timer, Heart, ShoppingCart,
+  Zap, Clock, Flame, Percent, Timer, Heart, MessageCircle,
   Star, TrendingUp, Bell, Gift, ArrowRight
 } from "lucide-react";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
@@ -21,8 +21,8 @@ const FLASH_DEALS = [
     originalPrice: 399,
     image: "/products/oud.jpg",
     shop: "Arabian Scents",
-    soldCount: 45,
-    totalStock: 50,
+    inquiries: 45,
+    viewCount: 230,
     endsIn: 3600 * 2, // 2 hours
   },
   {
@@ -32,8 +32,8 @@ const FLASH_DEALS = [
     originalPrice: 149,
     image: "/products/prayer-mat.jpg",
     shop: "Heritage Weaves",
-    soldCount: 78,
-    totalStock: 100,
+    inquiries: 78,
+    viewCount: 450,
     endsIn: 3600 * 4, // 4 hours
   },
   {
@@ -43,8 +43,8 @@ const FLASH_DEALS = [
     originalPrice: 220,
     image: "/products/coffee-set.jpg",
     shop: "Desert Crafts",
-    soldCount: 32,
-    totalStock: 40,
+    inquiries: 32,
+    viewCount: 180,
     endsIn: 3600 * 6, // 6 hours
   },
 ];
@@ -223,7 +223,7 @@ export default function DealsPage() {
 
           <div className="grid md:grid-cols-3 gap-6">
             {FLASH_DEALS.map((deal, index) => {
-              const percentSold = (deal.soldCount / deal.totalStock) * 100;
+              const popularity = Math.min((deal.inquiries / 100) * 100, 100);
               return (
                 <motion.div
                   key={deal.id}
@@ -251,27 +251,29 @@ export default function DealsPage() {
                         <span className="text-2xl font-bold text-red-600">AED {deal.price}</span>
                         <span className="text-muted-foreground line-through">AED {deal.originalPrice}</span>
                       </div>
-                      {/* Stock Progress */}
+                      {/* Popularity */}
                       <div className="mb-3">
                         <div className="flex justify-between text-xs mb-1">
                           <span className="text-muted-foreground">
-                            {deal.soldCount} sold
+                            {deal.inquiries} inquiries
                           </span>
                           <span className="font-medium text-red-600">
-                            Only {deal.totalStock - deal.soldCount} left!
+                            High demand!
                           </span>
                         </div>
                         <div className="h-2 bg-red-100 rounded-full overflow-hidden">
                           <motion.div
                             initial={{ width: 0 }}
-                            animate={{ width: `${percentSold}%` }}
+                            animate={{ width: `${popularity}%` }}
                             className="h-full bg-red-600 rounded-full"
                           />
                         </div>
                       </div>
-                      <Button className="w-full bg-red-600 hover:bg-red-700">
-                        <ShoppingCart className="w-4 h-4 me-2" />
-                        Grab This Deal
+                      <Button className="w-full bg-red-600 hover:bg-red-700" asChild>
+                        <Link href={`/products/${deal.id}`}>
+                          <MessageCircle className="w-4 h-4 me-2" />
+                          Contact Seller
+                        </Link>
                       </Button>
                     </div>
                   </Card>
@@ -358,8 +360,11 @@ export default function DealsPage() {
                           AED {deal.originalPrice}
                         </span>
                       </div>
-                      <Button size="sm" className="bg-moulna-gold hover:bg-moulna-gold-dark">
-                        Add to Cart
+                      <Button size="sm" className="bg-moulna-gold hover:bg-moulna-gold-dark" asChild>
+                        <Link href={`/products/${deal.id}`}>
+                          <MessageCircle className="w-4 h-4 me-1" />
+                          Contact Seller
+                        </Link>
                       </Button>
                     </div>
                   </div>

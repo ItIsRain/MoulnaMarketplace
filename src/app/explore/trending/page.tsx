@@ -369,12 +369,12 @@ export default function TrendingPage() {
                   <h3 className="font-semibold">Bonus XP Alert!</h3>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Purchase any trending product today and earn
+                  Inquire about any trending listing today and earn
                   <span className="font-bold text-moulna-gold"> 2x XP bonus</span>!
                 </p>
                 <Button variant="gold" className="w-full" asChild>
                   <Link href="/explore">
-                    Shop Now
+                    Browse Now
                   </Link>
                 </Button>
               </Card>

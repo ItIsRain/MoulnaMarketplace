@@ -11,148 +11,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import type { Product } from "@/lib/types";
 import {
-  Search, SlidersHorizontal, Grid3X3, List, ChevronDown,
-  Star, Heart, ShoppingCart, Sparkles, MapPin, Filter, X
+  Search, Grid3X3, List, ChevronDown,
+  Heart, MessageCircle, Sparkles, MapPin, Filter, Loader2
 } from "lucide-react";
 
-// Mock products data
-const PRODUCTS = [
-  {
-    id: "prd_1",
-    title: "Handcrafted Arabian Oud Perfume",
-    slug: "handcrafted-arabian-oud-perfume",
-    image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400",
-    priceFils: 45000,
-    compareAtPriceFils: 55000,
-    rating: 4.8,
-    reviewCount: 124,
-    seller: { name: "Scent of Arabia", level: 6 },
-    category: "Perfumes & Oud",
-    isHandmade: true,
-    isTrending: true,
-    isNew: false,
-    xpReward: 45,
-  },
-  {
-    id: "prd_2",
-    title: "Traditional Arabic Calligraphy Art",
-    slug: "traditional-arabic-calligraphy-art",
-    image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400",
-    priceFils: 89000,
-    rating: 5.0,
-    reviewCount: 56,
-    seller: { name: "Khalid Arts", level: 8 },
-    category: "Arabic Calligraphy",
-    isHandmade: true,
-    isTrending: false,
-    isNew: true,
-    xpReward: 89,
-  },
-  {
-    id: "prd_3",
-    title: "Gold-Plated Pearl Earrings",
-    slug: "gold-plated-pearl-earrings",
-    image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400",
-    priceFils: 32000,
-    rating: 4.9,
-    reviewCount: 89,
-    seller: { name: "Gulf Gems", level: 5 },
-    category: "Handmade Jewelry",
-    isHandmade: true,
-    isTrending: true,
-    isNew: false,
-    xpReward: 32,
-  },
-  {
-    id: "prd_4",
-    title: "Moroccan Ceramic Vase Set",
-    slug: "moroccan-ceramic-vase-set",
-    image: "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=400",
-    priceFils: 67500,
-    compareAtPriceFils: 85000,
-    rating: 4.7,
-    reviewCount: 42,
-    seller: { name: "Desert Home", level: 4 },
-    category: "Home Décor",
-    isHandmade: true,
-    isTrending: false,
-    isNew: false,
-    xpReward: 67,
-  },
-  {
-    id: "prd_5",
-    title: "Embroidered Abaya with Gold Thread",
-    slug: "embroidered-abaya-gold-thread",
-    image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=400",
-    priceFils: 125000,
-    rating: 4.9,
-    reviewCount: 78,
-    seller: { name: "Elegance UAE", level: 7 },
-    category: "Fashion & Clothing",
-    isHandmade: true,
-    isTrending: true,
-    isNew: true,
-    xpReward: 125,
-  },
-  {
-    id: "prd_6",
-    title: "Organic Date Honey Gift Box",
-    slug: "organic-date-honey-gift-box",
-    image: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400",
-    priceFils: 28000,
-    rating: 4.8,
-    reviewCount: 156,
-    seller: { name: "Al Ain Farms", level: 6 },
-    category: "Food & Sweets",
-    isHandmade: false,
-    isTrending: true,
-    isNew: false,
-    xpReward: 28,
-  },
-  {
-    id: "prd_7",
-    title: "Handpainted Desert Landscape",
-    slug: "handpainted-desert-landscape",
-    image: "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400",
-    priceFils: 175000,
-    rating: 5.0,
-    reviewCount: 23,
-    seller: { name: "Emirates Art Studio", level: 8 },
-    category: "Art & Prints",
-    isHandmade: true,
-    isTrending: false,
-    isNew: true,
-    xpReward: 175,
-  },
-  {
-    id: "prd_8",
-    title: "Wooden Baby Toys Set",
-    slug: "wooden-baby-toys-set",
-    image: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=400",
-    priceFils: 18500,
-    rating: 4.6,
-    reviewCount: 67,
-    seller: { name: "Little Emirates", level: 3 },
-    category: "Baby & Kids",
-    isHandmade: true,
-    isTrending: false,
-    isNew: false,
-    xpReward: 18,
-  },
-];
-
 const CATEGORIES = [
-  { id: "all", name: "All Products", icon: "🛍️" },
-  { id: "jewelry", name: "Handmade Jewelry", icon: "💍" },
-  { id: "home", name: "Home Décor", icon: "🏠" },
-  { id: "calligraphy", name: "Arabic Calligraphy", icon: "🖋️" },
-  { id: "perfume", name: "Perfumes & Oud", icon: "🌸" },
-  { id: "fashion", name: "Fashion & Clothing", icon: "👗" },
-  { id: "food", name: "Food & Sweets", icon: "🍯" },
-  { id: "art", name: "Art & Prints", icon: "🎨" },
-  { id: "baby", name: "Baby & Kids", icon: "🧸" },
+  { id: "all", name: "All Products", icon: "\ud83d\udecd\ufe0f" },
+  { id: "Handmade Jewelry", name: "Handmade Jewelry", icon: "\ud83d\udc8d" },
+  { id: "Home D\u00e9cor", name: "Home D\u00e9cor", icon: "\ud83c\udfe0" },
+  { id: "Arabic Calligraphy", name: "Arabic Calligraphy", icon: "\ud83d\udd8b\ufe0f" },
+  { id: "Perfumes & Oud", name: "Perfumes & Oud", icon: "\ud83c\udf38" },
+  { id: "Fashion & Clothing", name: "Fashion & Clothing", icon: "\ud83d\udc57" },
+  { id: "Food & Sweets", name: "Food & Sweets", icon: "\ud83c\udf6f" },
+  { id: "Art & Prints", name: "Art & Prints", icon: "\ud83c\udfa8" },
+  { id: "Baby & Kids", name: "Baby & Kids", icon: "\ud83e\uddf8" },
 ];
 
 const EMIRATES = ["All Emirates", "Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Ras Al Khaimah", "Fujairah", "Umm Al Quwain"];
@@ -160,20 +34,63 @@ const EMIRATES = ["All Emirates", "Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Ras
 const SORT_OPTIONS = [
   { value: "trending", label: "Trending" },
   { value: "newest", label: "Newest" },
-  { value: "price_asc", label: "Price: Low to High" },
-  { value: "price_desc", label: "Price: High to Low" },
-  { value: "top_rated", label: "Top Rated" },
-  { value: "most_sold", label: "Best Sellers" },
+  { value: "price_low", label: "Price: Low to High" },
+  { value: "price_high", label: "Price: High to Low" },
 ];
 
 export default function ExplorePage() {
   const [view, setView] = React.useState<"grid" | "list">("grid");
   const [selectedCategory, setSelectedCategory] = React.useState("all");
   const [sortBy, setSortBy] = React.useState("trending");
-  const [showFilters, setShowFilters] = React.useState(false);
-  const [priceRange, setPriceRange] = React.useState<[number, number]>([0, 200000]);
   const [showHandmadeOnly, setShowHandmadeOnly] = React.useState(false);
+  const [showVerifiedOnly, setShowVerifiedOnly] = React.useState(false);
+  const [priceRange, setPriceRange] = React.useState<[number, number]>([0, 0]);
   const [wishlist, setWishlist] = React.useState<string[]>([]);
+  const [products, setProducts] = React.useState<Product[]>([]);
+  const [total, setTotal] = React.useState(0);
+  const [loading, setLoading] = React.useState(true);
+  const [offset, setOffset] = React.useState(0);
+  const [hasMore, setHasMore] = React.useState(false);
+  const limit = 20;
+
+  const fetchProducts = React.useCallback(async (reset = false) => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    params.set("sort", sortBy);
+    params.set("limit", String(limit));
+    params.set("offset", String(reset ? 0 : offset));
+
+    if (selectedCategory !== "all") params.set("category", selectedCategory);
+    if (showHandmadeOnly) params.set("handmade", "true");
+    if (showVerifiedOnly) params.set("verified", "true");
+    if (priceRange[0] > 0) params.set("minPrice", String(priceRange[0]));
+    if (priceRange[1] > 0) params.set("maxPrice", String(priceRange[1]));
+
+    try {
+      const res = await fetch(`/api/products?${params}`);
+      const data = await res.json();
+      if (res.ok) {
+        if (reset) {
+          setProducts(data.products);
+          setOffset(data.products.length);
+        } else {
+          setProducts(prev => [...prev, ...data.products]);
+          setOffset(prev => prev + data.products.length);
+        }
+        setTotal(data.total);
+        setHasMore((reset ? data.products.length : offset + data.products.length) < data.total);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [sortBy, selectedCategory, showHandmadeOnly, showVerifiedOnly, priceRange, offset]);
+
+  // Reset and refetch when filters change
+  React.useEffect(() => {
+    setOffset(0);
+    fetchProducts(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortBy, selectedCategory, showHandmadeOnly, showVerifiedOnly, priceRange]);
 
   const toggleWishlist = (productId: string) => {
     setWishlist(prev =>
@@ -182,12 +99,6 @@ export default function ExplorePage() {
         : [...prev, productId]
     );
   };
-
-  const filteredProducts = PRODUCTS.filter(p => {
-    if (showHandmadeOnly && !p.isHandmade) return false;
-    if (p.priceFils < priceRange[0] || p.priceFils > priceRange[1]) return false;
-    return true;
-  });
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -205,11 +116,14 @@ export default function ExplorePage() {
                 Discover unique products crafted by talented artisans across the UAE
               </p>
               <div className="relative max-w-xl">
-                <Input
-                  placeholder="Search for products, shops, or categories..."
-                  className="h-12 ps-12 bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                />
-                <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
+                <Link href="/explore/search" className="block">
+                  <Input
+                    placeholder="Search for products, shops, or categories..."
+                    className="h-12 ps-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 cursor-pointer"
+                    readOnly
+                  />
+                  <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
+                </Link>
               </div>
             </div>
           </div>
@@ -250,22 +164,24 @@ export default function ExplorePage() {
                       <Input
                         type="number"
                         placeholder="Min"
-                        value={priceRange[0] / 100}
+                        value={priceRange[0] > 0 ? priceRange[0] / 100 : ""}
                         onChange={(e) => setPriceRange([Number(e.target.value) * 100, priceRange[1]])}
                         className="h-9"
                       />
-                      <span className="text-muted-foreground">—</span>
+                      <span className="text-muted-foreground">&mdash;</span>
                       <Input
                         type="number"
                         placeholder="Max"
-                        value={priceRange[1] / 100}
+                        value={priceRange[1] > 0 ? priceRange[1] / 100 : ""}
                         onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value) * 100])}
                         className="h-9"
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {formatAED(priceRange[0])} - {formatAED(priceRange[1])}
-                    </p>
+                    {(priceRange[0] > 0 || priceRange[1] > 0) && (
+                      <p className="text-xs text-muted-foreground">
+                        {priceRange[0] > 0 ? formatAED(priceRange[0]) : "Any"} - {priceRange[1] > 0 ? formatAED(priceRange[1]) : "Any"}
+                      </p>
+                    )}
                   </div>
                 </Card>
 
@@ -299,15 +215,12 @@ export default function ExplorePage() {
                       <span className="text-sm">Handmade Only</span>
                     </label>
                     <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" className="w-4 h-4 rounded border-muted-foreground" />
-                      <span className="text-sm">On Sale</span>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" className="w-4 h-4 rounded border-muted-foreground" />
-                      <span className="text-sm">Free Shipping</span>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" className="w-4 h-4 rounded border-muted-foreground" />
+                      <input
+                        type="checkbox"
+                        checked={showVerifiedOnly}
+                        onChange={(e) => setShowVerifiedOnly(e.target.checked)}
+                        className="w-4 h-4 rounded border-muted-foreground"
+                      />
                       <span className="text-sm">Verified Sellers</span>
                     </label>
                   </div>
@@ -320,7 +233,7 @@ export default function ExplorePage() {
                     <h3 className="font-semibold">Earn XP</h3>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Earn 1 XP for every AED spent. Look for bonus XP products!
+                    Earn XP by browsing, saving items, and engaging with sellers!
                   </p>
                 </Card>
               </div>
@@ -332,14 +245,13 @@ export default function ExplorePage() {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
                   <p className="text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">{filteredProducts.length}</span> products found
+                    <span className="font-medium text-foreground">{total}</span> products found
                   </p>
 
                   {/* Mobile Filter Button */}
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setShowFilters(true)}
                     className="lg:hidden"
                   >
                     <Filter className="w-4 h-4 me-2" />
@@ -388,136 +300,167 @@ export default function ExplorePage() {
                 </div>
               </div>
 
-              {/* Product Grid */}
-              <div className={cn(
-                "grid gap-6",
-                view === "grid"
-                  ? "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
-                  : "grid-cols-1"
-              )}>
-                {filteredProducts.map((product, index) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Card
-                      hover
-                      className={cn(
-                        "overflow-hidden group",
-                        view === "list" && "flex"
-                      )}
-                    >
-                      {/* Image */}
-                      <div className={cn(
-                        "relative overflow-hidden",
-                        view === "grid" ? "aspect-square" : "w-48 flex-shrink-0"
-                      )}>
-                        <Image
-                          src={product.image}
-                          alt={product.title}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
+              {/* Loading State */}
+              {loading && products.length === 0 ? (
+                <div className="py-20 text-center">
+                  <Loader2 className="w-8 h-8 mx-auto animate-spin text-muted-foreground" />
+                </div>
+              ) : products.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <Search className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="font-semibold text-lg mb-2">No products found</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Try adjusting your filters or check back later
+                  </p>
+                </Card>
+              ) : (
+                <>
+                  {/* Product Grid */}
+                  <div className={cn(
+                    "grid gap-6",
+                    view === "grid"
+                      ? "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
+                      : "grid-cols-1"
+                  )}>
+                    {products.map((product, index) => {
+                      const discount = product.compareAtPriceFils
+                        ? getDiscountPercentage(product.priceFils, product.compareAtPriceFils)
+                        : 0;
 
-                        {/* Badges */}
-                        <div className="absolute top-3 start-3 flex flex-col gap-2">
-                          {product.isTrending && (
-                            <Badge variant="trending">Trending</Badge>
-                          )}
-                          {product.isNew && (
-                            <Badge variant="new">New</Badge>
-                          )}
-                          {product.isHandmade && (
-                            <Badge variant="handmade">Handmade</Badge>
-                          )}
-                          {product.compareAtPriceFils && (
-                            <Badge variant="default" className="bg-red-500">
-                              -{getDiscountPercentage(product.priceFils, product.compareAtPriceFils)}%
-                            </Badge>
-                          )}
-                        </div>
-
-                        {/* Wishlist Button */}
-                        <button
-                          onClick={() => toggleWishlist(product.id)}
-                          className="absolute top-3 end-3 w-8 h-8 rounded-full bg-white/90 dark:bg-black/50 flex items-center justify-center shadow-sm hover:scale-110 transition-transform"
+                      return (
+                        <motion.div
+                          key={product.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: Math.min(index, 8) * 0.05 }}
                         >
-                          <Heart
+                          <Card
+                            hover
                             className={cn(
-                              "w-4 h-4",
-                              wishlist.includes(product.id)
-                                ? "fill-red-500 text-red-500"
-                                : "text-muted-foreground"
+                              "overflow-hidden group",
+                              view === "list" && "flex"
                             )}
-                          />
-                        </button>
+                          >
+                            {/* Image */}
+                            <div className={cn(
+                              "relative overflow-hidden",
+                              view === "grid" ? "aspect-square" : "w-48 flex-shrink-0"
+                            )}>
+                              {product.images[0] ? (
+                                <Image
+                                  src={product.images[0]}
+                                  alt={product.title}
+                                  fill
+                                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-sm">
+                                  No image
+                                </div>
+                              )}
 
-                        {/* Quick Add */}
-                        <div className="absolute bottom-3 inset-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="gold" size="sm" className="w-full">
-                            <ShoppingCart className="w-4 h-4 me-2" />
-                            Add to Cart
-                          </Button>
-                        </div>
-                      </div>
+                              {/* Badges */}
+                              <div className="absolute top-3 start-3 flex flex-col gap-2">
+                                {product.isTrending && (
+                                  <Badge variant="trending">Trending</Badge>
+                                )}
+                                {product.isNew && (
+                                  <Badge variant="new">New</Badge>
+                                )}
+                                {product.isHandmade && (
+                                  <Badge variant="handmade">Handmade</Badge>
+                                )}
+                                {discount > 0 && (
+                                  <Badge variant="default" className="bg-red-500">
+                                    -{discount}%
+                                  </Badge>
+                                )}
+                              </div>
 
-                      {/* Content */}
-                      <div className={cn("p-4", view === "list" && "flex-1")}>
-                        <Link href={`/products/${product.slug}`}>
-                          <h3 className="font-medium hover:text-moulna-gold transition-colors line-clamp-2 mb-1">
-                            {product.title}
-                          </h3>
-                        </Link>
+                              {/* Wishlist Button */}
+                              <button
+                                onClick={() => toggleWishlist(product.id)}
+                                className="absolute top-3 end-3 w-8 h-8 rounded-full bg-white/90 dark:bg-black/50 flex items-center justify-center shadow-sm hover:scale-110 transition-transform"
+                              >
+                                <Heart
+                                  className={cn(
+                                    "w-4 h-4",
+                                    wishlist.includes(product.id)
+                                      ? "fill-red-500 text-red-500"
+                                      : "text-muted-foreground"
+                                  )}
+                                />
+                              </button>
 
-                        <p className="text-sm text-muted-foreground mb-2">
-                          by {product.seller.name}
-                        </p>
+                              {/* Quick Contact */}
+                              <div className="absolute bottom-3 inset-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button variant="gold" size="sm" className="w-full" asChild>
+                                  <Link href={`/products/${product.slug}`}>
+                                    <MessageCircle className="w-4 h-4 me-2" />
+                                    View Listing
+                                  </Link>
+                                </Button>
+                              </div>
+                            </div>
 
-                        {/* Rating */}
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 fill-moulna-gold text-moulna-gold" />
-                            <span className="text-sm font-medium">{product.rating}</span>
-                          </div>
-                          <span className="text-sm text-muted-foreground">
-                            ({product.reviewCount} reviews)
-                          </span>
-                        </div>
+                            {/* Content */}
+                            <div className={cn("p-4", view === "list" && "flex-1")}>
+                              <Link href={`/products/${product.slug}`}>
+                                <h3 className="font-medium hover:text-moulna-gold transition-colors line-clamp-2 mb-1">
+                                  {product.title}
+                                </h3>
+                              </Link>
 
-                        {/* Price */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-lg">
-                              {formatAED(product.priceFils)}
-                            </span>
-                            {product.compareAtPriceFils && (
-                              <span className="text-sm text-muted-foreground line-through">
-                                {formatAED(product.compareAtPriceFils)}
-                              </span>
-                            )}
-                          </div>
+                              <p className="text-sm text-muted-foreground mb-2">
+                                by {product.seller.name}
+                              </p>
 
-                          {/* XP Preview */}
-                          <div className="flex items-center gap-1 text-sm text-moulna-gold">
-                            <Sparkles className="w-3.5 h-3.5" />
-                            <span>+{product.xpReward} XP</span>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
+                              {/* Price */}
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-lg">
+                                    {formatAED(product.priceFils)}
+                                  </span>
+                                  {product.compareAtPriceFils && (
+                                    <span className="text-sm text-muted-foreground line-through">
+                                      {formatAED(product.compareAtPriceFils)}
+                                    </span>
+                                  )}
+                                </div>
 
-              {/* Load More */}
-              <div className="mt-12 text-center">
-                <Button variant="outline" size="lg">
-                  Load More Products
-                  <ChevronDown className="w-4 h-4 ms-2" />
-                </Button>
-              </div>
+                                {/* XP Preview */}
+                                <div className="flex items-center gap-1 text-sm text-moulna-gold">
+                                  <Sparkles className="w-3.5 h-3.5" />
+                                  <span>+{product.xpReward} XP</span>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Load More */}
+                  {hasMore && (
+                    <div className="mt-12 text-center">
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => fetchProducts(false)}
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 me-2" />
+                        )}
+                        Load More Products
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>

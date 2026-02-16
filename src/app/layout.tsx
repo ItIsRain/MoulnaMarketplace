@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Playfair_Display, DM_Sans, Noto_Sans_Arabic } from "next/font/google";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/components/providers/AuthProvider";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -49,6 +50,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${playfair.variable} ${dmSans.variable} ${notoSansArabic.variable} antialiased min-h-screen flex flex-col`}>
+        <AuthProvider>
         <TooltipProvider delayDuration={300}>
           {children}
           <Toaster
@@ -62,6 +64,7 @@ export default function RootLayout({
             }}
           />
         </TooltipProvider>
+        </AuthProvider>
       </body>
     </html>
   );

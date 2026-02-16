@@ -29,9 +29,9 @@ const badgeVariants = cva(
           "bg-yellow-500 text-black",
         processing:
           "bg-indigo-600 text-white",
-        shipped:
+        completed:
           "bg-blue-600 text-white",
-        delivered:
+        closed:
           "bg-emerald-600 text-white",
         cancelled:
           "bg-red-600 text-white",

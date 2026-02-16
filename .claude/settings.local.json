@@ -4,7 +4,9 @@
       "Bash(npm install:*)",
       "Bash(copy:*)",
       "Bash(powershell -Command:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npx next build)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

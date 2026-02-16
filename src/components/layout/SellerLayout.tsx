@@ -9,9 +9,9 @@ import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
 import { XPBar } from "@/components/gamification/XPBar";
 import {
-  LayoutDashboard, Package, ShoppingCart, Users,
-  MessageSquare, Star, Tag, Wallet, Settings,
-  Store, BarChart3, LogOut, Bell, ChevronRight
+  LayoutDashboard, Package, MessageSquare, Users,
+  Star, Tag, Settings, Store, BarChart3,
+  LogOut, Bell, ChevronRight, Inbox
 } from "lucide-react";
 
 const SIDEBAR_ITEMS = [
@@ -21,27 +21,27 @@ const SIDEBAR_ITEMS = [
     icon: LayoutDashboard,
   },
   {
-    label: "Products",
+    label: "Listings",
     href: "/seller/products",
     icon: Package,
     badge: "28",
   },
   {
-    label: "Orders",
+    label: "Inquiries",
     href: "/seller/orders",
-    icon: ShoppingCart,
+    icon: Inbox,
     badge: "5",
-  },
-  {
-    label: "Customers",
-    href: "/seller/customers",
-    icon: Users,
   },
   {
     label: "Messages",
     href: "/seller/messages",
     icon: MessageSquare,
     badge: "3",
+  },
+  {
+    label: "Customers",
+    href: "/seller/customers",
+    icon: Users,
   },
   {
     label: "Reviews",
@@ -52,11 +52,6 @@ const SIDEBAR_ITEMS = [
     label: "Promotions",
     href: "/seller/promotions",
     icon: Tag,
-  },
-  {
-    label: "Finances",
-    href: "/seller/finances",
-    icon: Wallet,
   },
   {
     label: "Analytics",
@@ -90,7 +85,7 @@ export function SellerLayout({ children }: SellerLayoutProps) {
     level: 8,
     xp: 4520,
     rating: 4.9,
-    pendingOrders: 5,
+    pendingInquiries: 5,
     unreadMessages: 3,
   };
 

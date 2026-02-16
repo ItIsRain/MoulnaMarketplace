@@ -85,10 +85,10 @@ export default function ProductCategoriesPage() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Layers className="w-7 h-7 text-moulna-gold" />
-            Product Categories
+            Listing Categories
           </h1>
           <p className="text-muted-foreground">
-            Organize your products into categories
+            Organize your listings into categories
           </p>
         </div>
         <Button
@@ -135,7 +135,7 @@ export default function ProductCategoriesPage() {
               <p className="text-2xl font-bold">
                 {CATEGORIES.reduce((acc, cat) => acc + cat.productCount, 0)}
               </p>
-              <p className="text-xs text-muted-foreground">Total Products</p>
+              <p className="text-xs text-muted-foreground">Total Listings</p>
             </div>
           </div>
         </Card>
@@ -244,7 +244,7 @@ export default function ProductCategoriesPage() {
                 </div>
 
                 <Badge variant="secondary">
-                  {category.productCount} products
+                  {category.productCount} listings
                 </Badge>
 
                 <div className="flex items-center gap-1">
@@ -284,7 +284,7 @@ export default function ProductCategoriesPage() {
                       </div>
 
                       <Badge variant="outline" className="text-xs">
-                        {child.productCount} products
+                        {child.productCount} listings
                       </Badge>
 
                       <div className="flex items-center gap-1">
@@ -329,7 +329,7 @@ export default function ProductCategoriesPage() {
           <li>• Keep category names clear and descriptive</li>
           <li>• Use sub-categories for more specific product types</li>
           <li>• Drag and drop to reorder categories</li>
-          <li>• Products can belong to multiple categories</li>
+          <li>• Listings can belong to multiple categories</li>
         </ul>
       </Card>
     </div>

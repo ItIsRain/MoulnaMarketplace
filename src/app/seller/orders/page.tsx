@@ -4,140 +4,168 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { cn, formatAED, timeAgo } from "@/lib/utils";
+import { cn, timeAgo } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
+import { formatAED } from "@/lib/utils";
 import {
-  ShoppingBag, Search, Filter, Clock, Package,
-  Truck, Check, X, ChevronRight, Eye, Printer,
-  Sparkles
+  Inbox, Search, Filter, Clock, MessageCircle,
+  CheckCircle, CheckCircle2, ChevronRight, Eye, Sparkles, Phone
 } from "lucide-react";
 
-const ORDERS = [
+const INQUIRIES = [
   {
-    id: "ord_1",
-    orderNumber: "ORD-2024-001567",
+    id: "inq_1",
     customer: {
       name: "Fatima M.",
       avatar: "fatima-m",
       level: 4,
-      ordersCount: 12,
+      joinDate: "2023",
     },
-    items: [
-      { id: "item_1", title: "Arabian Oud Perfume - 100ml", quantity: 1, price: 45000, image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=100" },
-      { id: "item_2", title: "Rose Oud Mist", quantity: 2, price: 28000, image: "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=100" },
-    ],
-    total: 101000,
-    status: "pending",
+    listing: {
+      title: "Arabian Oud Perfume - 100ml",
+      image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=100",
+      price: 45000,
+    },
+    message: "Hi, is this still available? Can I get it in 150ml? Also, Can we meet in Abu Dhabi?",
+    status: "new",
     date: "2024-02-13T10:30:00Z",
-    shippingAddress: "Dubai Marina, Building 45, Apt 1204",
-    xpReward: 50,
   },
   {
-    id: "ord_2",
-    orderNumber: "ORD-2024-001566",
+    id: "inq_2",
     customer: {
       name: "Ahmed K.",
       avatar: "ahmed-k",
       level: 7,
-      ordersCount: 35,
+      joinDate: "2022",
     },
-    items: [
-      { id: "item_3", title: "Premium Oud Gift Set", quantity: 1, price: 85000, image: "https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=100" },
-    ],
-    total: 85000,
-    status: "processing",
+    listing: {
+      title: "Premium Oud Gift Set",
+      image: "https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=100",
+      price: 85000,
+    },
+    message: "What's the best price for 5 sets? I need them for corporate gifts.",
+    status: "replied",
     date: "2024-02-13T08:15:00Z",
-    shippingAddress: "Abu Dhabi, Khalidiya, Villa 23",
-    xpReward: 50,
   },
   {
-    id: "ord_3",
-    orderNumber: "ORD-2024-001565",
+    id: "inq_3",
     customer: {
       name: "Sara A.",
       avatar: "sara-a",
       level: 5,
-      ordersCount: 8,
+      joinDate: "2023",
     },
-    items: [
-      { id: "item_4", title: "Amber & Musk Blend", quantity: 1, price: 35000, image: "https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?w=100" },
-    ],
-    total: 35000,
-    status: "shipped",
-    trackingNumber: "UAE987654321",
+    listing: {
+      title: "Amber & Musk Blend",
+      image: "https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?w=100",
+      price: 35000,
+    },
+    message: "Can we meet in Dubai Marina for pickup? I'd like to smell it first before buying.",
+    status: "new",
     date: "2024-02-12T16:45:00Z",
-    shippingAddress: "Sharjah, Al Nahda, Tower 8, Floor 5",
-    xpReward: 50,
   },
   {
-    id: "ord_4",
-    orderNumber: "ORD-2024-001564",
+    id: "inq_4",
     customer: {
       name: "Khalid R.",
       avatar: "khalid-r",
       level: 3,
-      ordersCount: 5,
+      joinDate: "2024",
     },
-    items: [
-      { id: "item_5", title: "Home Fragrance Diffuser", quantity: 2, price: 22000, image: "https://images.unsplash.com/photo-1602928321679-560bb453f190?w=100" },
-    ],
-    total: 44000,
-    status: "delivered",
+    listing: {
+      title: "Home Fragrance Diffuser",
+      image: "https://images.unsplash.com/photo-1602928321679-560bb453f190?w=100",
+      price: 22000,
+    },
+    message: "Thank you! I'll take it. When can we arrange the handover?",
+    status: "replied",
     date: "2024-02-11T14:20:00Z",
-    deliveredAt: "2024-02-12T11:00:00Z",
-    shippingAddress: "Dubai, JLT, Cluster D, Tower 3",
-    xpEarned: 50,
   },
   {
-    id: "ord_5",
-    orderNumber: "ORD-2024-001560",
+    id: "inq_5",
     customer: {
       name: "Noura S.",
       avatar: "noura-s",
       level: 2,
-      ordersCount: 2,
+      joinDate: "2024",
     },
-    items: [
-      { id: "item_6", title: "Arabian Oud Perfume - 50ml", quantity: 1, price: 28000, image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=100" },
-    ],
-    total: 28000,
-    status: "cancelled",
-    cancelReason: "Customer requested cancellation",
+    listing: {
+      title: "Rose Oud Mist",
+      image: "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=100",
+      price: 22000,
+    },
+    message: "Is this available in a smaller size? Looking for something for travel.",
+    status: "archived",
     date: "2024-02-10T09:00:00Z",
-    shippingAddress: "Ajman, Al Rashidiya",
+  },
+  {
+    id: "inq_6",
+    customer: {
+      name: "Layla H.",
+      avatar: "layla-h",
+      level: 6,
+      joinDate: "2023",
+    },
+    listing: {
+      title: "Premium Oud Gift Set",
+      image: "https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=100",
+      price: 85000,
+    },
+    message: "Deal done! Thank you for the beautiful set.",
+    status: "sold",
+    salePrice: 82000,
+    date: "2024-02-09T12:00:00Z",
+  },
+  {
+    id: "inq_7",
+    customer: {
+      name: "Mohammed A.",
+      avatar: "mohammed-a",
+      level: 5,
+      joinDate: "2022",
+    },
+    listing: {
+      title: "Arabian Oud Perfume - 100ml",
+      image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=100",
+      price: 45000,
+    },
+    message: "Picked up today, smells amazing. Thank you!",
+    status: "sold",
+    salePrice: 45000,
+    date: "2024-02-07T15:30:00Z",
   },
 ];
 
-const statusConfig: Record<string, { label: string; variant: "pending" | "processing" | "shipped" | "delivered" | "cancelled"; icon: React.ElementType }> = {
-  pending: { label: "Pending", variant: "pending", icon: Clock },
-  processing: { label: "Processing", variant: "processing", icon: Package },
-  shipped: { label: "Shipped", variant: "shipped", icon: Truck },
-  delivered: { label: "Delivered", variant: "delivered", icon: Check },
-  cancelled: { label: "Cancelled", variant: "cancelled", icon: X },
+const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+  new: { label: "New", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400", icon: Clock },
+  replied: { label: "Replied", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400", icon: CheckCircle },
+  archived: { label: "Archived", color: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400", icon: Inbox },
+  sold: { label: "Sold", color: "bg-moulna-gold/10 text-moulna-gold dark:bg-moulna-gold/20 dark:text-moulna-gold", icon: CheckCircle2 },
 };
 
-export default function SellerOrdersPage() {
+export default function SellerInquiriesPage() {
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
   const [searchQuery, setSearchQuery] = React.useState("");
 
-  const filteredOrders = ORDERS.filter(order => {
-    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-    const matchesSearch = order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         order.customer.name.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredInquiries = INQUIRIES.filter(inquiry => {
+    const matchesStatus = statusFilter === "all" || inquiry.status === statusFilter;
+    const matchesSearch = inquiry.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         inquiry.listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         inquiry.message.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
   const stats = {
-    total: ORDERS.length,
-    pending: ORDERS.filter(o => o.status === "pending").length,
-    processing: ORDERS.filter(o => o.status === "processing").length,
-    shipped: ORDERS.filter(o => o.status === "shipped").length,
-    delivered: ORDERS.filter(o => o.status === "delivered").length,
+    total: INQUIRIES.length,
+    new: INQUIRIES.filter(i => i.status === "new").length,
+    replied: INQUIRIES.filter(i => i.status === "replied").length,
+    archived: INQUIRIES.filter(i => i.status === "archived").length,
+    sold: INQUIRIES.filter(i => i.status === "sold").length,
   };
 
   return (
@@ -145,11 +173,11 @@ export default function SellerOrdersPage() {
       {/* Header */}
       <div>
         <h1 className="font-display text-2xl font-bold mb-2 flex items-center gap-3">
-          <ShoppingBag className="w-6 h-6" />
-          Orders
+          <Inbox className="w-6 h-6" />
+          Inquiries
         </h1>
         <p className="text-muted-foreground">
-          Manage and fulfill customer orders
+          Manage buyer inquiries about your listings
         </p>
       </div>
 
@@ -157,10 +185,10 @@ export default function SellerOrdersPage() {
       <div className="grid grid-cols-5 gap-4">
         {[
           { label: "Total", value: stats.total, filter: "all" },
-          { label: "Pending", value: stats.pending, filter: "pending", urgent: stats.pending > 0 },
-          { label: "Processing", value: stats.processing, filter: "processing" },
-          { label: "Shipped", value: stats.shipped, filter: "shipped" },
-          { label: "Delivered", value: stats.delivered, filter: "delivered" },
+          { label: "New", value: stats.new, filter: "new", urgent: stats.new > 0 },
+          { label: "Replied", value: stats.replied, filter: "replied" },
+          { label: "Sold", value: stats.sold, filter: "sold" },
+          { label: "Archived", value: stats.archived, filter: "archived" },
         ].map((stat) => (
           <button
             key={stat.label}
@@ -174,20 +202,20 @@ export default function SellerOrdersPage() {
           >
             <p className={cn(
               "text-2xl font-bold",
-              stat.urgent && "text-yellow-600"
+              stat.urgent && "text-blue-600"
             )}>{stat.value}</p>
             <p className="text-sm text-muted-foreground">{stat.label}</p>
           </button>
         ))}
       </div>
 
-      {/* Filters */}
+      {/* Search */}
       <Card className="p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search by order number or customer..."
+              placeholder="Search by customer, listing, or message..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="ps-9"
@@ -197,142 +225,124 @@ export default function SellerOrdersPage() {
             <Filter className="w-4 h-4 me-2" />
             More Filters
           </Button>
-          <Button variant="outline">
-            <Printer className="w-4 h-4 me-2" />
-            Export
-          </Button>
         </div>
       </Card>
 
-      {/* Orders List */}
+      {/* Inquiries List */}
       <div className="space-y-4">
-        {filteredOrders.map((order, index) => {
-          const status = statusConfig[order.status];
+        {filteredInquiries.map((inquiry, index) => {
+          const status = statusConfig[inquiry.status];
           const StatusIcon = status.icon;
 
           return (
             <motion.div
-              key={order.id}
+              key={inquiry.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Card className="p-6">
+              <Card className={cn(
+                "p-6",
+                inquiry.status === "new" && "border-blue-200 dark:border-blue-900/50"
+              )}>
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-4">
-                    <DiceBearAvatar
-                      seed={order.customer.avatar}
-                      size="lg"
-                    />
+                    <DiceBearAvatar seed={inquiry.customer.avatar} size="lg" />
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold">{order.customer.name}</span>
-                        <LevelBadge level={order.customer.level} size="sm" />
+                        <span className="font-semibold">{inquiry.customer.name}</span>
+                        <LevelBadge level={inquiry.customer.level} size="sm" />
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {order.customer.ordersCount} orders · {order.orderNumber}
+                        Member since {inquiry.customer.joinDate}
                       </p>
                     </div>
                   </div>
                   <div className="text-end">
-                    <Badge variant={status.variant}>
-                      <StatusIcon className="w-3.5 h-3.5 me-1" />
+                    <span className={cn("text-xs px-2.5 py-1 rounded-full font-medium inline-flex items-center gap-1", status.color)}>
+                      <StatusIcon className="w-3 h-3" />
                       {status.label}
-                    </Badge>
+                    </span>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {timeAgo(order.date)}
+                      {timeAgo(inquiry.date)}
                     </p>
                   </div>
                 </div>
 
-                {/* Order Items */}
-                <div className="flex flex-wrap gap-3 mb-4">
-                  {order.items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-                      <div className="relative w-10 h-10 rounded overflow-hidden">
-                        <Image
-                          src={item.image}
-                          alt={item.title}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium line-clamp-1 max-w-[150px]">
-                          {item.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          x{item.quantity} · {formatAED(item.price)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                {/* Listing Reference */}
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 mb-4">
+                  <div className="relative w-12 h-12 rounded overflow-hidden flex-shrink-0">
+                    <Image
+                      src={inquiry.listing.image}
+                      alt={inquiry.listing.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium line-clamp-1">{inquiry.listing.title}</p>
+                    <p className="text-xs text-muted-foreground">Listed at AED {(inquiry.listing.price / 100).toLocaleString()}</p>
+                  </div>
+                  {inquiry.status === "sold" && "salePrice" in inquiry && (
+                    <Badge className="bg-moulna-gold/10 text-moulna-gold border-moulna-gold/30">
+                      Sold {formatAED((inquiry as { salePrice: number }).salePrice)}
+                    </Badge>
+                  )}
                 </div>
 
-                {/* Order Details */}
+                {/* Message Preview */}
+                <p className="text-muted-foreground mb-4">
+                  &ldquo;{inquiry.message}&rdquo;
+                </p>
+
+                {/* Actions */}
                 <div className="flex items-center justify-between pt-4 border-t">
-                  <div className="text-sm text-muted-foreground">
-                    Ship to: <span className="text-foreground">{order.shippingAddress}</span>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    {inquiry.status === "new" && (
+                      <div className="flex items-center gap-1 text-moulna-gold">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Reply fast for +50 XP</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-end">
-                      <p className="font-bold text-lg">{formatAED(order.total)}</p>
-                      {order.status === "pending" && order.xpReward && (
-                        <p className="text-xs text-moulna-gold flex items-center gap-1">
-                          <Sparkles className="w-3 h-3" />
-                          Ship fast for +{order.xpReward} XP
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {order.status === "pending" && (
-                        <Button variant="gold" size="sm">
-                          Confirm Order
-                        </Button>
-                      )}
-                      {order.status === "processing" && (
-                        <Button variant="gold" size="sm">
-                          Mark Shipped
-                        </Button>
-                      )}
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/seller/orders/${order.id}`}>
-                          <Eye className="w-4 h-4 me-2" />
-                          View
+                  <div className="flex items-center gap-2">
+                    {inquiry.status === "new" && (
+                      <Button variant="gold" size="sm" asChild>
+                        <Link href={`/seller/messages/${inquiry.id}`}>
+                          <MessageCircle className="w-4 h-4 me-2" />
+                          Reply
                         </Link>
                       </Button>
-                    </div>
+                    )}
+                    {inquiry.status === "replied" && (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/seller/messages/${inquiry.id}`}>
+                          <MessageCircle className="w-4 h-4 me-2" />
+                          Continue Chat
+                        </Link>
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/seller/messages/${inquiry.id}`}>
+                        <Eye className="w-4 h-4 me-2" />
+                        View
+                      </Link>
+                    </Button>
                   </div>
                 </div>
-
-                {/* Tracking Number */}
-                {'trackingNumber' in order && order.trackingNumber && (
-                  <div className="mt-3 p-3 rounded-lg bg-blue-600 text-sm text-white">
-                    <span className="font-medium">Tracking: </span>
-                    <code className="font-mono bg-blue-700 px-1.5 py-0.5 rounded">{order.trackingNumber}</code>
-                  </div>
-                )}
-
-                {/* XP Earned */}
-                {'xpEarned' in order && order.xpEarned && (
-                  <div className="mt-3 pt-3 border-t flex items-center gap-2 text-sm text-moulna-gold">
-                    <Sparkles className="w-4 h-4" />
-                    <span>+{order.xpEarned} XP earned for on-time delivery!</span>
-                  </div>
-                )}
               </Card>
             </motion.div>
           );
         })}
 
-        {filteredOrders.length === 0 && (
+        {filteredInquiries.length === 0 && (
           <Card className="p-12 text-center">
-            <ShoppingBag className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-semibold mb-2">No orders found</h3>
+            <Inbox className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="font-semibold mb-2">No inquiries found</h3>
             <p className="text-sm text-muted-foreground">
               {searchQuery || statusFilter !== "all"
                 ? "Try adjusting your filters"
-                : "New orders will appear here"
+                : "New inquiries from buyers will appear here"
               }
             </p>
           </Card>

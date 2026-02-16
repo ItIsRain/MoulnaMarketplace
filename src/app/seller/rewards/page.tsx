@@ -19,10 +19,10 @@ const SELLER_PERKS = [
   { level: 2, perk: "Custom shop banner", unlocked: true },
   { level: 3, perk: "Priority support", unlocked: true },
   { level: 4, perk: "Featured in category pages", unlocked: true },
-  { level: 5, perk: "Lower commission rate (9%)", unlocked: true },
+  { level: 5, perk: "5 free listing boosts per month", unlocked: true },
   { level: 6, perk: "Early access to new features", unlocked: true },
   { level: 7, perk: "Homepage spotlight eligibility", unlocked: true },
-  { level: 8, perk: "Even lower commission (8%)", unlocked: true },
+  { level: 8, perk: "10 free listing boosts per month", unlocked: true },
   { level: 9, perk: "Dedicated account manager", unlocked: false },
   { level: 10, perk: "Exclusive partner program", unlocked: false },
 ];
@@ -39,15 +39,15 @@ const SELLER_BADGES = [
   {
     id: "top-seller",
     name: "Top Seller",
-    description: "100+ orders completed",
+    description: "100+ deals completed",
     icon: Crown,
     earned: true,
     xp: 500,
   },
   {
-    id: "fast-shipper",
-    name: "Fast Shipper",
-    description: "Ship 50 orders within 24 hours",
+    id: "fast-responder",
+    name: "Fast Responder",
+    description: "Reply to 50 inquiries within 1 hour",
     icon: TrendingUp,
     earned: true,
     xp: 300,
@@ -76,7 +76,7 @@ const SELLER_CHALLENGES = [
   {
     id: "weekly-sales",
     title: "Weekly Sales Goal",
-    description: "Complete 10 orders this week",
+    description: "Complete 10 deals this week",
     xp: 200,
     progress: { current: 7, total: 10 },
     endsIn: "3 days",
@@ -91,8 +91,8 @@ const SELLER_CHALLENGES = [
   },
   {
     id: "new-products",
-    title: "Fresh Inventory",
-    description: "Add 5 new products this month",
+    title: "Fresh Listings",
+    description: "Add 5 new listings this month",
     xp: 150,
     progress: { current: 3, total: 5 },
     endsIn: "12 days",
@@ -308,7 +308,7 @@ export default function SellerRewardsPage() {
                   Top Sellers
                 </h2>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link href="/seller/leaderboard">
+                  <Link href="/seller/rewards/achievements">
                     View All
                     <ChevronRight className="w-4 h-4 ms-1" />
                   </Link>

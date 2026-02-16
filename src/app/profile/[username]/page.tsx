@@ -15,7 +15,7 @@ import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
 import {
   User, MapPin, Calendar, Star, MessageSquare,
-  ShoppingBag, Award, Heart, Share2, Users,
+  Award, Heart, Share2, Users,
   Instagram, Twitter, Globe, Sparkles, Trophy
 } from "lucide-react";
 
@@ -31,14 +31,14 @@ const USER_DATA = {
   xp: 2340,
   badges: [
     { name: "Early Adopter", icon: Trophy, color: "bg-purple-500" },
-    { name: "Shopaholic", icon: ShoppingBag, color: "bg-blue-500" },
+    { name: "Explorer", icon: Star, color: "bg-blue-500" },
     { name: "Review Master", icon: Star, color: "bg-yellow-500" },
   ],
   stats: {
     reviews: 28,
     following: 45,
     followers: 120,
-    purchases: 34,
+    conversations: 34,
   },
   recentReviews: [
     {

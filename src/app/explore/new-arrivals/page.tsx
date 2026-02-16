@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Sparkles, Clock, Filter, Grid, List, Heart, ShoppingCart,
+  Sparkles, Clock, Filter, Grid, List, Heart, MessageCircle,
   Star, ChevronDown, ArrowUpDown
 } from "lucide-react";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
@@ -278,8 +278,10 @@ export default function NewArrivalsPage() {
                           </span>
                         )}
                       </div>
-                      <Button size="icon" variant="outline" className="rounded-full">
-                        <ShoppingCart className="w-4 h-4" />
+                      <Button size="icon" variant="outline" className="rounded-full" asChild>
+                        <Link href={`/products/${product.id}`}>
+                          <MessageCircle className="w-4 h-4" />
+                        </Link>
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
@@ -337,9 +339,11 @@ export default function NewArrivalsPage() {
                             <Clock className="w-3 h-3" />
                             {product.addedAt}
                           </span>
-                          <Button size="sm" className="bg-moulna-gold hover:bg-moulna-gold-dark">
-                            <ShoppingCart className="w-4 h-4 me-1" />
-                            Add
+                          <Button size="sm" className="bg-moulna-gold hover:bg-moulna-gold-dark" asChild>
+                            <Link href={`/products/${product.id}`}>
+                              <MessageCircle className="w-4 h-4 me-1" />
+                              Contact Seller
+                            </Link>
                           </Button>
                         </div>
                       </div>

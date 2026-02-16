@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/card";
@@ -12,110 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
-import { LevelBadge } from "@/components/gamification/LevelBadge";
+import type { Shop } from "@/lib/types";
 import {
   Store, Search, MapPin, Star, Heart, Users,
-  Package, Award, Filter, ArrowUpDown, ChevronRight
+  Package, Award, Filter, ArrowUpDown, ChevronRight, Loader2
 } from "lucide-react";
-
-const SHOPS = [
-  {
-    slug: "scent-of-arabia",
-    name: "Scent of Arabia",
-    avatar: "scent-of-arabia",
-    banner: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800",
-    category: "Perfumes & Oud",
-    location: "Dubai",
-    level: 8,
-    rating: 4.9,
-    reviewCount: 245,
-    followers: 2450,
-    productCount: 28,
-    isVerified: true,
-    badges: ["Top Seller", "Artisan"],
-    description: "Authentic Arabian fragrances crafted with love",
-  },
-  {
-    slug: "heritage-jewels",
-    name: "Heritage Jewels",
-    avatar: "heritage-jewels",
-    banner: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800",
-    category: "Jewelry",
-    location: "Abu Dhabi",
-    level: 7,
-    rating: 4.8,
-    reviewCount: 189,
-    followers: 1890,
-    productCount: 45,
-    isVerified: true,
-    badges: ["Artisan"],
-    description: "Traditional and modern jewelry designs",
-  },
-  {
-    slug: "calligraphy-dreams",
-    name: "Calligraphy Dreams",
-    avatar: "calligraphy",
-    banner: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800",
-    category: "Arabic Art",
-    location: "Sharjah",
-    level: 6,
-    rating: 5.0,
-    reviewCount: 98,
-    followers: 1540,
-    productCount: 32,
-    isVerified: true,
-    badges: ["Rising Star"],
-    description: "Beautiful Arabic calligraphy art pieces",
-  },
-  {
-    slug: "desert-weaves",
-    name: "Desert Weaves",
-    avatar: "desert-weaves",
-    banner: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800",
-    category: "Home Décor",
-    location: "Dubai",
-    level: 5,
-    rating: 4.7,
-    reviewCount: 76,
-    followers: 980,
-    productCount: 24,
-    isVerified: false,
-    badges: [],
-    description: "Traditional Sadu weaving and home textiles",
-  },
-  {
-    slug: "pearl-paradise",
-    name: "Pearl Paradise",
-    avatar: "pearl-paradise",
-    banner: "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=800",
-    category: "Jewelry",
-    location: "RAK",
-    level: 4,
-    rating: 4.9,
-    reviewCount: 54,
-    followers: 720,
-    productCount: 18,
-    isVerified: true,
-    badges: ["Artisan"],
-    description: "Exquisite pearl jewelry from the Gulf",
-  },
-  {
-    slug: "oud-masters",
-    name: "Oud Masters",
-    avatar: "oud-masters",
-    banner: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=800",
-    category: "Perfumes & Oud",
-    location: "Ajman",
-    level: 6,
-    rating: 4.8,
-    reviewCount: 132,
-    followers: 1650,
-    productCount: 35,
-    isVerified: true,
-    badges: ["Top Seller"],
-    description: "Premium oud and traditional perfumes",
-  },
-];
 
 const CATEGORIES = [
   "All",
@@ -143,13 +43,64 @@ export default function ShopsPage() {
   const [selectedCategory, setSelectedCategory] = React.useState("All");
   const [selectedLocation, setSelectedLocation] = React.useState("All Emirates");
   const [sortBy, setSortBy] = React.useState("popular");
+  const [shops, setShops] = React.useState<Shop[]>([]);
+  const [total, setTotal] = React.useState(0);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [offset, setOffset] = React.useState(0);
+  const limit = 20;
 
-  const filteredShops = SHOPS.filter(shop => {
-    const matchesSearch = shop.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || shop.category === selectedCategory;
-    const matchesLocation = selectedLocation === "All Emirates" || shop.location === selectedLocation;
-    return matchesSearch && matchesCategory && matchesLocation;
-  });
+  const fetchShops = React.useCallback(async (resetOffset = false) => {
+    setIsLoading(true);
+    const currentOffset = resetOffset ? 0 : offset;
+    const params = new URLSearchParams();
+    if (searchQuery) params.set("search", searchQuery);
+    if (selectedCategory !== "All") params.set("category", selectedCategory);
+    if (selectedLocation !== "All Emirates") params.set("location", selectedLocation);
+    params.set("sort", sortBy);
+    params.set("limit", String(limit));
+    params.set("offset", String(currentOffset));
+
+    try {
+      const res = await fetch(`/api/shops?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (resetOffset) {
+          setShops(data.shops);
+          setOffset(0);
+        } else {
+          setShops(prev => currentOffset === 0 ? data.shops : [...prev, ...data.shops]);
+        }
+        setTotal(data.total);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchQuery, selectedCategory, selectedLocation, sortBy, offset]);
+
+  // Fetch on filter change
+  React.useEffect(() => {
+    setOffset(0);
+    fetchShops(true);
+  }, [selectedCategory, selectedLocation, sortBy]);
+
+  // Debounced search
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setOffset(0);
+      fetchShops(true);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const loadMore = () => {
+    const newOffset = offset + limit;
+    setOffset(newOffset);
+  };
+
+  // Fetch more when offset changes (but not on initial)
+  React.useEffect(() => {
+    if (offset > 0) fetchShops(false);
+  }, [offset]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -233,115 +184,130 @@ export default function ShopsPage() {
         {/* Shops Grid */}
         <section className="container mx-auto px-4 py-12">
           <p className="text-sm text-muted-foreground mb-6">
-            Showing {filteredShops.length} shops
+            {isLoading && shops.length === 0 ? "Loading..." : `Showing ${shops.length} of ${total} shops`}
           </p>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredShops.map((shop, index) => (
-              <motion.div
-                key={shop.slug}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Link href={`/shops/${shop.slug}`}>
-                  <Card className="overflow-hidden group cursor-pointer h-full hover:shadow-lg transition-shadow">
-                    {/* Banner */}
-                    <div className="relative h-32 overflow-hidden">
-                      <Image
-                        src={shop.banner}
-                        alt={shop.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          {isLoading && shops.length === 0 ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {shops.map((shop, index) => (
+                <motion.div
+                  key={shop.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Link href={`/shops/${shop.slug}`}>
+                    <Card className="overflow-hidden group cursor-pointer h-full hover:shadow-lg transition-shadow">
+                      {/* Banner */}
+                      <div className="relative h-32 overflow-hidden">
+                        {shop.bannerUrl ? (
+                          <Image
+                            src={shop.bannerUrl}
+                            alt={shop.name}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-r from-moulna-gold/20 to-amber-100 group-hover:scale-105 transition-transform duration-500" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
-                      {/* Follow Button */}
-                      <button
-                        className="absolute top-3 right-3 p-2 rounded-full bg-white/90 hover:bg-white transition-colors"
-                        onClick={(e) => e.preventDefault()}
-                      >
-                        <Heart className="w-4 h-4" />
-                      </button>
-                    </div>
+                        {/* Follow Button */}
+                        <button
+                          className="absolute top-3 right-3 p-2 rounded-full bg-white/90 hover:bg-white transition-colors"
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          <Heart className="w-4 h-4" />
+                        </button>
+                      </div>
 
-                    {/* Avatar */}
-                    <div className="relative px-4">
-                      <div className="absolute -top-8">
-                        <DiceBearAvatar
-                          seed={shop.avatar}
-                          size="xl"
-                          className="border-4 border-white shadow-lg"
-                        />
-                        {shop.isVerified && (
-                          <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
-                            <Award className="w-3.5 h-3.5 text-white" />
+                      {/* Avatar */}
+                      <div className="relative px-4">
+                        <div className="absolute -top-8">
+                          <DiceBearAvatar
+                            seed={shop.avatarSeed || shop.slug}
+                            style={shop.avatarStyle || "adventurer"}
+                            size="xl"
+                            className="border-4 border-white shadow-lg"
+                          />
+                          {shop.isVerified && (
+                            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                              <Award className="w-3.5 h-3.5 text-white" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="pt-12 px-4 pb-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h3 className="font-semibold text-lg group-hover:text-moulna-gold transition-colors">
+                              {shop.name}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {shop.category || "Shop"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {shop.tagline && (
+                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                            {shop.tagline}
+                          </p>
+                        )}
+
+                        {/* Badges */}
+                        {(shop.isVerified || shop.isArtisan) && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {shop.isVerified && (
+                              <Badge variant="outline" className="text-xs">Verified</Badge>
+                            )}
+                            {shop.isArtisan && (
+                              <Badge variant="outline" className="text-xs">Artisan</Badge>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Stats */}
+                        <div className="flex items-center justify-between pt-3 border-t">
+                          <div className="flex items-center gap-4 text-sm">
+                            <div className="flex items-center gap-1">
+                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                              <span className="font-medium">{shop.rating}</span>
+                              <span className="text-muted-foreground">({shop.reviewCount})</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <Package className="w-4 h-4" />
+                              {shop.totalListings}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Users className="w-4 h-4" />
+                            {shop.followerCount.toLocaleString()}
+                          </div>
+                        </div>
+
+                        {/* Location */}
+                        {shop.location && (
+                          <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                            <MapPin className="w-3 h-3" />
+                            {shop.location}
                           </div>
                         )}
                       </div>
-                    </div>
+                    </Card>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          )}
 
-                    {/* Content */}
-                    <div className="pt-12 px-4 pb-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="font-semibold text-lg group-hover:text-moulna-gold transition-colors">
-                            {shop.name}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {shop.category}
-                          </p>
-                        </div>
-                        <LevelBadge level={shop.level} size="sm" />
-                      </div>
-
-                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                        {shop.description}
-                      </p>
-
-                      {/* Badges */}
-                      {shop.badges.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-3">
-                          {shop.badges.map((badge) => (
-                            <Badge key={badge} variant="outline" className="text-xs">
-                              {badge}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Stats */}
-                      <div className="flex items-center justify-between pt-3 border-t">
-                        <div className="flex items-center gap-4 text-sm">
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                            <span className="font-medium">{shop.rating}</span>
-                            <span className="text-muted-foreground">({shop.reviewCount})</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <Package className="w-4 h-4" />
-                            {shop.productCount}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Users className="w-4 h-4" />
-                          {shop.followers.toLocaleString()}
-                        </div>
-                      </div>
-
-                      {/* Location */}
-                      <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-                        <MapPin className="w-3 h-3" />
-                        {shop.location}
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-
-          {filteredShops.length === 0 && (
+          {!isLoading && shops.length === 0 && (
             <Card className="p-12 text-center">
               <Store className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="font-semibold mb-2">No shops found</h3>
@@ -362,9 +328,10 @@ export default function ShopsPage() {
           )}
 
           {/* Load More */}
-          {filteredShops.length > 0 && (
+          {shops.length > 0 && shops.length < total && (
             <div className="mt-12 text-center">
-              <Button variant="outline" size="lg">
+              <Button variant="outline" size="lg" onClick={loadMore} disabled={isLoading}>
+                {isLoading ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : null}
                 Load More Shops
               </Button>
             </div>

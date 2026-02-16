@@ -1,6 +1,6 @@
 # Moulna — Gamified Handmade & Social Sellers Marketplace
 
-![Moulna Logo](./Moulna.svg)
+![Moulna Logo](./moulna-logo.svg)
 
 > **Use this prompt with any AI coding assistant (Cursor, Claude, Bolt, v0, etc.) to scaffold the complete frontend.**
 > **This is a UAE-focused marketplace by Moulna.ae — connecting local brands, creators, social sellers, and artisans with buyers — gamified from the ground up.**
@@ -11,7 +11,7 @@
 
 | Element | Value |
 |---------|-------|
-| **Logo** | `./Moulna.svg` |
+| **Logo** | `./moulna-logo.svg` |
 | **Primary Gold** | `#c7a34d` |
 | **Primary Dark** | `#363e42` |
 | **Brand Name** | Moulna |
@@ -27,7 +27,7 @@
 
 Build a **gamified multi-vendor marketplace** for handmade goods, local brands, social sellers, and artisan products — primarily serving the UAE and GCC region. Unlike traditional marketplaces (Etsy, Amazon Handmade, Noon), this platform makes buying and selling **feel like a game**: users earn XP, level up, collect badges, climb leaderboards, and unlock perks — all while shopping and selling.
 
-The platform name is **Moulna**. The logo is located at `./Moulna.svg`.
+The platform name is **Moulna**. The logo is located at `./moulna-logo.svg`.
 
 ### Core Users
 1. **Buyers** — Browse, shop, review, earn XP for engagement
@@ -508,7 +508,7 @@ app/
 ### 1. LANDING PAGE (`/`)
 ```
 Layout:
-- Sticky navbar: Moulna.svg logo, search bar (command-K style), category dropdown,
+- Sticky navbar: moulna-logo.svg logo, search bar (command-K style), category dropdown,
   cart icon with count badge, user avatar (DiceBear) with level indicator ring,
   notification bell, "Sell on Moulna" CTA (gold #c7a34d button)
   
@@ -551,14 +551,14 @@ Layout:
 
 - "Start Selling Today" CTA banner for sellers
 
-- Footer: Moulna.svg logo, categories, company links, help, social icons, App Store badges,
+- Footer: moulna-logo.svg logo, categories, company links, help, social icons, App Store badges,
   language toggle (EN/AR), currency display (AED), gold (#c7a34d) accent on links
 ```
 
 ### 2. AUTH PAGES (`/login`, `/register`, `/forgot-password`, etc.)
 ```
 Design:
-- Split layout: left = Moulna brand panel with Moulna.svg logo + animated SVG illustration + tagline,
+- Split layout: left = Moulna brand panel with moulna-logo.svg logo + animated SVG illustration + tagline,
   gold (#c7a34d) gradient background accents
   right = auth form with charcoal (#363e42) text
 - Registration generates a DiceBear avatar immediately on name input
@@ -1088,7 +1088,7 @@ Layout:
 ### 19. SELL WITH US PAGE (`/sell-with-us`)
 ```
 Seller recruitment landing page:
-- Moulna.svg logo prominently displayed
+- moulna-logo.svg logo prominently displayed
 - Hero: "Turn Your Passion Into a Business with Moulna"
 - Benefits grid: Low Fees, Easy Setup, Gamified Growth, UAE-focused,
   Analytics, Support
@@ -1180,11 +1180,11 @@ components/
 ├── ui/                             ← All shadcn/ui components
 │
 ├── layout/
-│   ├── Navbar.tsx                  ← Main nav with Moulna.svg logo, search, cart, avatar, notif
+│   ├── Navbar.tsx                  ← Main nav with moulna-logo.svg logo, search, cart, avatar, notif
 │   ├── SellerSidebar.tsx           ← Seller dashboard sidebar (gold #c7a34d accents)
 │   ├── BuyerSidebar.tsx            ← Buyer dashboard sidebar (gold #c7a34d accents)
 │   ├── AdminSidebar.tsx            ← Admin dashboard sidebar
-│   ├── Footer.tsx                  ← Full footer with Moulna.svg logo
+│   ├── Footer.tsx                  ← Full footer with moulna-logo.svg logo
 │   ├── PageHeader.tsx              ← Breadcrumb + title + description + actions
 │   ├── MobileBottomNav.tsx         ← Mobile bottom tab bar (Shop, Explore, Cart, Profile, More)
 │   └── StepHeader.tsx              ← Step indicator for multi-step flows

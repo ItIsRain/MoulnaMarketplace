@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  History, Sparkles, ShoppingBag, Star, MessageSquare,
+  History, Sparkles, MessageCircle, Star, MessageSquare,
   Users, Flame, Award, Gift, Filter, Calendar,
   TrendingUp, ChevronDown
 } from "lucide-react";
@@ -15,12 +15,12 @@ import {
 const XP_HISTORY = [
   {
     id: "1",
-    type: "purchase",
-    description: "Completed order #MOU-2401-1234",
+    type: "inquiry",
+    description: "Contacted seller about listing",
     xp: 50,
     date: "2024-01-15T10:30:00",
-    icon: ShoppingBag,
-    category: "Shopping",
+    icon: MessageCircle,
+    category: "Inquiries",
   },
   {
     id: "2",
@@ -44,7 +44,7 @@ const XP_HISTORY = [
   {
     id: "4",
     type: "badge",
-    description: "Earned 'Shopaholic' badge",
+    description: "Earned 'Explorer' badge",
     xp: 200,
     date: "2024-01-14T15:45:00",
     icon: Award,
@@ -54,7 +54,7 @@ const XP_HISTORY = [
   {
     id: "5",
     type: "challenge",
-    description: "Completed daily challenge: Window Shopping",
+    description: "Completed daily challenge: Listing Explorer",
     xp: 15,
     date: "2024-01-14T12:00:00",
     icon: Gift,
@@ -63,7 +63,7 @@ const XP_HISTORY = [
   {
     id: "6",
     type: "referral",
-    description: "Friend completed first purchase",
+    description: "Friend joined Moulna",
     xp: 150,
     date: "2024-01-13T18:20:00",
     icon: Users,
@@ -81,12 +81,12 @@ const XP_HISTORY = [
   },
   {
     id: "8",
-    type: "purchase",
-    description: "Completed order #MOU-2401-1198",
+    type: "inquiry",
+    description: "Contacted seller about handmade jewelry",
     xp: 75,
     date: "2024-01-12T16:00:00",
-    icon: ShoppingBag,
-    category: "Shopping",
+    icon: MessageCircle,
+    category: "Inquiries",
   },
 ];
 
@@ -96,7 +96,7 @@ const STATS = [
   { label: "Avg. Daily XP", value: "43", change: "Keep it up!" },
 ];
 
-const CATEGORIES = ["All", "Shopping", "Engagement", "Streak", "Achievement", "Challenge", "Referral"];
+const CATEGORIES = ["All", "Inquiries", "Engagement", "Streak", "Achievement", "Challenge", "Referral"];
 
 export default function RewardsHistoryPage() {
   const [selectedCategory, setSelectedCategory] = React.useState("All");
@@ -245,7 +245,7 @@ export default function RewardsHistoryPage() {
             <History className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="font-semibold mb-2">No XP history found</h3>
             <p className="text-sm text-muted-foreground">
-              Start earning XP by shopping, writing reviews, and completing challenges!
+              Start earning XP by contacting sellers, writing reviews, and completing challenges!
             </p>
           </Card>
         )}

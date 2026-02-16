@@ -9,12 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   Trophy, Star, Package, Users, MessageSquare, TrendingUp,
-  Award, Crown, Zap, Target, Gift, ShoppingBag, CheckCircle,
+  Award, Crown, Zap, Target, Gift, CheckCircle,
   Lock, Sparkles
 } from "lucide-react";
 
 const ACHIEVEMENT_CATEGORIES = [
-  { id: "sales", label: "Sales", icon: ShoppingBag },
+  { id: "sales", label: "Inquiries", icon: MessageSquare },
   { id: "products", label: "Products", icon: Package },
   { id: "customers", label: "Customers", icon: Users },
   { id: "reviews", label: "Reviews", icon: Star },
@@ -24,9 +24,9 @@ const ACHIEVEMENT_CATEGORIES = [
 const ACHIEVEMENTS = [
   {
     id: "1",
-    name: "First Sale",
-    description: "Complete your first sale on Moulna",
-    icon: ShoppingBag,
+    name: "First Inquiry",
+    description: "Receive your first inquiry on Moulna",
+    icon: MessageSquare,
     category: "sales",
     xpReward: 100,
     unlocked: true,
@@ -36,7 +36,7 @@ const ACHIEVEMENTS = [
   {
     id: "2",
     name: "Rising Star",
-    description: "Reach 10 sales",
+    description: "Receive 10 inquiries",
     icon: Star,
     category: "sales",
     xpReward: 250,
@@ -47,19 +47,19 @@ const ACHIEVEMENTS = [
   {
     id: "3",
     name: "Top Seller",
-    description: "Reach 100 sales",
+    description: "Receive 100 inquiries",
     icon: TrendingUp,
     category: "sales",
     xpReward: 500,
     unlocked: false,
     progress: 67,
-    progressText: "67/100 sales",
+    progressText: "67/100 inquiries",
     rarity: "rare",
   },
   {
     id: "4",
     name: "Catalog Builder",
-    description: "List 25 products",
+    description: "List 25 items",
     icon: Package,
     category: "products",
     xpReward: 200,
@@ -70,13 +70,13 @@ const ACHIEVEMENTS = [
   {
     id: "5",
     name: "Product Master",
-    description: "List 100 products",
+    description: "List 100 items",
     icon: Package,
     category: "products",
     xpReward: 500,
     unlocked: false,
     progress: 45,
-    progressText: "45/100 products",
+    progressText: "45/100 listings",
     rarity: "rare",
   },
   {
@@ -151,7 +151,7 @@ const ACHIEVEMENTS = [
   {
     id: "12",
     name: "UAE Champion",
-    description: "Ship to all 7 emirates",
+    description: "Receive inquiries from all 7 emirates",
     icon: Target,
     category: "special",
     xpReward: 500,
@@ -366,7 +366,7 @@ export default function SellerAchievementsPage() {
           <h2 className="font-semibold text-lg">Coming Soon</h2>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
-          New achievements are added regularly. Keep selling and engaging to unlock them first!
+          New achievements are added regularly. Keep listing and engaging to unlock them first!
         </p>
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline" className="border-dashed">

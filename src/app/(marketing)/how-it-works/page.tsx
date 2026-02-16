@@ -8,37 +8,37 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Search, ShoppingCart, Truck, Star, Sparkles, Shield,
+  Search, MessageCircle, Handshake, Star, Sparkles, Shield,
   Heart, Users, Award, Gift, ArrowRight, CheckCircle,
-  CreditCard, MessageSquare, Package
+  MessageSquare, Package
 } from "lucide-react";
 
 const BUYER_STEPS = [
   {
     step: 1,
-    title: "Discover",
-    description: "Browse thousands of authentic Arabian products from verified local artisans and sellers.",
+    title: "Browse",
+    description: "Explore thousands of authentic Arabian products from verified local artisans and sellers.",
     icon: Search,
     color: "from-blue-500 to-cyan-500",
   },
   {
     step: 2,
-    title: "Shop",
-    description: "Add items to your cart, enjoy secure checkout with multiple payment options including COD.",
-    icon: ShoppingCart,
+    title: "Contact Seller",
+    description: "Found something you like? Message the seller directly to ask questions and negotiate.",
+    icon: MessageCircle,
     color: "from-green-500 to-emerald-500",
   },
   {
     step: 3,
-    title: "Receive",
-    description: "Track your order in real-time and receive fast delivery across the UAE.",
-    icon: Truck,
+    title: "Meet & Trade",
+    description: "Arrange a meetup or delivery with the seller and complete the deal on your own terms.",
+    icon: Handshake,
     color: "from-purple-500 to-violet-500",
   },
   {
     step: 4,
-    title: "Earn & Review",
-    description: "Leave reviews, earn XP points, unlock badges, and level up your Moulna profile.",
+    title: "Review",
+    description: "Leave a review, earn XP points, unlock badges, and level up your Moulna profile.",
     icon: Star,
     color: "from-moulna-gold to-amber-500",
   },
@@ -59,9 +59,9 @@ const SELLER_STEPS = [
   },
   {
     step: 3,
-    title: "Receive Orders",
-    description: "Get notified of new orders and manage them through your seller dashboard.",
-    icon: ShoppingCart,
+    title: "Receive Inquiries",
+    description: "Get notified when buyers are interested and manage conversations through your seller dashboard.",
+    icon: MessageCircle,
   },
   {
     step: 4,
@@ -74,8 +74,8 @@ const SELLER_STEPS = [
 const FEATURES = [
   {
     icon: Shield,
-    title: "Secure Payments",
-    description: "Your transactions are protected with bank-level encryption.",
+    title: "Verified Sellers",
+    description: "All sellers are verified to ensure a safe and trustworthy marketplace.",
   },
   {
     icon: Sparkles,
@@ -85,17 +85,17 @@ const FEATURES = [
   {
     icon: Heart,
     title: "Support Local",
-    description: "Every purchase supports UAE artisans and small businesses.",
+    description: "Connect with UAE artisans and small businesses in your community.",
   },
   {
     icon: MessageSquare,
     title: "Direct Communication",
-    description: "Chat directly with sellers for custom orders and questions.",
+    description: "Chat directly with sellers for custom requests and questions.",
   },
   {
-    icon: CreditCard,
-    title: "Flexible Payments",
-    description: "Pay with cards, Apple Pay, or cash on delivery.",
+    icon: Handshake,
+    title: "Local Meetups",
+    description: "Arrange safe, convenient meetups with sellers in your area.",
   },
   {
     icon: Gift,
@@ -126,12 +126,12 @@ export default function HowItWorksPage() {
               How Moulna Works
             </h1>
             <p className="text-xl text-gray-300 mb-8">
-              Discover, shop, and earn rewards while supporting local UAE artisans.
+              Browse listings, contact sellers, and trade locally while supporting UAE artisans.
               Here's everything you need to know to get started.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Button size="lg" className="bg-moulna-gold hover:bg-moulna-gold-dark text-moulna-charcoal">
-                Start Shopping
+                Start Browsing
                 <ArrowRight className="w-4 h-4 ms-2" />
               </Button>
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
@@ -148,10 +148,10 @@ export default function HowItWorksPage() {
           <div className="text-center mb-16">
             <Badge className="mb-4 bg-blue-100 text-blue-700">For Buyers</Badge>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Shopping Made Easy
+              Finding What You Need Made Easy
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              From discovery to delivery, here's how your Moulna shopping journey unfolds.
+              From browsing to meeting the seller, here's how your Moulna journey unfolds.
             </p>
           </div>
 
@@ -253,7 +253,7 @@ export default function HowItWorksPage() {
               Why Choose Moulna
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              We've built Moulna with features that make shopping and selling a joy.
+              We've built Moulna with features that make buying and selling a joy.
             </p>
           </div>
 
@@ -291,7 +291,7 @@ export default function HowItWorksPage() {
               Ready to Get Started?
             </h2>
             <p className="text-white/80 mb-8 max-w-xl mx-auto">
-              Join thousands of happy customers and sellers on Moulna today.
+              Join thousands of buyers and sellers on Moulna today.
               Create your free account and start your journey.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
@@ -302,7 +302,7 @@ export default function HowItWorksPage() {
               </Button>
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10" asChild>
                 <Link href="/explore">
-                  Browse Products
+                  Browse Listings
                 </Link>
               </Button>
             </div>

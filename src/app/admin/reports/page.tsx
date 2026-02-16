@@ -69,7 +69,7 @@ const REPORTS = [
     reportedBy: "Ahmed Khalid",
     reporterAvatar: "ahmed-khalid",
     reason: "Fake/Paid review",
-    description: "This review appears to be fake. The reviewer account was created the same day and has no order history.",
+    description: "This review appears to be fake. The reviewer account was created the same day and has no transaction history.",
     status: "pending",
     priority: "low",
     date: "Mar 10, 2024",

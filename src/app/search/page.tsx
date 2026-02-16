@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
-  Search, Filter, Grid, List, Star, Heart, ShoppingCart,
+  Search, Filter, Grid, List, Star, Heart, MessageCircle,
   SlidersHorizontal, X, MapPin, Store
 } from "lucide-react";
 
@@ -309,8 +309,10 @@ export default function SearchPage() {
                               </span>
                             )}
                           </div>
-                          <Button size="icon" variant="outline" className="rounded-full">
-                            <ShoppingCart className="w-4 h-4" />
+                          <Button size="icon" variant="outline" className="rounded-full" asChild>
+                            <Link href={`/products/${product.id}`}>
+                              <MessageCircle className="w-4 h-4" />
+                            </Link>
                           </Button>
                         </div>
                       </div>
@@ -360,9 +362,11 @@ export default function SearchPage() {
                                 </span>
                               )}
                             </div>
-                            <Button size="sm" className="bg-moulna-gold hover:bg-moulna-gold-dark">
-                              <ShoppingCart className="w-4 h-4 me-1" />
-                              Add
+                            <Button size="sm" className="bg-moulna-gold hover:bg-moulna-gold-dark" asChild>
+                              <Link href={`/products/${product.id}`}>
+                                <MessageCircle className="w-4 h-4 me-1" />
+                                Contact Seller
+                              </Link>
                             </Button>
                           </div>
                         </div>

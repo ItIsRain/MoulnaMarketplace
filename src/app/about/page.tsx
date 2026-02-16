@@ -10,14 +10,14 @@ import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Heart, Users, ShoppingBag, Star, Award, Globe,
+  Heart, Users, MessageSquare, Star, Award, Globe,
   Sparkles, Target, Lightbulb, Handshake, ArrowRight
 } from "lucide-react";
 
 const STATS = [
-  { value: "50K+", label: "Happy Customers", icon: Users },
+  { value: "50K+", label: "Active Users", icon: Users },
   { value: "2,500+", label: "Local Artisans", icon: Heart },
-  { value: "100K+", label: "Products Sold", icon: ShoppingBag },
+  { value: "100K+", label: "Listings Posted", icon: MessageSquare },
   { value: "4.9", label: "Average Rating", icon: Star },
 ];
 
@@ -25,7 +25,7 @@ const VALUES = [
   {
     icon: Heart,
     title: "Support Local",
-    description: "Every purchase directly supports UAE artisans and small businesses, helping them grow and thrive.",
+    description: "Every connection directly supports UAE artisans and small businesses, helping them grow and thrive.",
   },
   {
     icon: Award,
@@ -165,7 +165,7 @@ export default function AboutPage() {
                     modern home décor and fashion.
                   </p>
                   <p className="font-medium text-foreground">
-                    Our mission is simple: to make every purchase meaningful, every
+                    Our mission is simple: to make every connection meaningful, every
                     seller successful, and every customer delighted.
                   </p>
                 </div>
@@ -286,13 +286,13 @@ export default function AboutPage() {
               Ready to Join the Movement?
             </h2>
             <p className="text-white/80 max-w-xl mx-auto mb-8">
-              Whether you&apos;re looking to discover unique products or share your
+              Whether you&apos;re looking to discover unique items or share your
               creations with the world, Moulna is here for you.
             </p>
             <div className="flex items-center justify-center gap-4">
               <Button size="lg" variant="outline" className="bg-white text-moulna-gold hover:bg-white/90 border-white" asChild>
                 <Link href="/explore">
-                  Shop Now
+                  Browse Listings
                 </Link>
               </Button>
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10" asChild>

@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
-  ShoppingBag,
+  MessageSquare,
   Bell,
   Menu,
   X,
@@ -17,7 +17,6 @@ import {
   Store,
   LogOut,
   Settings,
-  Package,
   Trophy,
   Flame,
 } from "lucide-react";
@@ -95,7 +94,7 @@ export function Navbar() {
             <div className="hidden lg:flex flex-1 max-w-xl mx-8">
               <div className="relative w-full">
                 <Input
-                  placeholder="Search products, shops, or categories..."
+                  placeholder="Search listings, shops, or categories..."
                   className="pl-10 pr-4 bg-muted/50 border-0 focus-visible:bg-white"
                   icon={<Search className="w-4 h-4" />}
                 />
@@ -181,15 +180,17 @@ export function Navbar() {
                 </Link>
               )}
 
-              {/* Cart */}
-              <Link href="/cart">
-                <Button variant="ghost" size="icon" className="relative">
-                  <ShoppingBag className="w-5 h-5" />
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-[10px] font-bold text-white rounded-full flex items-center justify-center">
-                    2
-                  </span>
-                </Button>
-              </Link>
+              {/* Messages */}
+              {isAuthenticated && (
+                <Link href="/dashboard/messages">
+                  <Button variant="ghost" size="icon" className="relative">
+                    <MessageSquare className="w-5 h-5" />
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-[10px] font-bold text-white rounded-full flex items-center justify-center">
+                      3
+                    </span>
+                  </Button>
+                </Link>
+              )}
 
               {/* Notifications */}
               {isAuthenticated && (
@@ -235,7 +236,7 @@ export function Navbar() {
                           className="absolute top-full right-0 mt-2 w-72 bg-card rounded-xl shadow-lg overflow-hidden z-50"
                         >
                           {/* User Info */}
-                          <div className="p-4 bg-gradient-to-br from-moulna-gold-50 to-white dark:from-moulna-gold/10 dark:to-moulna-charcoal border-b">
+                          <div className="p-4 border-b">
                             <div className="flex items-center gap-3">
                               <DiceBearAvatar
                                 seed={user.avatar.seed}
@@ -266,12 +267,12 @@ export function Navbar() {
                               <span className="text-sm font-medium">Dashboard</span>
                             </Link>
                             <Link
-                              href="/dashboard/orders"
+                              href="/dashboard/messages"
                               className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
                               onClick={() => setIsUserMenuOpen(false)}
                             >
-                              <Package className="w-4 h-4" />
-                              <span className="text-sm font-medium">My Orders</span>
+                              <MessageSquare className="w-4 h-4" />
+                              <span className="text-sm font-medium">Messages</span>
                             </Link>
                             <Link
                               href="/dashboard/rewards"
@@ -362,7 +363,7 @@ export function Navbar() {
           >
             <div className="flex items-center gap-3">
               <Input
-                placeholder="Search products, shops..."
+                placeholder="Search listings, shops..."
                 autoFocus
                 className="flex-1"
                 icon={<Search className="w-4 h-4" />}

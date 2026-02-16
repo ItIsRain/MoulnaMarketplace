@@ -122,7 +122,7 @@ export function StreakCard({
         </div>
         {purchaseStreak > 0 && (
           <div className="flex items-center justify-between">
-            <span className="text-sm text-white/80">Purchase Streak</span>
+            <span className="text-sm text-white/80">Deal Streak</span>
             <span className="text-sm font-semibold">{purchaseStreak} weeks</span>
           </div>
         )}

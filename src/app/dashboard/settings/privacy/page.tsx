@@ -91,8 +91,8 @@ const PRIVACY_SETTINGS = [
       },
       {
         id: "purchase_history",
-        label: "Private Purchase History",
-        description: "Keep your purchase history private",
+        label: "Private Deal History",
+        description: "Keep your deal history private",
         enabled: true,
       },
       {

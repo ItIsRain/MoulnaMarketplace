@@ -13,12 +13,12 @@ const SECTIONS = [
     icon: Database,
     title: "Information We Collect",
     content: `
-      We collect information you provide directly to us, such as when you create an account, make a purchase,
-      or contact us for support. This includes:
+      We collect information you provide directly to us, such as when you create an account, contact a seller,
+      or reach out to support. This includes:
 
       • Personal identification information (name, email address, phone number)
-      • Payment information (processed securely through our payment providers)
-      • Shipping address and delivery preferences
+      • Subscription payment information (for seller plans, processed securely through our payment providers)
+      • Location preferences and saved meetup spots
       • Account preferences and settings
       • Communications with our support team
       • Product reviews and feedback
@@ -53,8 +53,8 @@ const SECTIONS = [
     content: `
       We do not sell your personal information. We may share your information with:
 
-      • Sellers: When you make a purchase, we share necessary information with the seller to fulfill your order
-      • Service Providers: Companies that perform services on our behalf (payment processing, shipping, analytics)
+      • Sellers: When you contact a seller, we share necessary information to facilitate the connection
+      • Service Providers: Companies that perform services on our behalf (analytics, communications, hosting)
       • Legal Requirements: When required by law or to protect our rights
       • Business Transfers: In connection with any merger, sale of company assets, or acquisition
 
@@ -69,7 +69,7 @@ const SECTIONS = [
       We implement appropriate technical and organizational measures to protect your personal information:
 
       • SSL/TLS encryption for data transmission
-      • Secure payment processing through certified providers
+      • Secure subscription payment processing through certified providers
       • Regular security assessments and audits
       • Access controls and authentication measures
       • Employee training on data protection

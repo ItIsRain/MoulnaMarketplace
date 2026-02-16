@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
   User, MapPin, Heart, Sparkles, ChevronRight, ChevronLeft,
-  Check, Palette, ShoppingBag, Crown, Star, Gift, Flame
+  Check, Palette, Search, Crown, Star, Gift, Flame
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -314,7 +314,7 @@ export default function OnboardingPage() {
                 <div className="space-y-3">
                   <Button className="w-full bg-moulna-gold hover:bg-moulna-gold-dark" asChild>
                     <Link href="/dashboard">
-                      <ShoppingBag className="w-4 h-4 me-2" />
+                      <Search className="w-4 h-4 me-2" />
                       Start Exploring
                     </Link>
                   </Button>

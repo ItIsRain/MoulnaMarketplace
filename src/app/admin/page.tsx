@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
-  Users, ShoppingBag, Store, DollarSign, TrendingUp, TrendingDown,
+  Users, MessageSquare, Store, DollarSign, TrendingUp, TrendingDown,
   AlertCircle, CheckCircle, Clock, Package, Flag, ArrowUpRight,
   Activity, Eye, Shield
 } from "lucide-react";
@@ -34,11 +34,11 @@ const STATS = [
     bg: "bg-green-100",
   },
   {
-    label: "Total Orders",
+    label: "Total Inquiries",
     value: "8,234",
     change: "+15.3%",
     trend: "up",
-    icon: ShoppingBag,
+    icon: MessageSquare,
     color: "text-purple-600",
     bg: "bg-purple-100",
   },
@@ -109,7 +109,7 @@ const RECENT_ACTIVITY = [
   },
   {
     action: "Dispute resolved",
-    subject: "Order #MN-2024-8923",
+    subject: "Inquiry #MN-2024-8923",
     time: "2 hours ago",
     type: "success",
   },
@@ -122,10 +122,10 @@ const RECENT_ACTIVITY = [
 ];
 
 const TOP_SELLERS = [
-  { name: "Arabian Scents", avatar: "arabian-scents", revenue: 45230, orders: 156 },
-  { name: "Dubai Crafts", avatar: "dubai-crafts", revenue: 38900, orders: 134 },
-  { name: "Emirates Artisan", avatar: "emirates-artisan", revenue: 32100, orders: 98 },
-  { name: "Pearl Boutique", avatar: "pearl-boutique", revenue: 28500, orders: 87 },
+  { name: "Arabian Scents", avatar: "arabian-scents", revenue: 45230, inquiries: 156 },
+  { name: "Dubai Crafts", avatar: "dubai-crafts", revenue: 38900, inquiries: 134 },
+  { name: "Emirates Artisan", avatar: "emirates-artisan", revenue: 32100, inquiries: 98 },
+  { name: "Pearl Boutique", avatar: "pearl-boutique", revenue: 28500, inquiries: 87 },
 ];
 
 export default function AdminDashboardPage() {
@@ -289,7 +289,7 @@ export default function AdminDashboardPage() {
                 </div>
                 <div className="text-end">
                   <p className="font-bold">AED {seller.revenue.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">{seller.orders} orders</p>
+                  <p className="text-xs text-muted-foreground">{seller.inquiries} inquiries</p>
                 </div>
               </motion.div>
             ))}

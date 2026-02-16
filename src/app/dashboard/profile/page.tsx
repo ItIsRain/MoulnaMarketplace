@@ -27,7 +27,7 @@ const AVATAR_STYLES = [
 ] as const;
 
 const USER_BADGES = [
-  { id: "bdg_1", name: "First Purchase", icon: "🛍️" },
+  { id: "bdg_1", name: "First Deal", icon: "🛍️" },
   { id: "bdg_2", name: "Review Master", icon: "⭐" },
   { id: "bdg_3", name: "Social Butterfly", icon: "🦋" },
   { id: "bdg_4", name: "Week Warrior", icon: "🔥" },
@@ -349,7 +349,7 @@ export default function ProfilePage() {
               </div>
               <div className="flex items-center gap-2 text-sm text-moulna-gold">
                 <Sparkles className="w-4 h-4" />
-                <span>Add shipping address (+15 XP)</span>
+                <span>Add saved location (+15 XP)</span>
               </div>
             </div>
           </Card>

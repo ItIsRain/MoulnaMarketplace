@@ -43,9 +43,8 @@ const FOOTER_LINKS = {
     links: [
       { name: "Help Center", href: "/help" },
       { name: "Contact Us", href: "/contact" },
-      { name: "Shipping Info", href: "/help?category=shipping" },
-      { name: "Returns & Refunds", href: "/legal/refund-policy" },
-      { name: "Track Order", href: "/track-order" },
+      { name: "Meetup Tips", href: "/help?category=meetups" },
+      { name: "Dispute Resolution", href: "/legal/refund-policy" },
     ],
   },
 };
@@ -154,22 +153,6 @@ export function Footer() {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Payment Icons */}
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <span>We accept:</span>
-              <div className="flex items-center gap-1">
-                <div className="w-8 h-5 bg-white/10 rounded flex items-center justify-center text-[10px] font-bold">
-                  VISA
-                </div>
-                <div className="w-8 h-5 bg-white/10 rounded flex items-center justify-center text-[10px] font-bold">
-                  MC
-                </div>
-                <div className="w-8 h-5 bg-white/10 rounded flex items-center justify-center text-[10px] font-bold">
-                  COD
-                </div>
-              </div>
-            </div>
-
             {/* Language/Currency */}
             <div className="flex items-center gap-2">
               <button className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors text-xs font-medium">

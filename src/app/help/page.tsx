@@ -11,32 +11,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  HelpCircle, Search, ShoppingBag, Truck, CreditCard,
-  User, Store, RefreshCw, MessageCircle, Phone, Mail,
+  HelpCircle, Search, MessageSquare, Shield,
+  User, Store, MessageCircle, Phone, Mail,
   ChevronRight, ChevronDown, ExternalLink
 } from "lucide-react";
 
 const HELP_CATEGORIES = [
   {
-    icon: ShoppingBag,
-    title: "Orders & Purchases",
-    description: "Track orders, manage returns, and view purchase history",
+    icon: MessageSquare,
+    title: "Inquiries & Messaging",
+    description: "Contact sellers, manage conversations, and communication tips",
     articles: 12,
-    slug: "orders",
+    slug: "inquiries",
   },
   {
-    icon: Truck,
-    title: "Shipping & Delivery",
-    description: "Shipping options, delivery times, and tracking",
+    icon: Shield,
+    title: "Safety & Trust",
+    description: "Staying safe, meeting sellers, and reporting issues",
     articles: 8,
-    slug: "shipping",
+    slug: "safety",
   },
   {
-    icon: CreditCard,
-    title: "Payments & Refunds",
-    description: "Payment methods, refunds, and billing",
+    icon: Store,
+    title: "Browsing & Listings",
+    description: "Finding listings, saving items, and search tips",
     articles: 10,
-    slug: "payments",
+    slug: "browsing",
   },
   {
     icon: User,
@@ -48,42 +48,42 @@ const HELP_CATEGORIES = [
   {
     icon: Store,
     title: "Selling on Moulna",
-    description: "Start selling, manage shop, and payouts",
+    description: "Start listing, manage your shop, and grow your audience",
     articles: 15,
     slug: "selling",
   },
   {
-    icon: RefreshCw,
-    title: "Returns & Exchanges",
-    description: "Return policy, exchanges, and disputes",
+    icon: MessageCircle,
+    title: "Community & Support",
+    description: "Getting help, community guidelines, and disputes",
     articles: 6,
-    slug: "returns",
+    slug: "community",
   },
 ];
 
 const POPULAR_ARTICLES = [
   {
     id: "art_1",
-    title: "How to track my order",
-    category: "Orders",
+    title: "How to contact a seller",
+    category: "Inquiries",
     views: 15420,
   },
   {
     id: "art_2",
-    title: "What payment methods are accepted?",
-    category: "Payments",
+    title: "Tips for safe meetups and transactions",
+    category: "Safety",
     views: 12350,
   },
   {
     id: "art_3",
-    title: "How to return an item",
-    category: "Returns",
+    title: "How to report a suspicious listing",
+    category: "Safety",
     views: 10280,
   },
   {
     id: "art_4",
-    title: "Shipping times and costs",
-    category: "Shipping",
+    title: "How to search and filter listings",
+    category: "Browsing",
     views: 9870,
   },
   {
@@ -102,28 +102,28 @@ const POPULAR_ARTICLES = [
 
 const FAQS = [
   {
-    question: "How long does shipping take?",
-    answer: "Shipping times vary by seller and location. Most orders within the UAE are delivered within 2-5 business days. You can see the estimated delivery time on each product page.",
+    question: "How do I contact a seller?",
+    answer: "You can message any seller directly through our messaging system. Go to a listing page and click 'Contact Seller', or visit their shop page. You can also reach sellers via WhatsApp or phone if they provide those details.",
   },
   {
-    question: "What is your return policy?",
-    answer: "Most items can be returned within 14 days of delivery for a full refund. Some items like custom-made products may not be eligible for returns. Check the product page for specific return policies.",
+    question: "How do transactions work on Moulna?",
+    answer: "Moulna is a classifieds platform that connects buyers and sellers. All transactions happen directly between you and the seller - you arrange payment and delivery together. We recommend meeting in public places for in-person exchanges.",
   },
   {
     question: "How does the XP and rewards system work?",
-    answer: "You earn XP (experience points) for various activities like making purchases, writing reviews, and referring friends. As you accumulate XP, you level up and unlock rewards, badges, and exclusive perks.",
+    answer: "You earn XP (experience points) for various activities like contacting sellers, writing reviews, and referring friends. As you accumulate XP, you level up and unlock rewards, badges, and exclusive perks.",
   },
   {
-    question: "Is my payment information secure?",
-    answer: "Yes! We use industry-standard encryption and never store your full credit card details. We partner with trusted payment providers to ensure all transactions are secure.",
+    question: "How do I stay safe when meeting a seller?",
+    answer: "Always meet in public places, bring a friend if possible, and inspect items before completing any transaction. Never share personal financial details through the platform. Report any suspicious behavior immediately.",
   },
   {
     question: "How do I become a seller?",
-    answer: "Getting started is easy! Click 'Sell with Us' and create a seller account. You can list your first products within minutes. There are no upfront costs - we only charge a small commission on sales.",
+    answer: "Getting started is easy! Click 'Sell with Us' and create a seller account. You can list your first items within minutes. Creating listings on Moulna is free!",
   },
   {
-    question: "Can I contact a seller directly?",
-    answer: "Yes! You can message any seller directly through our messaging system. Go to their shop page and click 'Contact Seller'. Most sellers respond within 24 hours.",
+    question: "Can I save listings and get notified of price changes?",
+    answer: "Yes! You can save any listing to your Saved Items and we'll notify you if the seller updates the price. You can also follow sellers to get notified when they post new listings.",
   },
 ];
 

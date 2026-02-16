@@ -12,9 +12,9 @@ import { XPBar } from "@/components/gamification/XPBar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  LayoutDashboard, User, ShoppingBag, Heart, MapPin,
+  LayoutDashboard, User, Heart, MapPin,
   MessageSquare, Gift, Award, Settings, LogOut,
-  Flame, Trophy, Target, Star, Users, Bell
+  Flame, Target, Star, Users, Bell
 } from "lucide-react";
 
 const SIDEBAR_ITEMS = [
@@ -24,12 +24,7 @@ const SIDEBAR_ITEMS = [
     icon: LayoutDashboard,
   },
   {
-    label: "Orders",
-    href: "/dashboard/orders",
-    icon: ShoppingBag,
-  },
-  {
-    label: "Wishlist",
+    label: "Saved Items",
     href: "/dashboard/wishlist",
     icon: Heart,
   },
@@ -51,7 +46,6 @@ const SIDEBAR_ITEMS = [
     children: [
       { label: "Badges", href: "/dashboard/rewards/badges", icon: Award },
       { label: "Challenges", href: "/dashboard/rewards/challenges", icon: Target },
-      { label: "Leaderboard", href: "/dashboard/rewards/leaderboard", icon: Trophy },
     ],
   },
   {

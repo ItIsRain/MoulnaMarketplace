@@ -36,14 +36,14 @@ const CONVERSATION = {
     {
       id: "2",
       sender: "me",
-      content: "Hi! I wanted to ask about the shipping time to Abu Dhabi. Also, do you offer gift wrapping?",
+      content: "Hi! I wanted to ask about meetup options in Abu Dhabi. Also, do you offer gift wrapping?",
       timestamp: "10:32 AM",
       status: "read",
     },
     {
       id: "3",
       sender: "them",
-      content: "Great questions! Shipping to Abu Dhabi typically takes 1-2 business days. And yes, we do offer complimentary gift wrapping on all orders! 🎁",
+      content: "I can meet you in Abu Dhabi! I'm usually available on weekends. And yes, I can include gift wrapping for free! 🎁",
       timestamp: "10:35 AM",
       status: "read",
     },
@@ -57,7 +57,7 @@ const CONVERSATION = {
     {
       id: "5",
       sender: "them",
-      content: "Absolutely! Just add your message in the order notes and we'll include a beautiful handwritten card with your gift. Is there anything else you'd like to know?",
+      content: "Absolutely! Just let me know your message and we'll include a beautiful handwritten card with your gift. Is there anything else you'd like to know?",
       timestamp: "10:40 AM",
       status: "read",
     },
@@ -69,9 +69,9 @@ const CONVERSATION = {
       status: "delivered",
     },
   ],
-  relatedOrder: {
-    id: "ORD-2024-1234",
-    product: "Premium Oud Collection Set",
+  relatedInquiry: {
+    id: "INQ-2024-1234",
+    listing: "Premium Oud Collection Set",
     price: 450,
   },
 };
@@ -278,27 +278,27 @@ export default function ConversationPage() {
             </div>
           </Card>
 
-          {/* Related Order */}
-          {CONVERSATION.relatedOrder && (
+          {/* Related Inquiry */}
+          {CONVERSATION.relatedInquiry && (
             <Card className="p-4">
-              <h4 className="font-medium text-sm mb-3">Related Order</h4>
+              <h4 className="font-medium text-sm mb-3">Related Listing</h4>
               <div className="flex gap-3">
                 <div className="w-16 h-16 rounded-lg bg-muted" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">
-                    {CONVERSATION.relatedOrder.product}
+                    {CONVERSATION.relatedInquiry.listing}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {CONVERSATION.relatedOrder.id}
+                    {CONVERSATION.relatedInquiry.id}
                   </p>
                   <p className="font-semibold text-moulna-gold mt-1">
-                    AED {CONVERSATION.relatedOrder.price}
+                    AED {CONVERSATION.relatedInquiry.price}
                   </p>
                 </div>
               </div>
               <Button variant="outline" size="sm" className="w-full mt-3" asChild>
-                <Link href={`/dashboard/orders/${CONVERSATION.relatedOrder.id}`}>
-                  View Order
+                <Link href={`/dashboard/orders/${CONVERSATION.relatedInquiry.id}`}>
+                  View Inquiry
                 </Link>
               </Button>
             </Card>

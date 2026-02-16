@@ -11,41 +11,41 @@ import {
   CheckCircle, XCircle, Clock, HelpCircle
 } from "lucide-react";
 
-const REFUND_ELIGIBILITY = [
-  { eligible: true, text: "Item not as described in the listing" },
-  { eligible: true, text: "Item arrived damaged or defective" },
-  { eligible: true, text: "Wrong item received" },
-  { eligible: true, text: "Item not received within delivery window" },
-  { eligible: false, text: "Change of mind after 14 days" },
-  { eligible: false, text: "Used or altered items (unless defective)" },
-  { eligible: false, text: "Custom or personalized items" },
-  { eligible: false, text: "Perishable goods" },
+const REPORTABLE_ISSUES = [
+  { reportable: true, text: "Listing description does not match the actual item" },
+  { reportable: true, text: "Seller is unresponsive after agreeing to a transaction" },
+  { reportable: true, text: "Suspected scam or fraudulent listing" },
+  { reportable: true, text: "Counterfeit or stolen goods" },
+  { reportable: false, text: "Price disagreements after a deal is finalized off-platform" },
+  { reportable: false, text: "Buyer's remorse after completing a transaction" },
+  { reportable: false, text: "Disputes over items inspected and accepted at meetup" },
+  { reportable: false, text: "Issues with transactions conducted outside Moulna" },
 ];
 
-const REFUND_PROCESS = [
+const DISPUTE_PROCESS = [
   {
     step: 1,
-    title: "Submit Request",
-    description: "Go to your orders and click 'Request Refund' on the relevant order.",
+    title: "Report the Issue",
+    description: "Go to the listing or seller profile and click 'Report'. Provide details about the issue including screenshots or evidence.",
     duration: "5 minutes",
   },
   {
     step: 2,
-    title: "Seller Review",
-    description: "The seller will review your request and respond within 48 hours.",
+    title: "Moulna Review",
+    description: "Our Trust & Safety team will review your report and may reach out to both parties for more information.",
     duration: "24-48 hours",
   },
   {
     step: 3,
-    title: "Return Item",
-    description: "If approved, ship the item back using the provided return label.",
-    duration: "3-5 days",
+    title: "Mediation",
+    description: "If applicable, Moulna will facilitate communication between buyer and seller to reach a fair resolution.",
+    duration: "2-5 days",
   },
   {
     step: 4,
-    title: "Refund Processed",
-    description: "Once received, your refund will be processed to your original payment method.",
-    duration: "3-5 business days",
+    title: "Resolution & Action",
+    description: "Moulna will take appropriate action which may include removing listings, issuing warnings, or suspending accounts.",
+    duration: "1-3 business days",
   },
 ];
 
@@ -60,14 +60,14 @@ export default function RefundPolicyPage() {
             <ChevronRight className="w-4 h-4" />
             <Link href="/legal" className="hover:text-white">Legal</Link>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-white">Refund Policy</span>
+            <span className="text-white">Dispute Resolution</span>
           </div>
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-lg bg-moulna-gold/20 flex items-center justify-center">
               <RefreshCw className="w-8 h-8 text-moulna-gold" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">Refund & Returns Policy</h1>
+              <h1 className="text-3xl font-bold">Dispute Resolution Policy</h1>
               <div className="flex items-center gap-4 mt-2 text-sm text-gray-400">
                 <span className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
@@ -85,37 +85,40 @@ export default function RefundPolicyPage() {
           <Card className="p-8 mb-8">
             <h2 className="text-xl font-bold mb-4">Overview</h2>
             <p className="text-muted-foreground mb-4">
-              At Moulna, we want you to be completely satisfied with your purchase.
-              If you're not happy with your order, we're here to help. This policy
-              outlines how returns and refunds work on our platform.
+              Moulna is a classifieds platform that connects buyers and sellers.
+              All transactions happen directly between users and are conducted off-platform.
+              While Moulna does not process payments or handle goods, we are committed to
+              maintaining a trustworthy marketplace and will assist in mediating disputes
+              related to listings and seller conduct.
             </p>
             <div className="grid md:grid-cols-3 gap-4 mt-6">
               <div className="p-4 bg-muted rounded-lg text-center">
                 <Clock className="w-8 h-8 text-moulna-gold mx-auto mb-2" />
-                <p className="font-bold">14 Days</p>
-                <p className="text-sm text-muted-foreground">Return Window</p>
+                <p className="font-bold">24-48 Hours</p>
+                <p className="text-sm text-muted-foreground">Report Review Time</p>
               </div>
               <div className="p-4 bg-muted rounded-lg text-center">
                 <RefreshCw className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                <p className="font-bold">Free Returns</p>
-                <p className="text-sm text-muted-foreground">For Defective Items</p>
+                <p className="font-bold">Fair Mediation</p>
+                <p className="text-sm text-muted-foreground">Between Buyer & Seller</p>
               </div>
               <div className="p-4 bg-muted rounded-lg text-center">
                 <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                <p className="font-bold">3-5 Days</p>
-                <p className="text-sm text-muted-foreground">Refund Processing</p>
+                <p className="font-bold">Trust & Safety</p>
+                <p className="text-sm text-muted-foreground">Dedicated Team</p>
               </div>
             </div>
           </Card>
 
-          {/* Eligibility */}
+          {/* Reporting Issues */}
           <Card className="p-8 mb-8">
-            <h2 className="text-xl font-bold mb-4">Refund Eligibility</h2>
+            <h2 className="text-xl font-bold mb-4">Reporting Issues</h2>
             <p className="text-muted-foreground mb-6">
-              Whether you're eligible for a refund depends on the reason for your return:
+              You can report issues related to listings, sellers, or suspicious activity.
+              Below is a guide on what we can and cannot assist with:
             </p>
             <div className="grid md:grid-cols-2 gap-4">
-              {REFUND_ELIGIBILITY.map((item, index) => (
+              {REPORTABLE_ISSUES.map((item, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 10 }}
@@ -124,7 +127,7 @@ export default function RefundPolicyPage() {
                   transition={{ delay: index * 0.05 }}
                   className="flex items-start gap-3"
                 >
-                  {item.eligible ? (
+                  {item.reportable ? (
                     <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                   ) : (
                     <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
@@ -135,14 +138,14 @@ export default function RefundPolicyPage() {
             </div>
           </Card>
 
-          {/* Process */}
+          {/* Dispute Resolution Process */}
           <Card className="p-8 mb-8">
-            <h2 className="text-xl font-bold mb-4">Refund Process</h2>
+            <h2 className="text-xl font-bold mb-4">Dispute Resolution Process</h2>
             <p className="text-muted-foreground mb-6">
-              Follow these steps to request a refund:
+              If you encounter an issue with a listing or seller, follow these steps:
             </p>
             <div className="space-y-6">
-              {REFUND_PROCESS.map((step, index) => (
+              {DISPUTE_PROCESS.map((step, index) => (
                 <motion.div
                   key={step.step}
                   initial={{ opacity: 0, x: -20 }}
@@ -155,7 +158,7 @@ export default function RefundPolicyPage() {
                     <div className="w-10 h-10 rounded-full bg-moulna-gold text-white flex items-center justify-center font-bold">
                       {step.step}
                     </div>
-                    {index < REFUND_PROCESS.length - 1 && (
+                    {index < DISPUTE_PROCESS.length - 1 && (
                       <div className="w-0.5 h-12 bg-moulna-gold/30 mx-auto mt-2" />
                     )}
                   </div>
@@ -173,43 +176,127 @@ export default function RefundPolicyPage() {
             </div>
           </Card>
 
-          {/* Additional Info */}
+          {/* Additional Sections */}
           <Card className="p-8 mb-8">
-            <h2 className="text-xl font-bold mb-4">Additional Information</h2>
+            <h2 className="text-xl font-bold mb-4">Seller Accountability</h2>
 
             <div className="space-y-6">
               <div>
-                <h3 className="font-semibold mb-2">Refund Methods</h3>
+                <h3 className="font-semibold mb-2">Accurate Listings</h3>
                 <p className="text-sm text-muted-foreground">
-                  Refunds are processed to your original payment method. For credit/debit cards,
-                  it may take 5-10 business days for the refund to appear on your statement.
-                  Cash on delivery orders will be refunded via bank transfer.
+                  Sellers are required to accurately describe their items, including condition,
+                  defects, specifications, and pricing. Listings must include genuine photos of
+                  the actual item being sold, not stock images or photos from other sources.
                 </p>
               </div>
 
               <div>
-                <h3 className="font-semibold mb-2">Partial Refunds</h3>
+                <h3 className="font-semibold mb-2">Consequences for Misleading Listings</h3>
                 <p className="text-sm text-muted-foreground">
-                  In some cases, partial refunds may be offered for items with minor issues
-                  or when the item has been used. The refund amount will be determined based
-                  on the item's condition.
+                  Sellers who post misleading or fraudulent listings may face warnings, listing
+                  removal, temporary suspension, or permanent account termination depending on
+                  the severity and frequency of violations. Repeated offenses will result in
+                  escalated enforcement actions.
                 </p>
               </div>
 
               <div>
-                <h3 className="font-semibold mb-2">Seller-Specific Policies</h3>
+                <h3 className="font-semibold mb-2">Seller Responsiveness</h3>
                 <p className="text-sm text-muted-foreground">
-                  Some sellers may have additional return policies. These will be clearly
-                  displayed on the product page and must comply with our minimum standards.
+                  Sellers are expected to respond to buyer inquiries in a timely manner and
+                  communicate honestly about item availability. Listings for items that are
+                  no longer available should be promptly removed or marked as sold.
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-8 mb-8">
+            <h2 className="text-xl font-bold mb-4">Safety Guidelines</h2>
+
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-semibold mb-2">Safe Meetups</h3>
+                <p className="text-sm text-muted-foreground">
+                  Always meet in well-lit, public places such as shopping malls, coffee shops,
+                  or designated safe trade zones. Avoid meeting at private residences or
+                  secluded areas. Bring a friend or let someone know where you are going.
                 </p>
               </div>
 
               <div>
-                <h3 className="font-semibold mb-2">Dispute Resolution</h3>
+                <h3 className="font-semibold mb-2">Inspect Before You Buy</h3>
                 <p className="text-sm text-muted-foreground">
-                  If you and the seller cannot agree on a resolution, you can escalate the
-                  dispute to Moulna Support. We will review the case and make a final decision
-                  within 5 business days.
+                  Always inspect items thoroughly before completing any transaction. Test
+                  electronics, check for defects, and verify that the item matches the listing
+                  description. Once you have accepted and paid for an item in person, the
+                  transaction is between you and the seller.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Payment Safety</h3>
+                <p className="text-sm text-muted-foreground">
+                  Be cautious with payment methods. Cash is the safest option for in-person
+                  transactions. Avoid sending money via wire transfer or prepaying before
+                  inspecting the item. Never share your financial information with other users.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Trust Your Instincts</h3>
+                <p className="text-sm text-muted-foreground">
+                  If a deal seems too good to be true, it probably is. Be wary of sellers who
+                  pressure you to act quickly, refuse to meet in person, or ask for unusual
+                  payment methods. Report suspicious activity to Moulna immediately.
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-8 mb-8">
+            <h2 className="text-xl font-bold mb-4">Platform Limitations</h2>
+
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-semibold mb-2">Off-Platform Transactions</h3>
+                <p className="text-sm text-muted-foreground">
+                  Moulna is a classifieds platform that facilitates connections between buyers
+                  and sellers. All transactions, including payment and item exchange, occur
+                  off-platform and directly between users. Moulna is not a party to any
+                  transaction and is not responsible for the quality, safety, legality, or
+                  any other aspect of items listed or transactions conducted.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">No Guarantees</h3>
+                <p className="text-sm text-muted-foreground">
+                  Moulna does not guarantee the accuracy of listings, the identity of users,
+                  or the outcome of any transaction. While we take steps to maintain a safe
+                  marketplace, users transact at their own risk and should exercise due
+                  diligence before completing any deal.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">No Refunds or Returns Through Moulna</h3>
+                <p className="text-sm text-muted-foreground">
+                  Since Moulna does not process payments or handle goods, we cannot issue
+                  refunds or facilitate returns. Any refund or return arrangements must be
+                  made directly between the buyer and seller. We encourage users to agree
+                  on terms before completing transactions.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Limitation of Liability</h3>
+                <p className="text-sm text-muted-foreground">
+                  Moulna's role is limited to providing the platform for listing and
+                  discovering items. We are not liable for any losses, damages, or disputes
+                  arising from off-platform transactions. Our dispute resolution process is
+                  a courtesy service aimed at maintaining platform trust and does not
+                  constitute legal mediation or arbitration.
                 </p>
               </div>
             </div>
@@ -222,8 +309,8 @@ export default function RefundPolicyPage() {
               <div>
                 <h3 className="font-semibold mb-2">Need Help?</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  If you have questions about our refund policy or need assistance with
-                  a return, our support team is here to help.
+                  If you need to report a listing, flag a suspicious user, or have questions
+                  about our dispute resolution process, our Trust & Safety team is here to help.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Button asChild>

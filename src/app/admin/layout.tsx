@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
-  LayoutDashboard, Users, Store, Package, ShoppingBag, Flag,
+  LayoutDashboard, Users, Store, Package, Flag,
   Settings, BarChart3, Shield, Bell, LogOut, ChevronDown,
   Menu, X, DollarSign, Tag, MessageSquare
 } from "lucide-react";
@@ -16,7 +16,7 @@ const ADMIN_NAV = [
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/sellers", label: "Sellers", icon: Store },
   { href: "/admin/products", label: "Products", icon: Package },
-  { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
+  { href: "/admin/orders", label: "Inquiries", icon: MessageSquare },
   { href: "/admin/reports", label: "Reports", icon: Flag },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/finances", label: "Finances", icon: DollarSign },

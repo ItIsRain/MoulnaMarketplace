@@ -26,13 +26,13 @@ const SETTING_SECTIONS = [
     ],
   },
   {
-    id: "commission",
-    title: "Commission Settings",
+    id: "listing",
+    title: "Listing Fee Settings",
     icon: Percent,
     settings: [
-      { key: "baseCommission", label: "Base Commission (%)", type: "number", value: "10" },
-      { key: "artisanCommission", label: "Artisan Commission (%)", type: "number", value: "7" },
-      { key: "newSellerCommission", label: "New Seller Commission (%)", type: "number", value: "12" },
+      { key: "listingFee", label: "Listing Fee (AED per listing after free tier)", type: "number", value: "5" },
+      { key: "freeListingLimit", label: "Free Listing Limit", type: "number", value: "10" },
+      { key: "boostPrice", label: "Featured Boost Price (AED)", type: "number", value: "15" },
     ],
   },
   {
@@ -40,7 +40,7 @@ const SETTING_SECTIONS = [
     title: "Notification Settings",
     icon: Bell,
     toggles: [
-      { key: "emailNewOrder", label: "Email on new order", enabled: true },
+      { key: "emailNewListing", label: "Email on new listing", enabled: true },
       { key: "emailNewSeller", label: "Email on new seller application", enabled: true },
       { key: "emailReport", label: "Email on new report", enabled: true },
       { key: "dailyDigest", label: "Daily activity digest", enabled: false },
@@ -64,8 +64,8 @@ const SETTING_SECTIONS = [
     toggles: [
       { key: "allowNewSellers", label: "Allow new seller registrations", enabled: true },
       { key: "requireApproval", label: "Require product approval", enabled: true },
-      { key: "allowGuestCheckout", label: "Allow guest checkout", enabled: false },
-      { key: "enableReviews", label: "Enable product reviews", enabled: true },
+      { key: "allowGuestBrowsing", label: "Allow guest browsing", enabled: true },
+      { key: "enableReviews", label: "Enable seller reviews", enabled: true },
     ],
   },
 ];

@@ -251,7 +251,7 @@ export default function ReviewsPage() {
                           </span>
                           {review.isVerifiedPurchase && (
                             <Badge variant="outline" className="text-xs">
-                              Verified Purchase
+                              Verified Buyer
                             </Badge>
                           )}
                         </div>
@@ -345,7 +345,7 @@ export default function ReviewsPage() {
                     <div className="flex-1 min-w-0">
                       <p className="font-medium line-clamp-1">{item.product.title}</p>
                       <p className="text-sm text-muted-foreground">
-                        Ordered on {item.orderDate}
+                        Bought on {item.orderDate}
                       </p>
                       <div className="flex items-center gap-1 text-sm text-moulna-gold mt-1">
                         <Sparkles className="w-3.5 h-3.5" />
@@ -366,7 +366,7 @@ export default function ReviewsPage() {
               <Star className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="font-semibold mb-2">No pending reviews</h3>
               <p className="text-sm text-muted-foreground">
-                You&apos;ve reviewed all your purchases. Keep shopping to earn more XP!
+                You&apos;ve reviewed all your recent deals. Keep exploring to earn more XP!
               </p>
             </Card>
           )}

@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
   Users, Search, Filter, Mail, MessageSquare,
-  ShoppingBag, Star, TrendingUp, Calendar, ArrowUpDown,
+  Star, TrendingUp, Calendar, ArrowUpDown,
   MoreHorizontal, Download, UserPlus
 } from "lucide-react";
 
@@ -21,9 +21,9 @@ const CUSTOMERS = [
     name: "Fatima Al Zahra",
     email: "fatima@email.com",
     avatar: "fatima-customer",
-    totalOrders: 12,
-    totalSpent: 4580,
-    lastOrder: "2024-01-15",
+    totalInquiries: 12,
+    totalListingsViewed: 45,
+    lastInquiry: "2024-01-15",
     rating: 4.8,
     isRepeat: true,
     tags: ["VIP", "Jewelry Lover"],
@@ -33,9 +33,9 @@ const CUSTOMERS = [
     name: "Ahmed Hassan",
     email: "ahmed.h@email.com",
     avatar: "ahmed-customer",
-    totalOrders: 8,
-    totalSpent: 2340,
-    lastOrder: "2024-01-12",
+    totalInquiries: 8,
+    totalListingsViewed: 23,
+    lastInquiry: "2024-01-12",
     rating: 5.0,
     isRepeat: true,
     tags: ["Oud Enthusiast"],
@@ -45,9 +45,9 @@ const CUSTOMERS = [
     name: "Mariam Khalid",
     email: "mariam.k@email.com",
     avatar: "mariam-customer",
-    totalOrders: 5,
-    totalSpent: 1890,
-    lastOrder: "2024-01-10",
+    totalInquiries: 5,
+    totalListingsViewed: 18,
+    lastInquiry: "2024-01-10",
     rating: 4.5,
     isRepeat: true,
     tags: [],
@@ -57,9 +57,9 @@ const CUSTOMERS = [
     name: "Omar Nasser",
     email: "omar.n@email.com",
     avatar: "omar-customer",
-    totalOrders: 3,
-    totalSpent: 780,
-    lastOrder: "2024-01-08",
+    totalInquiries: 3,
+    totalListingsViewed: 7,
+    lastInquiry: "2024-01-08",
     rating: 4.0,
     isRepeat: false,
     tags: ["New Customer"],
@@ -69,19 +69,19 @@ const CUSTOMERS = [
     name: "Sara Abdullah",
     email: "sara.a@email.com",
     avatar: "sara-customer",
-    totalOrders: 15,
-    totalSpent: 6200,
-    lastOrder: "2024-01-14",
+    totalInquiries: 15,
+    totalListingsViewed: 62,
+    lastInquiry: "2024-01-14",
     rating: 4.9,
     isRepeat: true,
-    tags: ["VIP", "Top Buyer"],
+    tags: ["VIP", "Most Active"],
   },
 ];
 
 const STATS = [
   { label: "Total Customers", value: "1,245", change: "+12%", icon: Users },
   { label: "Repeat Customers", value: "68%", change: "+5%", icon: TrendingUp },
-  { label: "Avg. Order Value", value: "AED 245", change: "+8%", icon: ShoppingBag },
+  { label: "Avg. Inquiries", value: "6.2", change: "+8%", icon: MessageSquare },
   { label: "Avg. Rating", value: "4.7", change: "+0.2", icon: Star },
 ];
 
@@ -165,9 +165,9 @@ export default function SellerCustomersPage() {
               <thead>
                 <tr className="border-b">
                   <th className="text-start p-4 font-medium">Customer</th>
-                  <th className="text-start p-4 font-medium">Orders</th>
-                  <th className="text-start p-4 font-medium">Total Spent</th>
-                  <th className="text-start p-4 font-medium">Last Order</th>
+                  <th className="text-start p-4 font-medium">Inquiries</th>
+                  <th className="text-start p-4 font-medium">Listings Viewed</th>
+                  <th className="text-start p-4 font-medium">Last Inquiry</th>
                   <th className="text-start p-4 font-medium">Rating</th>
                   <th className="text-start p-4 font-medium">Tags</th>
                   <th className="p-4"></th>
@@ -192,13 +192,13 @@ export default function SellerCustomersPage() {
                       </div>
                     </td>
                     <td className="p-4">
-                      <span className="font-medium">{customer.totalOrders}</span>
+                      <span className="font-medium">{customer.totalInquiries}</span>
                     </td>
                     <td className="p-4">
-                      <span className="font-medium">AED {customer.totalSpent.toLocaleString()}</span>
+                      <span className="font-medium">{customer.totalListingsViewed}</span>
                     </td>
                     <td className="p-4 text-muted-foreground">
-                      {new Date(customer.lastOrder).toLocaleDateString()}
+                      {formatDate(customer.lastInquiry)}
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-1">

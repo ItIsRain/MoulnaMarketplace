@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Percent, Tag, Gift, Clock, Calendar, Plus,
-  TrendingUp, Eye, ShoppingCart, Sparkles, Trash2,
+  TrendingUp, Eye, Users, Sparkles, Trash2,
   Copy, Edit, MoreHorizontal
 } from "lucide-react";
 
@@ -27,7 +27,7 @@ const PROMOTIONS = [
     endDate: "2024-01-31",
     status: "active",
     products: "All Products",
-    revenue: 4520,
+    inquiries: 145,
   },
   {
     id: "2",
@@ -41,21 +41,21 @@ const PROMOTIONS = [
     endDate: null,
     status: "active",
     products: "All Products",
-    revenue: 8920,
+    inquiries: 328,
   },
   {
     id: "3",
-    name: "Free Shipping",
-    type: "shipping",
+    name: "Featured Boost",
+    type: "boost",
     value: 0,
-    code: "FREESHIP",
+    code: "BOOST10",
     usageCount: 67,
     usageLimit: 200,
     startDate: "2024-01-10",
     endDate: "2024-02-10",
     status: "active",
-    products: "Orders over AED 100",
-    revenue: 2340,
+    products: "All Listings",
+    inquiries: 167,
   },
   {
     id: "4",
@@ -69,15 +69,15 @@ const PROMOTIONS = [
     endDate: "2023-12-31",
     status: "expired",
     products: "Oud Collection",
-    revenue: 6780,
+    inquiries: 289,
   },
 ];
 
 const STATS = [
   { label: "Active Promotions", value: "3", icon: Tag, color: "text-green-500" },
-  { label: "Total Uses", value: "329", icon: ShoppingCart, color: "text-blue-500" },
-  { label: "Revenue Generated", value: "AED 22,560", icon: TrendingUp, color: "text-moulna-gold" },
-  { label: "Avg. Order Value", value: "AED 245", icon: Sparkles, color: "text-purple-500" },
+  { label: "Total Uses", value: "329", icon: Users, color: "text-blue-500" },
+  { label: "Inquiries Generated", value: "1,245", icon: TrendingUp, color: "text-moulna-gold" },
+  { label: "Avg. Views Boost", value: "+45%", icon: Sparkles, color: "text-purple-500" },
 ];
 
 export default function SellerPromotionsPage() {
@@ -132,8 +132,8 @@ export default function SellerPromotionsPage() {
             </button>
             <button className="p-4 border-2 border-dashed rounded-lg hover:border-moulna-gold hover:bg-moulna-gold/5 transition-all text-start">
               <Gift className="w-8 h-8 text-purple-500 mb-2" />
-              <h3 className="font-medium">Free Shipping</h3>
-              <p className="text-sm text-muted-foreground">Waive shipping fees</p>
+              <h3 className="font-medium">Featured Boost</h3>
+              <p className="text-sm text-muted-foreground">Boost listing visibility</p>
             </button>
           </div>
         </Card>
@@ -157,7 +157,7 @@ export default function SellerPromotionsPage() {
                   <th className="text-start p-4 font-medium">Code</th>
                   <th className="text-start p-4 font-medium">Usage</th>
                   <th className="text-start p-4 font-medium">Duration</th>
-                  <th className="text-start p-4 font-medium">Revenue</th>
+                  <th className="text-start p-4 font-medium">Inquiries</th>
                   <th className="text-start p-4 font-medium">Status</th>
                   <th className="p-4"></th>
                 </tr>
@@ -177,18 +177,18 @@ export default function SellerPromotionsPage() {
                           "w-10 h-10 rounded-lg flex items-center justify-center",
                           promo.type === "percentage" && "bg-green-100 text-green-600",
                           promo.type === "fixed" && "bg-blue-100 text-blue-600",
-                          promo.type === "shipping" && "bg-purple-100 text-purple-600"
+                          promo.type === "boost" && "bg-purple-100 text-purple-600"
                         )}>
                           {promo.type === "percentage" && <Percent className="w-5 h-5" />}
                           {promo.type === "fixed" && <Tag className="w-5 h-5" />}
-                          {promo.type === "shipping" && <Gift className="w-5 h-5" />}
+                          {promo.type === "boost" && <Gift className="w-5 h-5" />}
                         </div>
                         <div>
                           <p className="font-medium">{promo.name}</p>
                           <p className="text-sm text-muted-foreground">
                             {promo.type === "percentage" && `${promo.value}% off`}
                             {promo.type === "fixed" && `AED ${promo.value} off`}
-                            {promo.type === "shipping" && "Free shipping"}
+                            {promo.type === "boost" && "Featured boost"}
                           </p>
                         </div>
                       </div>
@@ -220,12 +220,12 @@ export default function SellerPromotionsPage() {
                     <td className="p-4 text-sm">
                       <div className="flex items-center gap-1 text-muted-foreground">
                         <Calendar className="w-4 h-4" />
-                        {new Date(promo.startDate).toLocaleDateString()}
+                        {formatDate(promo.startDate)}
                       </div>
                       {promo.endDate && (
                         <div className="flex items-center gap-1 text-muted-foreground">
                           <Clock className="w-4 h-4" />
-                          {new Date(promo.endDate).toLocaleDateString()}
+                          {formatDate(promo.endDate)}
                         </div>
                       )}
                       {!promo.endDate && (
@@ -233,7 +233,7 @@ export default function SellerPromotionsPage() {
                       )}
                     </td>
                     <td className="p-4">
-                      <span className="font-medium">AED {promo.revenue.toLocaleString()}</span>
+                      <span className="font-medium">{promo.inquiries} inquiries</span>
                     </td>
                     <td className="p-4">
                       <Badge

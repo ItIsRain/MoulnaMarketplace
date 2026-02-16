@@ -113,6 +113,13 @@ export function getAvailableAvatarStyles(level: number): string[] {
   return styles;
 }
 
+// Format date consistently (avoids SSR/client hydration mismatch)
+export function formatDate(date: Date | string): string {
+  return new Date(date).toLocaleDateString('en-AE', {
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  });
+}
+
 // Time ago helper
 export function timeAgo(date: Date | string): string {
   const now = new Date();

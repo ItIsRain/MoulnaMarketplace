@@ -8,15 +8,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
-import { LevelBadge } from "@/components/gamification/LevelBadge";
 import { XPBar } from "@/components/gamification/XPBar";
 import { BadgeWithName } from "@/components/gamification/BadgeCard";
 import { DailyChallengePanel } from "@/components/gamification/DailyChallenge";
 import {
   Sparkles, Trophy, Star, Crown, Flame, Gift, Target,
-  ChevronRight, Lock, Check, TrendingUp, Users, Zap
+  ChevronRight, Lock, Check, TrendingUp, Zap
 } from "lucide-react";
 
 // Mock data
@@ -35,12 +32,12 @@ const LEVELS = [
   { level: 1, title: "Newcomer", xpRequired: 0, color: "#94a3b8", unlocks: ["Basic avatar styles"] },
   { level: 2, title: "Explorer", xpRequired: 500, color: "#60a5fa", unlocks: ["Profile badge", "Exclusive coupons"] },
   { level: 3, title: "Regular", xpRequired: 1500, color: "#34d399", unlocks: ["Priority support", "New avatar styles"] },
-  { level: 4, title: "Enthusiast", xpRequired: 3500, color: "#a78bfa", unlocks: ["5% discount code", "Early access"] },
-  { level: 5, title: "Connoisseur", xpRequired: 7000, color: "#d4b86a", unlocks: ["Free shipping", "Premium avatars"] },
-  { level: 6, title: "Trendsetter", xpRequired: 12000, color: "#c7a34d", unlocks: ["10% discount", "VIP support"] },
-  { level: 7, title: "Tastemaker", xpRequired: 20000, color: "#a8863d", unlocks: ["Exclusive products", "All avatars"] },
-  { level: 8, title: "Elite", xpRequired: 35000, color: "#363e42", unlocks: ["15% discount", "Personal curator"] },
-  { level: 9, title: "Legend", xpRequired: 60000, color: "#e11d48", unlocks: ["20% discount", "Invite-only events"] },
+  { level: 4, title: "Enthusiast", xpRequired: 3500, color: "#a78bfa", unlocks: ["Featured profile", "Early access"] },
+  { level: 5, title: "Connoisseur", xpRequired: 7000, color: "#d4b86a", unlocks: ["Verified badge", "Premium avatars"] },
+  { level: 6, title: "Trendsetter", xpRequired: 12000, color: "#c7a34d", unlocks: ["Priority visibility", "VIP support"] },
+  { level: 7, title: "Tastemaker", xpRequired: 20000, color: "#a8863d", unlocks: ["Exclusive listings", "All avatars"] },
+  { level: 8, title: "Elite", xpRequired: 35000, color: "#363e42", unlocks: ["Trusted member badge", "Personal curator"] },
+  { level: 9, title: "Legend", xpRequired: 60000, color: "#e11d48", unlocks: ["Top of search results", "Invite-only events"] },
   { level: 10, title: "Patron", xpRequired: 100000, color: "#fbbf24", unlocks: ["Lifetime perks", "All rewards"] },
 ];
 
@@ -50,7 +47,7 @@ interface RewardsBadge {
   name: string;
   icon: string;
   description: string;
-  category: "shopping" | "social" | "seller" | "streak" | "seasonal";
+  category: "engagement" | "social" | "seller" | "streak" | "seasonal";
   xpReward: number;
   earned: boolean;
   earnedAt?: string;
@@ -59,15 +56,15 @@ interface RewardsBadge {
 }
 
 const BADGES: RewardsBadge[] = [
-  { id: "bdg_1", name: "First Purchase", icon: "🛍️", description: "Made your first purchase", category: "shopping", xpReward: 100, earned: true, earnedAt: "2024-01-15" },
+  { id: "bdg_1", name: "First Inquiry", icon: "💬", description: "Contacted your first seller", category: "engagement", xpReward: 100, earned: true, earnedAt: "2024-01-15" },
   { id: "bdg_2", name: "Review Master", icon: "⭐", description: "Left 5 reviews", category: "social", xpReward: 200, earned: true, earnedAt: "2024-01-20" },
-  { id: "bdg_3", name: "Social Butterfly", icon: "🦋", description: "Shared 10 products", category: "social", xpReward: 150, earned: true, earnedAt: "2024-02-01" },
+  { id: "bdg_3", name: "Social Butterfly", icon: "🦋", description: "Shared 10 listings", category: "social", xpReward: 150, earned: true, earnedAt: "2024-02-01" },
   { id: "bdg_4", name: "Week Warrior", icon: "🔥", description: "7-day login streak", category: "streak", xpReward: 100, earned: true, earnedAt: "2024-02-05" },
-  { id: "bdg_5", name: "Wishlist Curator", icon: "❤️", description: "Added 20 items to wishlist", category: "shopping", xpReward: 50, earned: true, earnedAt: "2024-02-08" },
-  { id: "bdg_6", name: "Category Explorer", icon: "🗺️", description: "Bought from 5 categories", category: "shopping", xpReward: 150, earned: true, earnedAt: "2024-02-10" },
+  { id: "bdg_5", name: "Listing Curator", icon: "❤️", description: "Saved 20 listings", category: "engagement", xpReward: 50, earned: true, earnedAt: "2024-02-08" },
+  { id: "bdg_6", name: "Category Explorer", icon: "🗺️", description: "Browsed 5 different categories", category: "engagement", xpReward: 150, earned: true, earnedAt: "2024-02-10" },
   { id: "bdg_7", name: "Photo Reviewer", icon: "📸", description: "Added photos to 3 reviews", category: "social", xpReward: 150, earned: true, earnedAt: "2024-02-12" },
   { id: "bdg_8", name: "Monthly Master", icon: "📅", description: "30-day login streak", category: "streak", xpReward: 500, earned: false, progress: 7, target: 30 },
-  { id: "bdg_9", name: "Big Spender", icon: "💎", description: "Spent over 5,000 AED", category: "shopping", xpReward: 500, earned: false, progress: 2340, target: 5000 },
+  { id: "bdg_9", name: "Super Explorer", icon: "💎", description: "Contact 50 different sellers", category: "engagement", xpReward: 500, earned: false, progress: 23, target: 50 },
   { id: "bdg_10", name: "Influencer", icon: "📣", description: "Referred 5 friends", category: "social", xpReward: 500, earned: false, progress: 1, target: 5 },
   { id: "bdg_11", name: "Top Reviewer", icon: "✍️", description: "Left 20 reviews", category: "social", xpReward: 300, earned: false, progress: 5, target: 20 },
   { id: "bdg_12", name: "Trendsetter", icon: "🌟", description: "Reach Level 6", category: "seasonal", xpReward: 500, earned: false },
@@ -75,28 +72,20 @@ const BADGES: RewardsBadge[] = [
 
 const DAILY_CHALLENGES = [
   { id: "ch_1", task: "Browse 3 different categories", xp: 30, icon: "👀", completed: true },
-  { id: "ch_2", task: "Add 2 items to your wishlist", xp: 20, icon: "❤️", completed: false, progress: 1, target: 2 },
-  { id: "ch_3", task: "Leave a review on a past order", xp: 50, icon: "✍️", completed: false },
+  { id: "ch_2", task: "Save 2 listings", xp: 20, icon: "❤️", completed: false, progress: 1, target: 2 },
+  { id: "ch_3", task: "Contact a seller about a listing", xp: 50, icon: "✍️", completed: false },
 ];
 
 const XP_HISTORY = [
   { action: "Daily login", xp: 10, date: "Today" },
   { action: "Left a review", xp: 50, date: "Yesterday" },
-  { action: "Completed purchase", xp: 77, date: "Feb 10" },
+  { action: "Contacted a seller", xp: 77, date: "Feb 10" },
   { action: "7-day streak bonus", xp: 100, date: "Feb 9" },
   { action: "Added to wishlist", xp: 5, date: "Feb 8" },
 ];
 
-const LEADERBOARD = [
-  { rank: 1, name: "Ahmed K.", level: 8, xp: 42500, avatar: "ahmed-k" },
-  { rank: 2, name: "Fatima M.", level: 7, xp: 38200, avatar: "fatima-m" },
-  { rank: 3, name: "Khalid R.", level: 7, xp: 35800, avatar: "khalid-r" },
-  { rank: 4, name: "Noura A.", level: 6, xp: 28400, avatar: "noura-a" },
-  { rank: 5, name: "Omar S.", level: 6, xp: 25100, avatar: "omar-s" },
-];
-
 export default function RewardsPage() {
-  const [activeTab, setActiveTab] = React.useState<"overview" | "badges" | "levels" | "leaderboard">("overview");
+  const [activeTab, setActiveTab] = React.useState<"overview" | "badges" | "levels">("overview");
 
   return (
     <div className="space-y-8">
@@ -132,7 +121,6 @@ export default function RewardsPage() {
             { id: "overview", label: "Overview", icon: Sparkles },
             { id: "badges", label: "Badges", icon: Trophy },
             { id: "levels", label: "Levels", icon: TrendingUp },
-            { id: "leaderboard", label: "Leaderboard", icon: Users },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -377,76 +365,6 @@ export default function RewardsPage() {
         </div>
       )}
 
-      {activeTab === "leaderboard" && (
-        <div className="space-y-6">
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-semibold">Top Shoppers This Month</h3>
-              <div className="flex gap-2">
-                {["Weekly", "Monthly", "All Time"].map((period, i) => (
-                  <Button
-                    key={period}
-                    variant={i === 1 ? "default" : "outline"}
-                    size="sm"
-                    className={i === 1 ? "bg-moulna-gold hover:bg-moulna-gold-dark" : ""}
-                  >
-                    {period}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {LEADERBOARD.map((user, i) => (
-                <div
-                  key={user.rank}
-                  className={cn(
-                    "flex items-center gap-4 p-4 rounded-lg",
-                    i < 3 ? "bg-gradient-to-r from-moulna-gold/10 to-transparent" : "bg-muted/50"
-                  )}
-                >
-                  <div className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm",
-                    i === 0 && "bg-yellow-500 text-white",
-                    i === 1 && "bg-gray-400 text-white",
-                    i === 2 && "bg-amber-600 text-white",
-                    i > 2 && "bg-muted text-muted-foreground"
-                  )}>
-                    {i < 3 ? ["🥇", "🥈", "🥉"][i] : user.rank}
-                  </div>
-                  <DiceBearAvatar seed={user.avatar} size="lg" />
-                  <div className="flex-1">
-                    <p className="font-medium">{user.name}</p>
-                    <LevelBadge level={user.level} size="sm" />
-                  </div>
-                  <div className="text-end">
-                    <p className="font-bold text-moulna-gold">{user.xp.toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">XP</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <Separator className="my-6" />
-
-            {/* Your Position */}
-            <div className="flex items-center gap-4 p-4 rounded-lg bg-moulna-gold/10 border border-moulna-gold/30">
-              <div className="w-8 h-8 rounded-full bg-moulna-gold/20 flex items-center justify-center font-bold text-sm text-moulna-gold">
-                #{USER_STATS.rank}
-              </div>
-              <DiceBearAvatar seed="your-avatar" size="lg" />
-              <div className="flex-1">
-                <p className="font-medium">You</p>
-                <LevelBadge level={USER_STATS.level} size="sm" />
-              </div>
-              <div className="text-end">
-                <p className="font-bold text-moulna-gold">{USER_STATS.xp.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">XP</p>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
     </div>
   );
 }

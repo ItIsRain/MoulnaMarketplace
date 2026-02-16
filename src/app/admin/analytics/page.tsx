@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  BarChart3, TrendingUp, TrendingDown, Users, ShoppingBag,
+  BarChart3, TrendingUp, TrendingDown, Users, MessageSquare,
   DollarSign, Store, Calendar, Download, ArrowUpRight,
   ArrowDownRight, Eye, Package
 } from "lucide-react";
@@ -23,11 +23,11 @@ const OVERVIEW_STATS = [
     bg: "bg-green-100",
   },
   {
-    label: "Total Orders",
+    label: "Total Inquiries",
     value: "8,234",
     change: "+12.3%",
     trend: "up",
-    icon: ShoppingBag,
+    icon: MessageSquare,
     color: "text-blue-600",
     bg: "bg-blue-100",
   },
@@ -52,12 +52,12 @@ const OVERVIEW_STATS = [
 ];
 
 const REVENUE_DATA = [
-  { month: "Jan", revenue: 85000, orders: 520 },
-  { month: "Feb", revenue: 92000, orders: 580 },
-  { month: "Mar", revenue: 105000, orders: 650 },
-  { month: "Apr", revenue: 98000, orders: 610 },
-  { month: "May", revenue: 112000, orders: 720 },
-  { month: "Jun", revenue: 125000, orders: 810 },
+  { month: "Jan", revenue: 85000, inquiries: 520 },
+  { month: "Feb", revenue: 92000, inquiries: 580 },
+  { month: "Mar", revenue: 105000, inquiries: 650 },
+  { month: "Apr", revenue: 98000, inquiries: 610 },
+  { month: "May", revenue: 112000, inquiries: 720 },
+  { month: "Jun", revenue: 125000, inquiries: 810 },
 ];
 
 const TOP_CATEGORIES = [
@@ -72,7 +72,7 @@ const PLATFORM_METRICS = [
   { label: "Page Views", value: "1.2M", change: "+15%" },
   { label: "Avg Session", value: "4m 32s", change: "+8%" },
   { label: "Bounce Rate", value: "42%", change: "-5%" },
-  { label: "Cart Abandonment", value: "68%", change: "-3%" },
+  { label: "Inquiry Response Rate", value: "68%", change: "+3%" },
 ];
 
 export default function AdminAnalyticsPage() {
@@ -263,7 +263,7 @@ export default function AdminAnalyticsPage() {
               </li>
               <li className="flex items-start gap-2">
                 <ArrowDownRight className="w-4 h-4 text-orange-600 mt-0.5" />
-                <span>Conversion rate slightly decreased - consider optimizing checkout flow.</span>
+                <span>Conversion rate slightly decreased - consider optimizing listing visibility.</span>
               </li>
             </ul>
           </div>

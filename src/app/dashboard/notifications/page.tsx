@@ -12,7 +12,7 @@ import {
   MessageCircle, TrendingDown, CheckCheck, Trash2, Settings
 } from "lucide-react";
 
-type NotificationType = "order" | "xp" | "badge" | "review" | "price_drop" | "message" | "streak" | "system";
+type NotificationType = "listing" | "xp" | "badge" | "review" | "price_drop" | "message" | "streak" | "system";
 
 interface Notification {
   id: string;
@@ -30,12 +30,12 @@ interface Notification {
 const NOTIFICATIONS: Notification[] = [
   {
     id: "notif_1",
-    type: "order",
-    title: "Order Shipped!",
-    message: "Your order #ORD-2024-001234 has been shipped. Track your package now.",
+    type: "listing",
+    title: "Seller Replied!",
+    message: "Scent of Arabia responded to your inquiry about the Arabian Oud Perfume.",
     read: false,
     createdAt: "2024-02-13T10:30:00Z",
-    link: "/dashboard/orders/ord_1",
+    link: "/dashboard/messages/conv_1",
   },
   {
     id: "notif_2",
@@ -77,7 +77,7 @@ const NOTIFICATIONS: Notification[] = [
     id: "notif_6",
     type: "message",
     title: "New Message",
-    message: "Scent of Arabia replied to your inquiry about shipping.",
+    message: "Scent of Arabia replied to your inquiry.",
     read: true,
     createdAt: "2024-02-11T11:30:00Z",
     link: "/dashboard/messages/conv_1",
@@ -93,12 +93,12 @@ const NOTIFICATIONS: Notification[] = [
   },
   {
     id: "notif_8",
-    type: "order",
-    title: "Order Delivered",
-    message: "Your order #ORD-2024-001189 has been delivered. Don't forget to leave a review!",
+    type: "listing",
+    title: "Listing Saved",
+    message: "Traditional Arabic Calligraphy Art was added to your saved items.",
     read: true,
     createdAt: "2024-02-08T12:00:00Z",
-    link: "/dashboard/orders/ord_2",
+    link: "/dashboard/wishlist",
   },
   {
     id: "notif_9",
@@ -112,7 +112,7 @@ const NOTIFICATIONS: Notification[] = [
 ];
 
 const notificationIcons: Record<NotificationType, React.ReactNode> = {
-  order: <Package className="w-5 h-5 text-blue-500" />,
+  listing: <Package className="w-5 h-5 text-blue-500" />,
   xp: <Sparkles className="w-5 h-5 text-moulna-gold" />,
   badge: <Trophy className="w-5 h-5 text-yellow-500" />,
   review: <Star className="w-5 h-5 text-yellow-500" />,

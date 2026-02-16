@@ -52,7 +52,7 @@ export default function ResetPasswordPage() {
           {/* Logo */}
           <Link href="/" className="inline-block mb-8">
             <Image
-              src="/Moulna.svg"
+              src="/moulna-logo.svg"
               alt="Moulna"
               width={120}
               height={40}

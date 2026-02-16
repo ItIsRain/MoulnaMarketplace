@@ -9,11 +9,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Heart, ShoppingCart, Trash2, Star, Bell, Share2,
+  Heart, MessageCircle, Trash2, Star, Bell, Share2,
   Grid3X3, List, Sparkles
 } from "lucide-react";
 
-const WISHLIST_ITEMS = [
+const SAVED_ITEMS = [
   {
     id: "wish_1",
     product: {
@@ -25,11 +25,10 @@ const WISHLIST_ITEMS = [
       compareAtPriceFils: 55000,
       rating: 4.8,
       reviewCount: 124,
-      inStock: true,
+      available: true,
       seller: "Scent of Arabia",
     },
     addedDate: "Feb 10, 2024",
-    xpReward: 45,
   },
   {
     id: "wish_2",
@@ -41,11 +40,10 @@ const WISHLIST_ITEMS = [
       priceFils: 89000,
       rating: 5.0,
       reviewCount: 56,
-      inStock: true,
+      available: true,
       seller: "Khalid Arts",
     },
     addedDate: "Feb 8, 2024",
-    xpReward: 89,
   },
   {
     id: "wish_3",
@@ -57,11 +55,10 @@ const WISHLIST_ITEMS = [
       priceFils: 32000,
       rating: 4.9,
       reviewCount: 89,
-      inStock: true,
+      available: true,
       seller: "Gulf Gems",
     },
     addedDate: "Feb 5, 2024",
-    xpReward: 32,
   },
   {
     id: "wish_4",
@@ -74,11 +71,10 @@ const WISHLIST_ITEMS = [
       compareAtPriceFils: 85000,
       rating: 4.7,
       reviewCount: 42,
-      inStock: false,
+      available: false,
       seller: "Desert Home",
     },
     addedDate: "Jan 28, 2024",
-    xpReward: 67,
     priceDropAlert: true,
   },
   {
@@ -91,24 +87,20 @@ const WISHLIST_ITEMS = [
       priceFils: 125000,
       rating: 4.9,
       reviewCount: 78,
-      inStock: true,
+      available: true,
       seller: "Elegance UAE",
     },
     addedDate: "Jan 20, 2024",
-    xpReward: 125,
   },
 ];
 
-export default function WishlistPage() {
-  const [items, setItems] = React.useState(WISHLIST_ITEMS);
+export default function SavedItemsPage() {
+  const [items, setItems] = React.useState(SAVED_ITEMS);
   const [view, setView] = React.useState<"grid" | "list">("grid");
 
   const removeItem = (id: string) => {
     setItems(prev => prev.filter(item => item.id !== id));
   };
-
-  const totalValue = items.reduce((sum, item) => sum + item.product.priceFils, 0);
-  const totalXP = items.reduce((sum, item) => sum + item.xpReward, 0);
 
   return (
     <div className="space-y-6">
@@ -116,10 +108,10 @@ export default function WishlistPage() {
         <div>
           <h1 className="font-display text-2xl font-bold mb-2 flex items-center gap-3">
             <Heart className="w-6 h-6 text-red-500 fill-red-500" />
-            My Wishlist
+            Saved Items
           </h1>
           <p className="text-muted-foreground">
-            {items.length} items saved · Total value: {formatAED(totalValue)}
+            {items.length} items saved
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -146,23 +138,17 @@ export default function WishlistPage() {
         </div>
       </div>
 
-      {/* XP Preview */}
+      {/* XP Tip */}
       <Card className="p-4 bg-moulna-gold text-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-5 h-5" />
-            <span className="text-sm">
-              Buy all wishlist items and earn <span className="font-bold">+{totalXP} XP</span>
-            </span>
-          </div>
-          <Button size="sm" className="bg-white text-moulna-gold-dark hover:bg-white/90">
-            <ShoppingCart className="w-4 h-4 me-2" />
-            Add All to Cart
-          </Button>
+        <div className="flex items-center gap-3">
+          <Sparkles className="w-5 h-5" />
+          <span className="text-sm">
+            Contact sellers about your saved items to earn <span className="font-bold">+30 XP per conversation</span>
+          </span>
         </div>
       </Card>
 
-      {/* Wishlist Items */}
+      {/* Saved Items */}
       {items.length > 0 ? (
         <div className={cn(
           "grid gap-6",
@@ -194,16 +180,16 @@ export default function WishlistPage() {
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                    {!item.product.inStock && (
+                    {!item.product.available && (
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                         <Badge variant="outOfStock">
-                          Out of Stock
+                          Unavailable
                         </Badge>
                       </div>
                     )}
                     {item.product.compareAtPriceFils && (
                       <Badge variant="default" className="absolute top-3 start-3 bg-red-500">
-                        Sale
+                        Reduced
                       </Badge>
                     )}
                     {item.priceDropAlert && (
@@ -249,22 +235,18 @@ export default function WishlistPage() {
                       )}
                     </div>
 
-                    {/* XP Preview */}
-                    <div className="flex items-center gap-1 text-sm text-moulna-gold mb-4">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>+{item.xpReward} XP</span>
-                    </div>
-
                     {/* Actions */}
                     <div className="flex gap-2">
                       <Button
                         variant="gold"
                         size="sm"
                         className="flex-1"
-                        disabled={!item.product.inStock}
+                        asChild
                       >
-                        <ShoppingCart className="w-4 h-4 me-2" />
-                        {item.product.inStock ? "Add to Cart" : "Out of Stock"}
+                        <Link href={`/products/${item.product.slug}`}>
+                          <MessageCircle className="w-4 h-4 me-2" />
+                          Contact Seller
+                        </Link>
                       </Button>
                       <Button
                         variant="outline"
@@ -279,7 +261,7 @@ export default function WishlistPage() {
                     </div>
 
                     <p className="text-xs text-muted-foreground mt-3">
-                      Added on {item.addedDate}
+                      Saved on {item.addedDate}
                     </p>
                   </div>
                 </Card>
@@ -290,12 +272,12 @@ export default function WishlistPage() {
       ) : (
         <Card className="p-12 text-center">
           <Heart className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-          <h3 className="font-semibold text-lg mb-2">Your wishlist is empty</h3>
+          <h3 className="font-semibold text-lg mb-2">No saved items yet</h3>
           <p className="text-muted-foreground mb-6">
-            Save items you love to your wishlist and find them here anytime
+            Save listings you like and find them here anytime
           </p>
           <Button variant="gold" asChild>
-            <Link href="/explore">Explore Products</Link>
+            <Link href="/explore">Browse Listings</Link>
           </Button>
         </Card>
       )}

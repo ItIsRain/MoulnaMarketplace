@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   MapPin, Search, Navigation, Store, Star, Clock,
-  Truck, Heart, Filter, ChevronRight, Building2
+  Heart, Filter, ChevronRight, Building2
 } from "lucide-react";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 
@@ -35,7 +35,7 @@ const NEARBY_SHOPS = [
     reviews: 234,
     location: "Al Barsha, Dubai",
     openNow: true,
-    deliveryTime: "Same day",
+    responseTime: "Within 1 hour",
     featured: true,
   },
   {
@@ -48,7 +48,7 @@ const NEARBY_SHOPS = [
     reviews: 156,
     location: "Jumeirah, Dubai",
     openNow: true,
-    deliveryTime: "1-2 days",
+    responseTime: "Within 4 hours",
   },
   {
     id: "3",
@@ -60,7 +60,7 @@ const NEARBY_SHOPS = [
     reviews: 189,
     location: "Dubai Mall, Dubai",
     openNow: true,
-    deliveryTime: "Same day",
+    responseTime: "Within 1 hour",
   },
   {
     id: "4",
@@ -72,7 +72,7 @@ const NEARBY_SHOPS = [
     reviews: 312,
     location: "Gold Souq, Dubai",
     openNow: false,
-    deliveryTime: "2-3 days",
+    responseTime: "Within 24 hours",
   },
   {
     id: "5",
@@ -84,7 +84,7 @@ const NEARBY_SHOPS = [
     reviews: 445,
     location: "Deira, Dubai",
     openNow: true,
-    deliveryTime: "Same day",
+    responseTime: "Within 1 hour",
   },
 ];
 
@@ -274,8 +274,8 @@ export default function LocalPage() {
                         </div>
                         <div className="flex items-center justify-between mt-3">
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Truck className="w-4 h-4" />
-                            {shop.deliveryTime} delivery
+                            <Clock className="w-4 h-4" />
+                            Responds {shop.responseTime}
                           </div>
                           <Button size="sm" variant="outline" asChild>
                             <Link href={`/shops/${shop.slug}`}>
@@ -329,24 +329,24 @@ export default function LocalPage() {
               </Button>
             </Card>
 
-            {/* Same Day Delivery */}
+            {/* Nearby Meetups */}
             <Card className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <Truck className="w-6 h-6 text-emerald-600" />
+                  <MapPin className="w-6 h-6 text-emerald-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold">Same Day Delivery</h3>
+                  <h3 className="font-semibold">Meet Nearby Sellers</h3>
                   <p className="text-sm text-muted-foreground">
-                    Order before 2 PM
+                    Safe public meetup spots
                   </p>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground mb-4">
-                Get your local purchases delivered the same day when you order from nearby shops.
+                Connect with local sellers near you and arrange safe meetups at public locations.
               </p>
               <Button className="w-full bg-emerald-600 hover:bg-emerald-700">
-                Browse Same Day Items
+                Browse Nearby Listings
               </Button>
             </Card>
 
@@ -354,7 +354,7 @@ export default function LocalPage() {
             <Card className="p-6 bg-gradient-to-br from-moulna-gold/10 to-amber-50 border-moulna-gold/20">
               <h3 className="font-semibold mb-2">Support Local Artisans</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Every purchase from a local shop helps support UAE's creative community and preserves traditional craftsmanship.
+                Every deal with a local artisan helps support UAE's creative community and preserves traditional craftsmanship.
               </p>
               <div className="grid grid-cols-2 gap-4 text-center">
                 <div>
@@ -363,7 +363,7 @@ export default function LocalPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-moulna-gold">50K+</p>
-                  <p className="text-xs text-muted-foreground">Products Made in UAE</p>
+                  <p className="text-xs text-muted-foreground">Listings Made in UAE</p>
                 </div>
               </div>
             </Card>

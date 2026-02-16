@@ -4,11 +4,9 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { cn, formatAED } from "@/lib/utils";
+import { cn, timeAgo, formatAED } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
 import { XPBar } from "@/components/gamification/XPBar";
@@ -16,38 +14,51 @@ import { DailyChallengePanel } from "@/components/gamification/DailyChallenge";
 import { StreakCard } from "@/components/gamification/StreakCounter";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
-  Package, Heart, Star, Trophy, ArrowRight, Sparkles,
-  ChevronRight, Clock, Truck, Check
+  MessageSquare, Heart, Star, Trophy, Sparkles,
+  ChevronRight, Check
 } from "lucide-react";
 
 // Mock data
-const RECENT_ORDERS = [
+const RECENT_CONVERSATIONS = [
   {
-    id: "ord_1",
-    status: "shipped",
-    date: "Feb 10, 2024",
-    total: 77000,
-    items: [
-      { title: "Arabian Oud Perfume", image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=100" },
-    ],
-    xpEarned: 77,
+    id: "conv_1",
+    seller: { name: "Scent of Arabia", avatar: "scent-arabia", level: 6 },
+    listing: {
+      title: "Arabian Oud Perfume - 100ml",
+      image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=100",
+    },
+    lastMessage: "Yes, it's still available! I can meet in Dubai Marina tomorrow.",
+    date: "2024-02-13T10:30:00Z",
+    unread: true,
   },
   {
-    id: "ord_2",
-    status: "delivered",
-    date: "Feb 5, 2024",
-    total: 32000,
-    items: [
-      { title: "Pearl Earrings", image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=100" },
-    ],
-    xpEarned: 32,
+    id: "conv_2",
+    seller: { name: "Gulf Gems", avatar: "gulf-gems", level: 5 },
+    listing: {
+      title: "Gold-Plated Pearl Earrings",
+      image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=100",
+    },
+    lastMessage: "Thank you for your interest! The price for 2 sets would be AED 550.",
+    date: "2024-02-12T15:20:00Z",
+    unread: false,
+  },
+  {
+    id: "conv_3",
+    seller: { name: "Elegance UAE", avatar: "elegance-uae", level: 8 },
+    listing: {
+      title: "Embroidered Abaya with Gold Thread",
+      image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=100",
+    },
+    lastMessage: "I have size M and L available. Would you like to see it in person?",
+    date: "2024-02-11T09:45:00Z",
+    unread: false,
   },
 ];
 
 const DAILY_CHALLENGES = [
   { id: "ch_1", task: "Browse 3 different categories", xp: 30, icon: "👀", completed: true },
-  { id: "ch_2", task: "Add 2 items to your wishlist", xp: 20, icon: "❤️", completed: false, progress: 1, target: 2 },
-  { id: "ch_3", task: "Leave a review on a past order", xp: 50, icon: "✍️", completed: false },
+  { id: "ch_2", task: "Save 2 items to your wishlist", xp: 20, icon: "❤️", completed: false, progress: 1, target: 2 },
+  { id: "ch_3", task: "Contact a seller about a listing", xp: 50, icon: "💬", completed: false },
 ];
 
 const RECOMMENDED_PRODUCTS = [
@@ -73,12 +84,6 @@ const RECOMMENDED_PRODUCTS = [
     rating: 4.7,
   },
 ];
-
-const STATUS_STYLES = {
-  pending: { icon: Clock, variant: "pending" as const },
-  shipped: { icon: Truck, variant: "shipped" as const },
-  delivered: { icon: Check, variant: "delivered" as const },
-};
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
@@ -106,8 +111,8 @@ export default function DashboardPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Orders", value: "12", icon: Package, color: "text-blue-500" },
-          { label: "Wishlist Items", value: "8", icon: Heart, color: "text-red-500" },
+          { label: "Conversations", value: "12", icon: MessageSquare, color: "text-blue-500" },
+          { label: "Saved Items", value: "8", icon: Heart, color: "text-red-500" },
           { label: "Reviews Given", value: "5", icon: Star, color: "text-yellow-500" },
           { label: "Badges Earned", value: "7", icon: Trophy, color: "text-moulna-gold" },
         ].map((stat, i) => (
@@ -149,60 +154,56 @@ export default function DashboardPage() {
             />
           </Card>
 
-          {/* Recent Orders */}
+          {/* Recent Conversations */}
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-lg font-semibold">Recent Orders</h2>
-              <Link href="/dashboard/orders" className="text-sm text-moulna-gold hover:underline flex items-center gap-1">
+              <h2 className="font-display text-lg font-semibold">Recent Conversations</h2>
+              <Link href="/dashboard/messages" className="text-sm text-moulna-gold hover:underline flex items-center gap-1">
                 View All <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
 
             <div className="space-y-4">
-              {RECENT_ORDERS.map((order) => {
-                const status = STATUS_STYLES[order.status as keyof typeof STATUS_STYLES];
-                return (
-                  <Link
-                    key={order.id}
-                    href={`/dashboard/orders/${order.id}`}
-                    className="block"
-                  >
-                    <div className="flex items-center gap-4 p-4 rounded-lg border hover:border-moulna-gold/50 transition-colors">
-                      <div className="relative w-16 h-16 rounded-lg overflow-hidden">
-                        <Image
-                          src={order.items[0].image}
-                          alt={order.items[0].title}
-                          fill
-                          className="object-cover"
-                        />
+              {RECENT_CONVERSATIONS.map((conv) => (
+                <Link
+                  key={conv.id}
+                  href={`/dashboard/messages/${conv.id}`}
+                  className="block"
+                >
+                  <div className={cn(
+                    "flex items-center gap-4 p-4 rounded-lg border hover:border-moulna-gold/50 transition-colors",
+                    conv.unread && "border-blue-200 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-900/10"
+                  )}>
+                    <DiceBearAvatar seed={conv.seller.avatar} size="md" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="font-medium text-sm">{conv.seller.name}</span>
+                        <LevelBadge level={conv.seller.level} size="sm" />
+                        {conv.unread && (
+                          <span className="w-2 h-2 rounded-full bg-blue-500" />
+                        )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{order.items[0].title}</p>
-                        <p className="text-sm text-muted-foreground">{order.date}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant={status.variant} className="gap-1">
-                            <status.icon className="w-3 h-3" />
-                            <span className="capitalize">{order.status}</span>
-                          </Badge>
-                          <div className="flex items-center gap-1 text-xs text-moulna-gold font-semibold">
-                            <Sparkles className="w-3 h-3" />
-                            +{order.xpEarned} XP
-                          </div>
-                        </div>
-                      </div>
-                      <p className="font-bold">{formatAED(order.total)}</p>
+                      <p className="text-xs text-muted-foreground mb-1">
+                        Re: {conv.listing.title}
+                      </p>
+                      <p className="text-sm text-muted-foreground line-clamp-1">
+                        {conv.lastMessage}
+                      </p>
                     </div>
-                  </Link>
-                );
-              })}
+                    <div className="text-end flex-shrink-0">
+                      <p className="text-xs text-muted-foreground">{timeAgo(conv.date)}</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
 
-            {RECENT_ORDERS.length === 0 && (
+            {RECENT_CONVERSATIONS.length === 0 && (
               <div className="text-center py-8">
-                <Package className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-muted-foreground mb-4">No orders yet</p>
+                <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                <p className="text-muted-foreground mb-4">No conversations yet</p>
                 <Button variant="gold" asChild>
-                  <Link href="/explore">Start Shopping</Link>
+                  <Link href="/explore">Browse Listings</Link>
                 </Button>
               </div>
             )}
@@ -259,11 +260,11 @@ export default function DashboardPage() {
             <ul className="text-sm text-muted-foreground space-y-2">
               <li className="flex items-start gap-2">
                 <Check className="w-4 h-4 text-emerald-500 mt-0.5" />
-                <span>Leave a photo review for +100 XP</span>
+                <span>Contact a seller about a listing for +30 XP</span>
               </li>
               <li className="flex items-start gap-2">
                 <Check className="w-4 h-4 text-emerald-500 mt-0.5" />
-                <span>Share a product on social media for +20 XP</span>
+                <span>Leave a review for a seller for +100 XP</span>
               </li>
               <li className="flex items-start gap-2">
                 <Check className="w-4 h-4 text-emerald-500 mt-0.5" />

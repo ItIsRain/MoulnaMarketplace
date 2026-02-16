@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/card";
-import { FileText, Users, ShoppingBag, Shield, AlertTriangle, Scale } from "lucide-react";
+import { FileText, Users, MessageSquare, Shield, AlertTriangle, Scale } from "lucide-react";
 
 const SECTIONS = [
   {
@@ -46,24 +46,24 @@ const SECTIONS = [
   },
   {
     id: "marketplace",
-    icon: ShoppingBag,
+    icon: MessageSquare,
     title: "Marketplace Rules",
     content: `
-      As a marketplace, Moulna connects buyers with independent sellers. Each seller is responsible for
-      their own products, pricing, and fulfillment.
+      Moulna is a classifieds platform that connects buyers with independent sellers. All transactions
+      happen directly between buyers and sellers outside the platform.
 
       For Buyers:
-      • All purchases are made directly from independent sellers
-      • Product descriptions and images are provided by sellers
-      • Shipping times and policies vary by seller
-      • Returns and refunds are subject to individual seller policies
+      • All transactions are arranged directly with sellers
+      • Listing descriptions and images are provided by sellers
+      • We recommend meeting in public places for exchanges
+      • Always inspect items before completing a transaction
 
       For Sellers:
-      • You must accurately describe your products
-      • You are responsible for fulfilling orders promptly
+      • You must accurately describe your listings
+      • You are responsible for responding to inquiries promptly
       • You must comply with all applicable laws and regulations
-      • Commission fees apply to all sales (see Seller Agreement)
       • Prohibited items may not be listed
+      • Listing on Moulna is free
 
       Moulna is not responsible for the quality, safety, or legality of items listed by sellers.
     `,

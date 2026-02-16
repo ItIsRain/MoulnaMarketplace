@@ -20,7 +20,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 const SIDEBAR_LINKS = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/orders", label: "My Orders", icon: Package },
+  { href: "/dashboard/orders", label: "My Inquiries", icon: Package },
   { href: "/dashboard/wishlist", label: "Wishlist", icon: Heart },
   { href: "/dashboard/reviews", label: "My Reviews", icon: Star },
   { href: "/dashboard/rewards", label: "Rewards Hub", icon: Trophy },

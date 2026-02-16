@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge as BadgeUI } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  Award, Star, ShoppingBag, MessageSquare, Users,
+  Award, Star, MessageCircle, MessageSquare, Users,
   Flame, Gift, Crown, Heart, Sparkles, Target,
   Zap, Trophy, Medal, Lock, LucideIcon
 } from "lucide-react";
@@ -33,24 +33,24 @@ interface BadgeCategory {
 
 const BADGE_CATEGORIES: BadgeCategory[] = [
   {
-    name: "Shopping",
-    icon: ShoppingBag,
+    name: "Browsing",
+    icon: MessageCircle,
     badges: [
       {
-        id: "first-purchase",
-        name: "First Purchase",
-        description: "Complete your first order on Moulna",
-        icon: ShoppingBag,
+        id: "first-inquiry",
+        name: "First Inquiry",
+        description: "Contact your first seller on Moulna",
+        icon: MessageCircle,
         xp: 50,
         earned: true,
         earnedDate: "2024-01-01",
         rarity: "common",
       },
       {
-        id: "shopaholic",
-        name: "Shopaholic",
-        description: "Complete 10 orders",
-        icon: ShoppingBag,
+        id: "explorer",
+        name: "Explorer",
+        description: "Contact 10 different sellers",
+        icon: MessageCircle,
         xp: 200,
         earned: true,
         earnedDate: "2024-01-10",
@@ -58,19 +58,19 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         progress: { current: 10, total: 10 },
       },
       {
-        id: "big-spender",
-        name: "Big Spender",
-        description: "Spend AED 5,000 in total",
+        id: "power-browser",
+        name: "Power Browser",
+        description: "Save 50 listings",
         icon: Crown,
         xp: 500,
         earned: false,
         rarity: "rare",
-        progress: { current: 3200, total: 5000 },
+        progress: { current: 32, total: 50 },
       },
       {
         id: "collector",
         name: "Collector",
-        description: "Purchase from 10 different shops",
+        description: "Contact sellers from 10 different shops",
         icon: Star,
         xp: 300,
         earned: false,
@@ -86,7 +86,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
       {
         id: "first-review",
         name: "Reviewer",
-        description: "Write your first product review",
+        description: "Write your first seller review",
         icon: MessageSquare,
         xp: 30,
         earned: true,
@@ -162,7 +162,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
       {
         id: "referrer",
         name: "Ambassador",
-        description: "Refer 5 friends who make purchases",
+        description: "Refer 5 friends who join Moulna",
         icon: Users,
         xp: 350,
         earned: false,
@@ -187,7 +187,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
       },
       {
         id: "event-participant",
-        name: "Festival Shopper",
+        name: "Festival Explorer",
         description: "Participate in a seasonal event",
         icon: Gift,
         xp: 150,

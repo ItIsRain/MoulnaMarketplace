@@ -15,8 +15,8 @@ import {
 
 const UPLOAD_STEPS = [
   { step: 1, title: "Download Template", description: "Get the Excel template" },
-  { step: 2, title: "Fill Data", description: "Add your product information" },
-  { step: 3, title: "Upload File", description: "Import your products" },
+  { step: 2, title: "Fill Data", description: "Add your listing information" },
+  { step: 3, title: "Upload File", description: "Import your listings" },
   { step: 4, title: "Review & Publish", description: "Verify and go live" },
 ];
 
@@ -50,7 +50,7 @@ const RECENT_IMPORTS = [
 const VALIDATION_RESULTS = [
   { row: 2, field: "price", message: "Price must be a positive number", status: "error" },
   { row: 5, field: "category", message: "Category 'Fragrance' not found, using 'Perfumes'", status: "warning" },
-  { row: 8, field: "stock", message: "Stock quantity missing, defaulting to 0", status: "warning" },
+  { row: 8, field: "condition", message: "Condition not specified, defaulting to 'New'", status: "warning" },
   { row: 12, field: "image", message: "Image URL is invalid or inaccessible", status: "error" },
 ];
 
@@ -83,9 +83,9 @@ export default function BulkProductsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Bulk Product Upload</h1>
+          <h1 className="text-2xl font-bold">Bulk Listing Upload</h1>
           <p className="text-muted-foreground">
-            Import multiple products at once using Excel or CSV
+            Import multiple listings at once using Excel or CSV
           </p>
         </div>
         <Button variant="outline" asChild>
@@ -162,7 +162,7 @@ export default function BulkProductsPage() {
             <RefreshCw className="w-12 h-12 mx-auto text-moulna-gold mb-4 animate-spin" />
             <h3 className="font-semibold text-lg mb-2">Uploading & Processing...</h3>
             <p className="text-muted-foreground mb-6">
-              Please wait while we validate your products
+              Please wait while we validate your listings
             </p>
             <div className="max-w-md mx-auto">
               <Progress value={uploadProgress} className="h-3 mb-2" />
@@ -176,7 +176,7 @@ export default function BulkProductsPage() {
                 <FileSpreadsheet className="w-8 h-8 text-green-600" />
                 <div>
                   <p className="font-medium">products_new_collection.xlsx</p>
-                  <p className="text-sm text-muted-foreground">24 products found</p>
+                  <p className="text-sm text-muted-foreground">24 listings found</p>
                 </div>
               </div>
               <Badge className="bg-green-100 text-green-700">
@@ -258,11 +258,11 @@ export default function BulkProductsPage() {
               <div className="flex gap-3">
                 <Button variant="outline">
                   <Eye className="w-4 h-4 me-2" />
-                  Preview Products
+                  Preview Listings
                 </Button>
                 <Button className="bg-moulna-gold hover:bg-moulna-gold-dark">
                   <Package className="w-4 h-4 me-2" />
-                  Import 20 Products
+                  Import 20 Listings
                 </Button>
               </div>
             </div>
@@ -284,7 +284,7 @@ export default function BulkProductsPage() {
               <Badge variant="secondary">Description *</Badge>
               <Badge variant="secondary">Price (AED) *</Badge>
               <Badge variant="secondary">Category *</Badge>
-              <Badge variant="secondary">Stock Quantity</Badge>
+              <Badge variant="secondary">Condition</Badge>
               <Badge variant="secondary">SKU</Badge>
               <Badge variant="secondary">Image URLs</Badge>
               <Badge variant="secondary">Weight (g)</Badge>
@@ -313,7 +313,7 @@ export default function BulkProductsPage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-end">
-                    <p className="font-medium">{item.productsAdded} products</p>
+                    <p className="font-medium">{item.productsAdded} listings</p>
                     {item.errors > 0 && (
                       <p className="text-sm text-red-500">{item.errors} errors</p>
                     )}

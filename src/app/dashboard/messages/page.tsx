@@ -24,7 +24,7 @@ const CONVERSATIONS = [
       isOnline: true,
     },
     lastMessage: {
-      text: "Your order has been shipped! Tracking number: UAE123456789",
+      text: "Yes, it's still available! When would you like to meet?",
       timestamp: "2024-02-13T10:30:00Z",
       isFromMe: false,
       isRead: true,
@@ -56,7 +56,7 @@ const CONVERSATIONS = [
       isOnline: true,
     },
     lastMessage: {
-      text: "Thank you for your purchase! Hope you enjoy it 😊",
+      text: "Thank you for the smooth deal! Hope you enjoy it 😊",
       timestamp: "2024-02-11T09:20:00Z",
       isFromMe: true,
       isRead: true,
@@ -84,14 +84,14 @@ const CONVERSATIONS = [
 const MESSAGES = [
   {
     id: "msg_1",
-    text: "Hi! I just placed an order for the Arabian Oud Perfume. When can I expect it to ship?",
+    text: "Hi! I'm interested in the Arabian Oud Perfume. Is it still available? When can we arrange a meetup?",
     timestamp: "2024-02-13T09:00:00Z",
     isFromMe: true,
     status: "read",
   },
   {
     id: "msg_2",
-    text: "Hello! Thank you for your order. We're preparing it now and it will ship within 24 hours.",
+    text: "Hello! Yes, it's still available. I can meet you this weekend — would Abu Dhabi Mall work?",
     timestamp: "2024-02-13T09:15:00Z",
     isFromMe: false,
   },
@@ -104,7 +104,7 @@ const MESSAGES = [
   },
   {
     id: "msg_4",
-    text: "Yes, we do! Would you like us to add gift wrapping to your order? It's complimentary for purchases over AED 300.",
+    text: "Yes, we do! I can include gift wrapping when we meet. It's complimentary for items over AED 300.",
     timestamp: "2024-02-13T09:25:00Z",
     isFromMe: false,
   },
@@ -117,13 +117,13 @@ const MESSAGES = [
   },
   {
     id: "msg_6",
-    text: "Done! I've added premium gift wrapping to your order. 🎁",
+    text: "Done! I'll have it gift-wrapped and ready for our meetup. 🎁",
     timestamp: "2024-02-13T10:00:00Z",
     isFromMe: false,
   },
   {
     id: "msg_7",
-    text: "Your order has been shipped! Tracking number: UAE123456789",
+    text: "Yes, it's still available! When would you like to meet?",
     timestamp: "2024-02-13T10:30:00Z",
     isFromMe: false,
   },

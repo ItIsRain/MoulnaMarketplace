@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  Target, Flame, Clock, Gift, Star, ShoppingBag,
+  Target, Flame, Clock, Gift, Star, Search,
   MessageSquare, Users, Sparkles, Trophy, Zap,
   Calendar, CheckCircle, ChevronRight, Timer
 } from "lucide-react";
@@ -25,17 +25,17 @@ const DAILY_CHALLENGES = [
   },
   {
     id: "daily-2",
-    title: "Window Shopping",
-    description: "Browse 5 different products",
+    title: "Listing Explorer",
+    description: "Browse 5 different listings",
     xp: 15,
     progress: { current: 3, total: 5 },
     completed: false,
-    icon: ShoppingBag,
+    icon: Search,
   },
   {
     id: "daily-3",
     title: "Show Some Love",
-    description: "Add 3 items to your wishlist",
+    description: "Save 3 listings",
     xp: 20,
     progress: { current: 1, total: 3 },
     completed: false,
@@ -43,8 +43,8 @@ const DAILY_CHALLENGES = [
   },
   {
     id: "daily-4",
-    title: "Social Shopper",
-    description: "Share a product with a friend",
+    title: "Social Sharer",
+    description: "Share a listing with a friend",
     xp: 25,
     progress: { current: 0, total: 1 },
     completed: false,
@@ -56,7 +56,7 @@ const WEEKLY_CHALLENGES = [
   {
     id: "weekly-1",
     title: "Review Master",
-    description: "Write 3 product reviews this week",
+    description: "Write 3 seller reviews this week",
     xp: 100,
     progress: { current: 2, total: 3 },
     completed: false,
@@ -65,12 +65,12 @@ const WEEKLY_CHALLENGES = [
   },
   {
     id: "weekly-2",
-    title: "Loyal Customer",
-    description: "Make a purchase this week",
+    title: "Active Buyer",
+    description: "Contact a seller this week",
     xp: 75,
     progress: { current: 1, total: 1 },
     completed: true,
-    icon: ShoppingBag,
+    icon: MessageSquare,
     daysLeft: 4,
   },
   {
@@ -88,25 +88,25 @@ const WEEKLY_CHALLENGES = [
 const SPECIAL_CHALLENGES = [
   {
     id: "special-1",
-    title: "New Year Shopping Spree",
-    description: "Spend AED 500 during the New Year sale",
+    title: "New Year Explorer",
+    description: "Contact 5 sellers during the New Year event",
     xp: 500,
-    progress: { current: 320, total: 500 },
+    progress: { current: 3, total: 5 },
     completed: false,
     icon: Gift,
     endsIn: "3 days",
-    bonus: "Free shipping coupon",
+    bonus: "Featured profile badge",
   },
   {
     id: "special-2",
     title: "Refer & Earn",
-    description: "Invite a friend who makes a purchase",
+    description: "Invite a friend who joins Moulna",
     xp: 300,
     progress: { current: 0, total: 1 },
     completed: false,
     icon: Users,
     endsIn: "7 days",
-    bonus: "AED 50 credit",
+    bonus: "Exclusive badge",
   },
 ];
 

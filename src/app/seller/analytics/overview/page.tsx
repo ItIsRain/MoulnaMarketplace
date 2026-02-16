@@ -7,27 +7,27 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  BarChart3, TrendingUp, TrendingDown, DollarSign, ShoppingBag,
+  BarChart3, TrendingUp, TrendingDown, MessageSquare,
   Users, Eye, ArrowUpRight, ArrowDownRight, Calendar, Download,
   Target, Sparkles
 } from "lucide-react";
 
 const STATS = [
   {
-    label: "Total Revenue",
-    value: "AED 45,890",
+    label: "Total Inquiries",
+    value: "458",
     change: 12.5,
     trend: "up",
-    icon: DollarSign,
+    icon: MessageSquare,
     color: "text-green-600",
     bg: "bg-green-100",
   },
   {
-    label: "Orders",
+    label: "Conversations",
     value: "234",
     change: 8.2,
     trend: "up",
-    icon: ShoppingBag,
+    icon: MessageSquare,
     color: "text-blue-600",
     bg: "bg-blue-100",
   },
@@ -52,19 +52,19 @@ const STATS = [
 ];
 
 const TOP_PRODUCTS = [
-  { name: "Premium Oud Collection", sales: 45, revenue: 20250, growth: 18 },
-  { name: "Arabian Bakhoor Set", sales: 38, revenue: 5700, growth: 12 },
-  { name: "Traditional Perfume 100ml", sales: 32, revenue: 9600, growth: -5 },
-  { name: "Gift Sampler Pack", sales: 28, revenue: 4200, growth: 25 },
-  { name: "Luxury Oud Chips", sales: 24, revenue: 7200, growth: 8 },
+  { name: "Premium Oud Collection", inquiries: 45, views: 20250, growth: 18 },
+  { name: "Arabian Bakhoor Set", inquiries: 38, views: 5700, growth: 12 },
+  { name: "Traditional Perfume 100ml", inquiries: 32, views: 9600, growth: -5 },
+  { name: "Gift Sampler Pack", inquiries: 28, views: 4200, growth: 25 },
+  { name: "Luxury Oud Chips", inquiries: 24, views: 7200, growth: 8 },
 ];
 
 const RECENT_ACTIVITY = [
-  { type: "order", message: "New order #ORD-2024-1234", time: "2 min ago" },
+  { type: "inquiry", message: "New inquiry about Premium Oud Collection", time: "2 min ago" },
   { type: "review", message: "5-star review received", time: "15 min ago" },
   { type: "follower", message: "New follower: Sarah A.", time: "1 hour ago" },
-  { type: "milestone", message: "100th order this month!", time: "3 hours ago" },
-  { type: "order", message: "New order #ORD-2024-1233", time: "5 hours ago" },
+  { type: "milestone", message: "100th inquiry this month!", time: "3 hours ago" },
+  { type: "inquiry", message: "New inquiry about Arabian Bakhoor Set", time: "5 hours ago" },
 ];
 
 export default function AnalyticsOverviewPage() {
@@ -148,7 +148,7 @@ export default function AnalyticsOverviewPage() {
         {/* Revenue Chart Placeholder */}
         <Card className="lg:col-span-2 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="font-semibold">Revenue Overview</h2>
+            <h2 className="font-semibold">Inquiry Overview</h2>
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-moulna-gold" />
@@ -190,7 +190,7 @@ export default function AnalyticsOverviewPage() {
               >
                 <div className={cn(
                   "w-2 h-2 rounded-full mt-2",
-                  activity.type === "order" && "bg-green-500",
+                  activity.type === "inquiry" && "bg-green-500",
                   activity.type === "review" && "bg-yellow-500",
                   activity.type === "follower" && "bg-blue-500",
                   activity.type === "milestone" && "bg-purple-500"
@@ -221,8 +221,8 @@ export default function AnalyticsOverviewPage() {
             <thead>
               <tr className="border-b">
                 <th className="text-start py-3 px-4 text-sm font-medium text-muted-foreground">Product</th>
-                <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Sales</th>
-                <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Revenue</th>
+                <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Inquiries</th>
+                <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Views</th>
                 <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Growth</th>
               </tr>
             </thead>
@@ -241,9 +241,9 @@ export default function AnalyticsOverviewPage() {
                       <span className="font-medium">{product.name}</span>
                     </div>
                   </td>
-                  <td className="py-4 px-4 text-center">{product.sales}</td>
+                  <td className="py-4 px-4 text-center">{product.inquiries}</td>
                   <td className="py-4 px-4 text-center font-semibold">
-                    AED {product.revenue.toLocaleString()}
+                    {product.views.toLocaleString()}
                   </td>
                   <td className="py-4 px-4 text-center">
                     <Badge
@@ -273,7 +273,7 @@ export default function AnalyticsOverviewPage() {
           <div className="flex-1">
             <h3 className="font-semibold mb-1">Monthly Goal Progress</h3>
             <p className="text-sm text-muted-foreground mb-2">
-              You're 78% towards your AED 60,000 monthly revenue goal
+              You're 78% towards your 600 monthly inquiry goal
             </p>
             <div className="h-2 bg-moulna-gold/20 rounded-full overflow-hidden">
               <motion.div
@@ -284,8 +284,8 @@ export default function AnalyticsOverviewPage() {
             </div>
           </div>
           <div className="text-end">
-            <p className="text-2xl font-bold text-moulna-gold">AED 46,800</p>
-            <p className="text-sm text-muted-foreground">of AED 60,000</p>
+            <p className="text-2xl font-bold text-moulna-gold">468</p>
+            <p className="text-sm text-muted-foreground">of 600 inquiries</p>
           </div>
         </div>
       </Card>
