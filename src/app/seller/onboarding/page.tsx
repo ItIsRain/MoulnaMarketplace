@@ -41,6 +41,16 @@ const CATEGORIES = [
   "Gifts",
 ];
 
+const EMIRATES = [
+  "Abu Dhabi",
+  "Dubai",
+  "Sharjah",
+  "Ajman",
+  "Umm Al Quwain",
+  "Ras Al Khaimah",
+  "Fujairah",
+];
+
 const AVATAR_STYLES = [
   { id: "adventurer", name: "Adventurer", locked: false },
   { id: "bottts", name: "Bottts", locked: false },
@@ -61,6 +71,7 @@ export default function SellerOnboardingPage() {
   // Shop form state
   const [shopName, setShopName] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("");
+  const [selectedEmirate, setSelectedEmirate] = React.useState("");
   const [tagline, setTagline] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [story, setStory] = React.useState("");
@@ -176,7 +187,7 @@ export default function SellerOnboardingPage() {
           tagline: tagline || undefined,
           description: description || undefined,
           category: selectedCategory || undefined,
-          location: user?.location || undefined,
+          location: selectedEmirate || user?.location || undefined,
           avatarStyle,
           avatarSeed,
           logoUrl: logoUrl || undefined,
@@ -377,6 +388,26 @@ export default function SellerOnboardingPage() {
                         )}
                       >
                         {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-3 block">Emirate</label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {EMIRATES.map((emirate) => (
+                      <button
+                        key={emirate}
+                        onClick={() => setSelectedEmirate(emirate)}
+                        className={cn(
+                          "p-3 text-sm rounded-lg border transition-colors text-center",
+                          selectedEmirate === emirate
+                            ? "border-moulna-gold bg-moulna-gold/10 text-moulna-gold"
+                            : "border-muted hover:border-moulna-gold/50"
+                        )}
+                      >
+                        {emirate}
                       </button>
                     ))}
                   </div>

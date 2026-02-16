@@ -14,8 +14,18 @@ import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
   Store, Camera, Save, Globe, MapPin, Phone, Mail,
   Clock, Instagram, Facebook, Twitter, Youtube, ChevronRight,
-  Palette, FileText, Image, ExternalLink
+  Palette, FileText, Image, ExternalLink, Video
 } from "lucide-react";
+
+const EMIRATES = [
+  "Abu Dhabi",
+  "Dubai",
+  "Sharjah",
+  "Ajman",
+  "Umm Al Quwain",
+  "Ras Al Khaimah",
+  "Fujairah",
+];
 
 export default function EditShopPage() {
   const [formData, setFormData] = React.useState({
@@ -25,12 +35,14 @@ export default function EditShopPage() {
     description: "We specialize in premium Arabian oud, bakhoor, and traditional perfumes. Each product is carefully sourced and crafted to bring you the finest scents from the Arabian Peninsula.",
     email: "contact@arabianscents.ae",
     phone: "+971 50 123 4567",
+    emirate: "Dubai",
     location: "Al Barsha, Dubai, UAE",
     website: "https://arabianscents.ae",
     instagram: "@arabianscents_uae",
     facebook: "arabianscentsUAE",
     twitter: "@arabian_scents",
     youtube: "",
+    videoUrl: "",
     operatingHours: "9:00 AM - 9:00 PM",
     operatingDays: "Sunday - Thursday",
   });
@@ -238,8 +250,27 @@ export default function EditShopPage() {
                   />
                 </div>
               </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="location">Location</Label>
+              <div>
+                <Label htmlFor="emirate">Emirate</Label>
+                <div className="relative mt-1">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <select
+                    id="emirate"
+                    value={formData.emirate}
+                    onChange={(e) => setFormData({ ...formData, emirate: e.target.value })}
+                    className="w-full rounded-md border border-input bg-background ps-10 pe-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-moulna-gold"
+                  >
+                    <option value="">Select Emirate</option>
+                    {EMIRATES.map((emirate) => (
+                      <option key={emirate} value={emirate}>
+                        {emirate}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="location">Address</Label>
                 <div className="relative mt-1">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -247,6 +278,7 @@ export default function EditShopPage() {
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     className="ps-10"
+                    placeholder="e.g., Al Barsha, Dubai"
                   />
                 </div>
               </div>
@@ -334,6 +366,30 @@ export default function EditShopPage() {
                     placeholder="Channel URL"
                   />
                 </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Media */}
+          <Card className="p-6">
+            <h2 className="font-semibold mb-4">Media</h2>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="videoUrl">Shop Intro Video</Label>
+                <div className="relative mt-1">
+                  <Video className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="videoUrl"
+                    type="url"
+                    value={formData.videoUrl}
+                    onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                    className="ps-10"
+                    placeholder="https://youtube.com/watch?v=..."
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  YouTube or Vimeo URL for your shop intro video
+                </p>
               </div>
             </div>
           </Card>

@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/useAuthStore";
 import { cn } from "@/lib/utils";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
@@ -66,6 +67,8 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuthStore();
   const [expandedItem, setExpandedItem] = React.useState<string | null>("Rewards");
 
   // Mock user data
@@ -184,7 +187,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
               <hr className="my-2" />
 
-              <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors">
+              <button
+                onClick={() => { logout(); router.push("/"); }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors"
+              >
                 <LogOut className="w-5 h-5" />
                 Sign Out
               </button>

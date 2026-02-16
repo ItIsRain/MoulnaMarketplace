@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
   const maxPrice = parseInt(searchParams.get("maxPrice") || "0") || 0;
   const handmade = searchParams.get("handmade") === "true";
   const verified = searchParams.get("verified") === "true";
+  const shop = searchParams.get("shop") || "";
   const sort = searchParams.get("sort") || "newest";
   const limit = Math.min(parseInt(searchParams.get("limit") || "20") || 20, 50);
   const offset = parseInt(searchParams.get("offset") || "0") || 0;
@@ -24,6 +25,10 @@ export async function GET(request: NextRequest) {
     .select(`*, shops!inner(${SHOP_SELECT})`, { count: "exact" })
     .eq("status", "active")
     .or("expires_at.is.null,expires_at.gt.now()");
+
+  if (shop) {
+    query = query.eq("shops.slug", shop);
+  }
 
   if (search) {
     query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);

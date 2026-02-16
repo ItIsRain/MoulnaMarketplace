@@ -195,6 +195,8 @@ export interface Shop {
   isVerified: boolean;
   isArtisan: boolean;
   responseTime?: string;
+  videoUrl?: string;
+  galleryImages: string[];
   createdAt: string;
   updatedAt: string;
 }

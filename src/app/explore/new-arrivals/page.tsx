@@ -11,6 +11,8 @@ import {
   Sparkles, Clock, Filter, Grid, List, Heart, MessageCircle,
   Star, ChevronDown, ArrowUpDown
 } from "lucide-react";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 
 const NEW_PRODUCTS = [
@@ -119,19 +121,21 @@ export default function NewArrivalsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background">
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background">
       {/* Hero Section */}
-      <section className="relative py-16 bg-gradient-to-r from-emerald-600 to-teal-600 text-white overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
+      <section className="relative py-16 bg-gradient-to-r from-moulna-charcoal via-moulna-charcoal/90 to-moulna-charcoal text-white overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-            className="absolute -top-20 -right-20 w-64 h-64 border-2 border-white rounded-full"
+            className="absolute -top-20 -right-20 w-64 h-64 border-2 border-moulna-gold rounded-full"
           />
           <motion.div
             animate={{ rotate: -360 }}
             transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
-            className="absolute -bottom-10 -left-10 w-48 h-48 border border-white rounded-full"
+            className="absolute -bottom-10 -left-10 w-48 h-48 border border-moulna-gold rounded-full"
           />
         </div>
         <div className="container mx-auto px-4 relative">
@@ -140,24 +144,24 @@ export default function NewArrivalsPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-2xl mx-auto"
           >
-            <Badge className="mb-4 bg-white/20 text-white border-0">
+            <Badge className="mb-4 bg-moulna-gold/20 text-moulna-gold border-moulna-gold/30">
               <Sparkles className="w-3 h-3 me-1" />
               Fresh Additions
             </Badge>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              New Arrivals
+            <h1 className="text-4xl md:text-5xl font-display font-bold mb-4">
+              New Listings
             </h1>
             <p className="text-lg text-white/80 mb-6">
               Discover the latest additions to our marketplace.
               Fresh products from talented artisans, updated daily.
             </p>
             <div className="flex items-center justify-center gap-4 text-sm">
-              <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
-                <Clock className="w-4 h-4" />
+              <div className="flex items-center gap-2 bg-moulna-gold/10 border border-moulna-gold/20 px-4 py-2 rounded-full">
+                <Clock className="w-4 h-4 text-moulna-gold" />
                 Updated every hour
               </div>
-              <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
-                <Sparkles className="w-4 h-4" />
+              <div className="flex items-center gap-2 bg-moulna-gold/10 border border-moulna-gold/20 px-4 py-2 rounded-full">
+                <Sparkles className="w-4 h-4 text-moulna-gold" />
                 {NEW_PRODUCTS.length}+ new items this week
               </div>
             </div>
@@ -239,7 +243,7 @@ export default function NewArrivalsPage() {
               {viewMode === "grid" ? (
                 <Card className="group overflow-hidden hover:shadow-lg transition-all">
                   <div className="relative aspect-square bg-gradient-to-br from-muted to-muted/50">
-                    <Badge className="absolute top-3 left-3 bg-emerald-500 text-white">
+                    <Badge className="absolute top-3 left-3 bg-moulna-gold text-white">
                       <Sparkles className="w-3 h-3 me-1" />
                       New
                     </Badge>
@@ -294,7 +298,7 @@ export default function NewArrivalsPage() {
                 <Card className="group p-4 hover:shadow-lg transition-all">
                   <div className="flex gap-4">
                     <div className="relative w-32 h-32 rounded-lg bg-gradient-to-br from-muted to-muted/50 flex-shrink-0">
-                      <Badge className="absolute top-2 left-2 bg-emerald-500 text-white text-xs">
+                      <Badge className="absolute top-2 left-2 bg-moulna-gold text-white text-xs">
                         New
                       </Badge>
                     </div>
@@ -358,10 +362,12 @@ export default function NewArrivalsPage() {
         {/* Load More */}
         <div className="text-center mt-12">
           <Button variant="outline" size="lg">
-            Load More New Arrivals
+            Load More New Listings
           </Button>
         </div>
       </div>
     </div>
+    <Footer />
+    </>
   );
 }

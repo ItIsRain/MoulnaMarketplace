@@ -38,6 +38,8 @@ export function mapDbShop(row: any): Shop {
     isVerified: row.is_verified || false,
     isArtisan: row.is_artisan || false,
     responseTime: row.response_time ?? undefined,
+    videoUrl: row.video_url ?? undefined,
+    galleryImages: row.gallery_images ?? [],
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/useAuthStore";
 import { cn } from "@/lib/utils";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
@@ -30,6 +31,8 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   return (
@@ -126,7 +129,10 @@ export default function AdminLayout({
             >
               View Site
             </Link>
-            <button className="p-2 hover:bg-muted rounded-lg text-red-600">
+            <button
+              onClick={() => { logout(); router.push("/"); }}
+              className="p-2 hover:bg-muted rounded-lg text-red-600"
+            >
               <LogOut className="w-5 h-5" />
             </button>
           </div>

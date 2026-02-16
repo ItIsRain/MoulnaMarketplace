@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/useAuthStore";
 import { cn } from "@/lib/utils";
 import { Navbar } from "./Navbar";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
@@ -76,6 +77,8 @@ interface SellerLayoutProps {
 
 export function SellerLayout({ children }: SellerLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuthStore();
 
   // Mock seller data
   const seller = {
@@ -176,7 +179,10 @@ export function SellerLayout({ children }: SellerLayoutProps) {
                 Back to Marketplace
               </Link>
 
-              <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors">
+              <button
+                onClick={() => { logout(); router.push("/"); }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors"
+              >
                 <LogOut className="w-5 h-5" />
                 Sign Out
               </button>

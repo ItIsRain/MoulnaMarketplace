@@ -37,8 +37,11 @@ export async function GET(
     isFollowing = !!follow;
   }
 
+  const isOwner = !!user && user.id === shop.owner_id;
+
   return NextResponse.json({
     shop: mapDbShop(shop),
     isFollowing,
+    isOwner,
   });
 }

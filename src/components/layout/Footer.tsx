@@ -12,9 +12,7 @@ const FOOTER_LINKS = {
     links: [
       { name: "All Categories", href: "/explore/categories" },
       { name: "Trending Now", href: "/explore/trending" },
-      { name: "New Arrivals", href: "/explore/new-arrivals" },
-      { name: "Daily Deals", href: "/explore/deals" },
-      { name: "Collections", href: "/explore/collections" },
+      { name: "New Listings", href: "/explore/new-arrivals" },
       { name: "Gift Cards", href: "/gift-cards" },
     ],
   },
@@ -22,10 +20,7 @@ const FOOTER_LINKS = {
     title: "Sell",
     links: [
       { name: "Sell on Moulna", href: "/sell-with-us" },
-      { name: "Seller Dashboard", href: "/seller" },
       { name: "Pricing", href: "/pricing" },
-      { name: "Artisan Program", href: "/artisan-program" },
-      { name: "Seller Resources", href: "/help?category=selling" },
     ],
   },
   about: {
@@ -33,8 +28,6 @@ const FOOTER_LINKS = {
     links: [
       { name: "About Moulna", href: "/about" },
       { name: "How It Works", href: "/how-it-works" },
-      { name: "Blog", href: "/blog" },
-      { name: "Careers", href: "/careers" },
       { name: "Press", href: "/press" },
     ],
   },
@@ -43,7 +36,6 @@ const FOOTER_LINKS = {
     links: [
       { name: "Help Center", href: "/help" },
       { name: "Contact Us", href: "/contact" },
-      { name: "Meetup Tips", href: "/help?category=meetups" },
       { name: "Dispute Resolution", href: "/legal/refund-policy" },
     ],
   },

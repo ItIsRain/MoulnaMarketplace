@@ -4,7 +4,7 @@ import { v2 as cloudinary } from "cloudinary";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-const VALID_FOLDERS = ["logos", "banners", "story", "products"];
+const VALID_FOLDERS = ["logos", "banners", "story", "products", "gallery"];
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();

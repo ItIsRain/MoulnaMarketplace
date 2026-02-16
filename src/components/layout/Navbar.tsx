@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -18,7 +18,6 @@ import {
   LogOut,
   Settings,
   Trophy,
-  Flame,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -43,12 +42,12 @@ const CATEGORIES = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, isAuthenticated, logout } = useAuthStore();
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
-  const [isCategoryOpen, setIsCategoryOpen] = React.useState(false);
 
   // Handle scroll effect
   React.useEffect(() => {
@@ -63,7 +62,6 @@ export function Navbar() {
   React.useEffect(() => {
     setIsMobileMenuOpen(false);
     setIsUserMenuOpen(false);
-    setIsCategoryOpen(false);
   }, [pathname]);
 
   return (
@@ -106,53 +104,12 @@ export function Navbar() {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-1">
-              {/* Categories Dropdown */}
-              <div className="relative">
-                <Button
-                  variant="ghost"
-                  className="gap-1"
-                  onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-                >
-                  Categories
-                  <ChevronDown className={cn("w-4 h-4 transition-transform", isCategoryOpen && "rotate-180")} />
-                </Button>
-
-                <AnimatePresence>
-                  {isCategoryOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setIsCategoryOpen(false)}
-                      />
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        className="absolute top-full left-0 mt-2 w-64 bg-card rounded-xl shadow-lg p-2 z-50"
-                      >
-                        {CATEGORIES.map((cat) => (
-                          <Link
-                            key={cat.slug}
-                            href={`/explore/categories/${cat.slug}`}
-                            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
-                            onClick={() => setIsCategoryOpen(false)}
-                          >
-                            <span className="text-lg">{cat.icon}</span>
-                            <span className="text-sm font-medium">{cat.name}</span>
-                          </Link>
-                        ))}
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              <Link href="/explore/trending">
-                <Button variant="ghost">Trending</Button>
+              <Link href="/explore/categories">
+                <Button variant="ghost">Categories</Button>
               </Link>
 
-              <Link href="/explore/deals">
-                <Button variant="ghost">Deals</Button>
+              <Link href="/explore/shops">
+                <Button variant="ghost">Meet the Sellers</Button>
               </Link>
             </nav>
 
@@ -311,6 +268,7 @@ export function Navbar() {
                               onClick={() => {
                                 logout();
                                 setIsUserMenuOpen(false);
+                                router.push("/");
                               }}
                               className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors w-full"
                             >
@@ -429,17 +387,9 @@ export function Navbar() {
                 <div className="h-px bg-border" />
 
                 <div className="space-y-1">
-                  <Link href="/explore/trending" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted">
-                    <Flame className="w-4 h-4 text-orange-500" />
-                    <span className="text-sm font-medium">Trending Now</span>
-                  </Link>
-                  <Link href="/explore/deals" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted">
-                    <span className="text-lg">⚡</span>
-                    <span className="text-sm font-medium">Daily Deals</span>
-                  </Link>
-                  <Link href="/shops" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted">
+                  <Link href="/explore/shops" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted">
                     <Store className="w-4 h-4" />
-                    <span className="text-sm font-medium">Browse Shops</span>
+                    <span className="text-sm font-medium">Meet the Sellers</span>
                   </Link>
                 </div>
 

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -35,7 +35,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { user } = useAuthStore();
+  const router = useRouter();
+  const { user, logout } = useAuthStore();
 
   // Default mock user if not logged in
   const defaultUser = {
@@ -146,7 +147,10 @@ export default function DashboardLayout({
                   </Card>
 
                   {/* Logout */}
-                  <button className="flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-red-500 transition-colors w-full">
+                  <button
+                    onClick={() => { logout(); router.push("/"); }}
+                    className="flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-red-500 transition-colors w-full"
+                  >
                     <LogOut className="w-4 h-4" />
                     Sign Out
                   </button>

@@ -11,6 +11,11 @@ import {
   Heart,
   TrendingUp,
   Loader2,
+  UserPlus,
+  Store,
+  MapPin,
+  Package,
+  Trophy,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -41,50 +46,246 @@ const scaleIn = {
   visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
 };
 
-// Mock data
-const CATEGORIES = [
-  { name: "Handmade Jewelry", slug: "jewelry", icon: "💎", count: 2847 },
-  { name: "Home Décor", slug: "home-decor", icon: "🏠", count: 1923 },
-  { name: "Arabic Calligraphy", slug: "calligraphy", icon: "✒️", count: 892 },
-  { name: "Perfumes & Oud", slug: "perfumes", icon: "🌸", count: 1456 },
-  { name: "Fashion & Clothing", slug: "fashion", icon: "👗", count: 3201 },
-  { name: "Food & Sweets", slug: "food", icon: "🍯", count: 987 },
-  { name: "Art & Prints", slug: "art", icon: "🎨", count: 1654 },
-  { name: "Baby & Kids", slug: "baby-kids", icon: "👶", count: 1122 },
+// ─── Seasonal Campaigns ───
+
+interface SeasonalCampaign {
+  slug: string;
+  title: string;
+  description: string;
+  image: string;
+  gradient: string;
+  badge: string;
+}
+
+const SEASONAL_CAMPAIGNS: { start: string; end: string; campaign: SeasonalCampaign }[] = [
+  // Ramadan (approx late Feb – late Mar 2026)
+  {
+    start: "02-15",
+    end: "03-25",
+    campaign: {
+      slug: "ramadan-sale",
+      title: "Ramadan Kareem",
+      description: "Discover handcrafted gifts, oud collections, and special Ramadan bundles from UAE's finest artisans. Exclusive deals throughout the holy month.",
+      image: "https://images.unsplash.com/photo-1564769625905-50e93615e769?w=1200&q=80",
+      gradient: "from-purple-900/80 via-indigo-900/60 to-transparent",
+      badge: "Ramadan Special",
+    },
+  },
+  // Eid Al Fitr (late Mar – mid Apr)
+  {
+    start: "03-26",
+    end: "04-15",
+    campaign: {
+      slug: "eid-al-fitr-sale",
+      title: "Eid Mubarak",
+      description: "Celebrate Eid with stunning handmade gifts, festive home décor, and exclusive collections. Treat yourself and your loved ones.",
+      image: "https://images.unsplash.com/photo-1590076215667-875d4ef2d7de?w=1200&q=80",
+      gradient: "from-emerald-900/80 via-teal-900/60 to-transparent",
+      badge: "Eid Collection",
+    },
+  },
+  // Summer Sale (Jun – Aug)
+  {
+    start: "06-01",
+    end: "08-31",
+    campaign: {
+      slug: "summer-sale",
+      title: "Summer Sale",
+      description: "Beat the heat with cool deals! Up to 50% off on handmade accessories, home fragrances, and artisan crafts all summer long.",
+      image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=80",
+      gradient: "from-orange-900/80 via-amber-900/60 to-transparent",
+      badge: "Summer Deals",
+    },
+  },
+  // Back to School (Sep)
+  {
+    start: "09-01",
+    end: "09-30",
+    campaign: {
+      slug: "back-to-school",
+      title: "Back to School",
+      description: "Start the new school year with unique handmade stationery, calligraphy sets, and personalized accessories for students.",
+      image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1200&q=80",
+      gradient: "from-blue-900/80 via-sky-900/60 to-transparent",
+      badge: "School Season",
+    },
+  },
+  // UAE National Day (Nov 15 – Dec 10)
+  {
+    start: "11-15",
+    end: "12-10",
+    campaign: {
+      slug: "national-day-sale",
+      title: "UAE National Day",
+      description: "Celebrate the spirit of the union with proudly Emirati crafts, heritage items, and patriotic collections from local artisans.",
+      image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1200&q=80",
+      gradient: "from-red-900/80 via-rose-900/60 to-transparent",
+      badge: "National Day",
+    },
+  },
+  // Year-End / New Year (Dec 11 – Jan 10)
+  {
+    start: "12-11",
+    end: "01-10",
+    campaign: {
+      slug: "new-year-sale",
+      title: "New Year, New Finds",
+      description: "Ring in the new year with exclusive artisan collections. Handpicked gifts, limited editions, and festive deals to start fresh.",
+      image: "https://images.unsplash.com/photo-1482245294234-b3f2f8d5f1a4?w=1200&q=80",
+      gradient: "from-violet-900/80 via-purple-900/60 to-transparent",
+      badge: "New Year Sale",
+    },
+  },
+  // Dubai Shopping Festival (Jan 11 – Feb 14)
+  {
+    start: "01-11",
+    end: "02-14",
+    campaign: {
+      slug: "dsf-sale",
+      title: "Dubai Shopping Festival",
+      description: "The biggest shopping event in the region! Explore thousands of handmade products with exclusive DSF deals and surprise discounts.",
+      image: "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=1200&q=80",
+      gradient: "from-cyan-900/80 via-blue-900/60 to-transparent",
+      badge: "DSF Deals",
+    },
+  },
 ];
+
+// Default campaign when nothing else matches
+const DEFAULT_CAMPAIGN: SeasonalCampaign = {
+  slug: "deals",
+  title: "Explore What's New",
+  description: "Discover the latest handmade products, artisan collections, and exclusive finds from UAE's best creators.",
+  image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&q=80",
+  gradient: "from-neutral-900/80 via-neutral-800/60 to-transparent",
+  badge: "Featured",
+};
+
+function getCurrentCampaign(): SeasonalCampaign {
+  const now = new Date();
+  const mmdd = `${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+  for (const { start, end, campaign } of SEASONAL_CAMPAIGNS) {
+    // Handle year-wrap (e.g., Dec 11 – Jan 10)
+    if (start > end) {
+      if (mmdd >= start || mmdd <= end) return campaign;
+    } else {
+      if (mmdd >= start && mmdd <= end) return campaign;
+    }
+  }
+
+  return DEFAULT_CAMPAIGN;
+}
+
+// Mock data for sellers you follow
+const FOLLOWED_SELLERS = [
+  {
+    id: "shp_1",
+    name: "Scent of Arabia",
+    slug: "scent-of-arabia",
+    avatar: "scent-arabia",
+    level: 7,
+    rating: 4.9,
+    totalProducts: 28,
+    location: "Dubai",
+    category: "Perfumes & Oud",
+    image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400",
+    isVerified: true,
+  },
+  {
+    id: "shp_2",
+    name: "Khatt Studio",
+    slug: "khatt-studio",
+    avatar: "khatt-studio",
+    level: 6,
+    rating: 4.8,
+    totalProducts: 45,
+    location: "Sharjah",
+    category: "Arabic Calligraphy",
+    image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400",
+    isVerified: true,
+  },
+  {
+    id: "shp_3",
+    name: "Luxe Jewels",
+    slug: "luxe-jewels",
+    avatar: "luxe-jewels",
+    level: 8,
+    rating: 5.0,
+    totalProducts: 62,
+    location: "Abu Dhabi",
+    category: "Handmade Jewelry",
+    image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400",
+    isVerified: false,
+  },
+  {
+    id: "shp_4",
+    name: "Heritage Crafts",
+    slug: "heritage-crafts",
+    avatar: "heritage-crafts",
+    level: 5,
+    rating: 4.7,
+    totalProducts: 19,
+    location: "Dubai",
+    category: "Home Décor",
+    image: "https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=400",
+    isVerified: true,
+  },
+];
+
+// ─── Seasonal Banner Component ───
+
+function SeasonalBanner() {
+  const campaign = getCurrentCampaign();
+
+  return (
+    <section className="py-10 lg:py-16 bg-background">
+      <div className="container-app">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={fadeInUp}
+        >
+          <Link href={`/explore/${campaign.slug}`}>
+            <div className="relative rounded-2xl overflow-hidden group cursor-pointer shadow-lg hover:shadow-2xl transition-shadow duration-300">
+              {/* Background Image */}
+              <div className="relative h-[280px] md:h-[360px] lg:h-[420px]">
+                <Image
+                  src={campaign.image}
+                  alt={campaign.title}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  priority
+                />
+                <div className={`absolute inset-0 bg-gradient-to-r ${campaign.gradient}`} />
+                <div className="absolute inset-0 bg-black/20" />
+              </div>
+
+              {/* Content Overlay */}
+              <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-14 lg:px-20">
+                <Badge variant="gold" className="w-fit mb-4 text-sm px-4 py-1.5">
+                  <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                  {campaign.badge}
+                </Badge>
+
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold text-gold-gradient mb-3 max-w-xl drop-shadow-lg">
+                  {campaign.title}
+                </h2>
+
+                <p className="text-white/80 text-sm md:text-base lg:text-lg max-w-lg leading-relaxed line-clamp-3">
+                  {campaign.description}
+                </p>
+              </div>
+            </div>
+          </Link>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
 
 // Trending products loaded from API - see TrendingSection component below
-
-const TOP_SELLERS = [
-  { name: "Arabian Scents", avatar: "arabian_scents", level: 7, xp: 25000, rating: 4.9, sales: 1247 },
-  { name: "Khatt Studio", avatar: "khatt_studio", level: 6, xp: 15000, rating: 4.8, sales: 892 },
-  { name: "Luxe Jewels", avatar: "luxe_jewels", level: 8, xp: 42000, rating: 5.0, sales: 2341 },
-  { name: "Heritage Crafts", avatar: "heritage_crafts", level: 5, xp: 8500, rating: 4.7, sales: 567 },
-];
-
-const TESTIMONIALS = [
-  {
-    name: "Fatima Al-Rashid",
-    avatar: "fatima_r",
-    level: 5,
-    text: "Moulna has transformed how I shop for unique gifts. The XP system makes it so fun!",
-    role: "Buyer",
-  },
-  {
-    name: "Ahmed Hassan",
-    avatar: "ahmed_h",
-    level: 7,
-    text: "As a seller, the gamification features have doubled my engagement. Love the badges!",
-    role: "Seller",
-  },
-  {
-    name: "Sarah Al-Mansoori",
-    avatar: "sarah_m",
-    level: 6,
-    text: "Found the most beautiful handmade jewelry for my wedding. Amazing artisans!",
-    role: "Buyer",
-  },
-];
 
 function TrendingSection() {
   const [products, setProducts] = React.useState<Product[]>([]);
@@ -268,13 +469,13 @@ export default function HomePage() {
                 >
                   <Link href="/explore">
                     <Button size="xl" className="w-full sm:w-auto gap-2">
-                      Browse Listings
+                      Explore Products
                       <ArrowRight className="w-5 h-5" />
                     </Button>
                   </Link>
                   <Link href="/sell-with-us">
                     <Button variant="outline" size="xl" className="w-full sm:w-auto">
-                      Open Your Shop
+                      Become a Seller
                     </Button>
                   </Link>
                 </motion.div>
@@ -398,58 +599,92 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Categories */}
-        <section className="py-16 lg:py-24 bg-muted/30">
+        {/* Seasonal Campaign Banner */}
+        <SeasonalBanner />
+
+        {/* Seller of the Week */}
+        <section className="py-16 lg:py-24 bg-background">
           <div className="container-app">
             <motion.div
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
               variants={staggerContainer}
-              className="flex items-end justify-between mb-8"
             >
-              <div>
-                <motion.h2 variants={fadeInUp} className="text-3xl lg:text-4xl font-display font-bold mb-2">
-                  Shop by Category
-                </motion.h2>
-                <motion.p variants={fadeInUp} className="text-muted-foreground">
-                  Discover handcrafted treasures across all categories
-                </motion.p>
-              </div>
-              <motion.div variants={fadeInUp}>
-                <Link href="/explore/categories">
-                  <Button variant="ghost" className="gap-1">
-                    View All <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
+              <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-2">
+                <Trophy className="w-5 h-5 text-moulna-gold" />
+                <span className="text-sm font-medium text-moulna-gold">Featured Creator</span>
               </motion.div>
-            </motion.div>
+              <motion.h2 variants={fadeInUp} className="text-3xl lg:text-4xl font-display font-bold mb-8">
+                Seller of the Week
+              </motion.h2>
 
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={staggerContainer}
-              className="grid grid-cols-2 md:grid-cols-4 gap-4"
-            >
-              {CATEGORIES.map((category) => (
-                <motion.div key={category.slug} variants={scaleIn}>
-                  <Link href={`/explore/categories/${category.slug}`}>
-                    <Card
-                      hover
-                      className="p-5 text-center group"
-                    >
-                      <span className="text-4xl mb-3 block group-hover:scale-110 transition-transform">
-                        {category.icon}
-                      </span>
-                      <h3 className="font-semibold mb-1">{category.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {category.count.toLocaleString()} items
+              <motion.div variants={fadeInUp}>
+                <Card className="overflow-hidden">
+                  <div className="grid lg:grid-cols-2">
+                    {/* Seller Image */}
+                    <div className="relative h-64 lg:h-auto">
+                      <Image
+                        src="https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800"
+                        alt="Seller of the Week"
+                        fill
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent lg:bg-gradient-to-t" />
+                      <Badge variant="gold" className="absolute top-4 left-4 text-sm px-3 py-1">
+                        <Trophy className="w-4 h-4 mr-1" />
+                        Seller of the Week
+                      </Badge>
+                    </div>
+
+                    {/* Seller Details */}
+                    <div className="p-6 lg:p-8 flex flex-col justify-center">
+                      <div className="flex items-center gap-4 mb-4">
+                        <DiceBearAvatar
+                          seed="khatt-studio"
+                          size="xl"
+                          className="border-2 border-moulna-gold shadow-md"
+                        />
+                        <div>
+                          <h3 className="text-xl font-bold">Khatt Studio</h3>
+                          <p className="text-sm text-muted-foreground">Arabic Calligraphy</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <LevelBadge level={6} size="sm" />
+                            <Badge variant="gold" className="text-xs">Verified</Badge>
+                          </div>
+                        </div>
+                      </div>
+
+                      <p className="text-muted-foreground mb-6">
+                        Master calligrapher bringing traditional Arabic art into modern homes.
+                        Each piece is hand-crafted with premium materials and features authentic
+                        Naskh and Thuluth scripts.
                       </p>
-                    </Card>
-                  </Link>
-                </motion.div>
-              ))}
+
+                      <div className="grid grid-cols-3 gap-4 mb-6">
+                        <div className="text-center p-3 rounded-lg bg-muted/50">
+                          <p className="text-lg font-bold text-moulna-gold">4.8</p>
+                          <p className="text-xs text-muted-foreground">Rating</p>
+                        </div>
+                        <div className="text-center p-3 rounded-lg bg-muted/50">
+                          <p className="text-lg font-bold text-moulna-gold">45</p>
+                          <p className="text-xs text-muted-foreground">Products</p>
+                        </div>
+                        <div className="text-center p-3 rounded-lg bg-muted/50">
+                          <p className="text-lg font-bold text-moulna-gold">Sharjah</p>
+                          <p className="text-xs text-muted-foreground">Location</p>
+                        </div>
+                      </div>
+
+                      <Link href="/shops/khatt-studio">
+                        <Button variant="gold" className="w-full sm:w-auto gap-2">
+                          View Page <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
             </motion.div>
           </div>
         </section>
@@ -457,7 +692,7 @@ export default function HomePage() {
         {/* Trending Products */}
         <TrendingSection />
 
-        {/* Top Sellers */}
+        {/* Sellers You Follow */}
         <section className="py-16 lg:py-24 bg-background">
           <div className="container-app">
             <motion.div
@@ -468,17 +703,18 @@ export default function HomePage() {
               className="flex items-end justify-between mb-8"
             >
               <div>
-                <motion.h2 variants={fadeInUp} className="text-3xl lg:text-4xl font-display font-bold mb-2">
-                  Top Sellers This Month
+                <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-2">
+                  <Store className="w-5 h-5 text-moulna-gold" />
+                  <span className="text-sm font-medium text-moulna-gold">Your Favorites</span>
+                </motion.div>
+                <motion.h2 variants={fadeInUp} className="text-3xl lg:text-4xl font-display font-bold">
+                  Sellers You Follow
                 </motion.h2>
-                <motion.p variants={fadeInUp} className="text-muted-foreground">
-                  Shop from our highest-rated creators
-                </motion.p>
               </div>
               <motion.div variants={fadeInUp}>
                 <Link href="/explore/shops">
                   <Button variant="ghost" className="gap-1">
-                    View All Shops <ArrowRight className="w-4 h-4" />
+                    Browse All Sellers <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
               </motion.div>
@@ -489,140 +725,70 @@ export default function HomePage() {
               whileInView="visible"
               viewport={{ once: true }}
               variants={staggerContainer}
-              className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
+              className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
             >
-              {TOP_SELLERS.map((seller, index) => (
-                <motion.div key={seller.name} variants={scaleIn}>
-                  <Card hover className="p-5 text-center">
-                    {/* Rank Badge */}
-                    <div className="absolute top-3 left-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                        index === 0 ? "bg-yellow-400 text-yellow-900" :
-                        index === 1 ? "bg-gray-300 text-gray-700" :
-                        index === 2 ? "bg-amber-600 text-white" :
-                        "bg-muted text-muted-foreground"
-                      }`}>
-                        #{index + 1}
+              {FOLLOWED_SELLERS.map((seller) => (
+                <motion.div key={seller.id} variants={scaleIn}>
+                  <Link href={`/shops/${seller.slug}`}>
+                    <Card hover className="overflow-hidden group">
+                      {/* Cover Image */}
+                      <div className="relative h-32 overflow-hidden">
+                        <Image
+                          src={seller.image}
+                          alt={seller.name}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        {seller.isVerified && (
+                          <Badge variant="gold" className="absolute top-3 end-3 text-xs">
+                            Verified
+                          </Badge>
+                        )}
                       </div>
-                    </div>
 
-                    <DiceBearAvatar
-                      seed={seller.avatar}
-                      size="xl"
-                      showLevelRing
-                      xp={seller.xp}
-                      className="mx-auto mb-3"
-                    />
+                      {/* Seller Info */}
+                      <div className="relative px-4 pb-4 pt-7">
+                        {/* Avatar overlapping the cover image */}
+                        <div className="absolute -top-6 left-4">
+                          <DiceBearAvatar
+                            seed={seller.avatar}
+                            size="lg"
+                            className="border-2 border-background shadow-md"
+                          />
+                        </div>
 
-                    <h3 className="font-semibold mb-1">{seller.name}</h3>
-                    <LevelBadge xp={seller.xp} size="sm" showTitle />
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex-1 min-w-0 ml-14">
+                            <h3 className="font-semibold truncate">{seller.name}</h3>
+                            <LevelBadge level={seller.level} size="sm" />
+                          </div>
+                        </div>
 
-                    <div className="flex items-center justify-center gap-4 mt-3 text-sm">
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-moulna-gold text-moulna-gold" />
-                        <span className="font-medium">{seller.rating}</span>
-                      </div>
-                      <div className="text-muted-foreground">
-                        {seller.sales.toLocaleString()} sales
-                      </div>
-                    </div>
-
-                    <Link href={`/shops/${seller.avatar}`} className="block mt-4">
-                      <Button variant="outline" size="sm" className="w-full">
-                        Visit Shop
-                      </Button>
-                    </Link>
-                  </Card>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Testimonials */}
-        <section className="py-16 lg:py-24 bg-muted/30">
-          <div className="container-app">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={staggerContainer}
-              className="text-center mb-12"
-            >
-              <motion.h2 variants={fadeInUp} className="text-3xl lg:text-4xl font-display font-bold mb-4">
-                Loved by Our Community
-              </motion.h2>
-              <motion.p variants={fadeInUp} className="text-muted-foreground max-w-2xl mx-auto">
-                See what our buyers and sellers have to say about Moulna
-              </motion.p>
-            </motion.div>
-
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={staggerContainer}
-              className="grid md:grid-cols-3 gap-6"
-            >
-              {TESTIMONIALS.map((testimonial) => (
-                <motion.div key={testimonial.name} variants={scaleIn}>
-                  <Card className="p-6 h-full">
-                    <div className="flex items-center gap-3 mb-4">
-                      <DiceBearAvatar
-                        seed={testimonial.avatar}
-                        size="lg"
-                        showLevelRing
-                        level={testimonial.level}
-                      />
-                      <div>
-                        <p className="font-semibold">{testimonial.name}</p>
-                        <div className="flex items-center gap-2">
-                          <LevelBadge level={testimonial.level} size="sm" />
-                          <span className="text-xs text-muted-foreground">
-                            {testimonial.role}
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                          <span className="flex items-center gap-1">
+                            <Star className="w-3.5 h-3.5 fill-moulna-gold text-moulna-gold" />
+                            {seller.rating}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Package className="w-3.5 h-3.5" />
+                            {seller.totalProducts} products
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5" />
+                            {seller.location}
                           </span>
                         </div>
+
+                        <Button variant="outline" size="sm" className="w-full gap-1">
+                          <UserPlus className="w-3.5 h-3.5" />
+                          Following
+                        </Button>
                       </div>
-                    </div>
-                    <p className="text-muted-foreground">&ldquo;{testimonial.text}&rdquo;</p>
-                  </Card>
+                    </Card>
+                  </Link>
                 </motion.div>
               ))}
-            </motion.div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-16 lg:py-24 bg-gradient-to-r from-moulna-gold-dark via-moulna-gold to-moulna-gold-light text-white">
-          <div className="container-app">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center max-w-3xl mx-auto"
-            >
-              <h2 className="text-3xl lg:text-5xl font-display font-bold mb-4 text-white">
-                Ready to Start Selling?
-              </h2>
-              <p className="text-lg text-white/90 mb-8">
-                Join thousands of artisans and creators. Set up your shop in minutes and reach customers across the UAE.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/sell-with-us">
-                  <Button size="xl" className="bg-white text-moulna-charcoal hover:bg-white/90 w-full sm:w-auto">
-                    Open Your Shop
-                  </Button>
-                </Link>
-                <Link href="/how-it-works">
-                  <Button
-                    variant="outline"
-                    size="xl"
-                    className="border-white text-white hover:bg-white/10 w-full sm:w-auto"
-                  >
-                    Learn More
-                  </Button>
-                </Link>
-              </div>
             </motion.div>
           </div>
         </section>

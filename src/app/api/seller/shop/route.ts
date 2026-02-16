@@ -36,7 +36,7 @@ const ALLOWED_FIELDS = [
   "instagram", "facebook", "twitter", "youtube", "whatsapp",
   "story", "story_sections", "milestones", "core_values",
   "operating_hours", "policies", "branding", "listing_preferences",
-  "response_time",
+  "response_time", "video_url", "gallery_images",
 ];
 
 // camelCase to snake_case map
@@ -50,6 +50,8 @@ const FIELD_MAP: Record<string, string> = {
   operatingHours: "operating_hours",
   listingPreferences: "listing_preferences",
   responseTime: "response_time",
+  videoUrl: "video_url",
+  galleryImages: "gallery_images",
 };
 
 // PATCH /api/seller/shop — update the seller's shop
