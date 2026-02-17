@@ -24,6 +24,7 @@ export default function SellerShopPage() {
   const [isEditing, setIsEditing] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [uploadingField, setUploadingField] = React.useState<string | null>(null);
   const [shop, setShop] = React.useState<Shop | null>(null);
 
   // Editable fields
@@ -80,24 +81,29 @@ export default function SellerShopPage() {
     }
   };
 
-  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: "bannerUrl" | "logoUrl") => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("folder", "banners");
-    const res = await fetch("/api/upload", { method: "POST", body: formData });
-    if (res.ok) {
-      const { url } = await res.json();
-      const patchRes = await fetch("/api/seller/shop", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bannerUrl: url }),
-      });
-      if (patchRes.ok) {
-        const data = await patchRes.json();
-        setShop(data.shop);
+    setUploadingField(field);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", field === "bannerUrl" ? "banners" : "logos");
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (res.ok) {
+        const { url } = await res.json();
+        const patchRes = await fetch("/api/seller/shop", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ [field]: url }),
+        });
+        if (patchRes.ok) {
+          const data = await patchRes.json();
+          setShop(data.shop);
+        }
       }
+    } finally {
+      setUploadingField(null);
     }
   };
 
@@ -166,6 +172,7 @@ export default function SellerShopPage() {
 
         {/* Banner & Avatar */}
         <Card className="overflow-hidden">
+          {/* Banner */}
           <div className="relative h-48 md:h-64">
             {shop.bannerUrl ? (
               <Image
@@ -175,12 +182,19 @@ export default function SellerShopPage() {
                 className="object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-r from-moulna-gold/20 to-amber-100" />
+              <div className="w-full h-full bg-gradient-to-br from-moulna-gold/30 via-amber-100 to-moulna-gold/10" />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            {uploadingField === "bannerUrl" && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                <div className="flex items-center gap-2 bg-white/90 rounded-lg px-4 py-2 shadow">
+                  <Loader2 className="w-5 h-5 animate-spin text-moulna-gold" />
+                  <span className="text-sm font-medium">Uploading banner...</span>
+                </div>
+              </div>
+            )}
             {isEditing && (
               <label className="absolute top-4 right-4 cursor-pointer">
-                <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleBannerUpload} />
+                <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => handleImageUpload(e, "bannerUrl")} />
                 <Button variant="secondary" size="sm" asChild>
                   <span>
                     <Camera className="w-4 h-4 me-2" />
@@ -190,75 +204,88 @@ export default function SellerShopPage() {
               </label>
             )}
           </div>
-          <div className="relative px-6 pb-6">
-            <div className="flex flex-col md:flex-row md:items-end gap-4">
-              <div className="relative -mt-16">
-                <DiceBearAvatar
-                  seed={shop.avatarSeed || shop.slug}
-                  style={shop.avatarStyle || "adventurer"}
-                  size="xl"
-                  className="w-32 h-32 border-4 border-white shadow-lg"
-                />
-                {shop.isVerified && (
-                  <div className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                    <Award className="w-5 h-5 text-white" />
+
+          {/* Shop Info - below banner */}
+          <div className="px-6 pb-6">
+            {/* Avatar row — overlaps the banner */}
+            <div className="flex items-end gap-5 -mt-14">
+              <div className="relative flex-shrink-0">
+                {uploadingField === "logoUrl" ? (
+                  <div className="w-28 h-28 rounded-full border-4 border-white shadow-lg bg-muted flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-1">
+                      <Loader2 className="w-6 h-6 animate-spin text-moulna-gold" />
+                      <span className="text-xs text-muted-foreground">Uploading...</span>
+                    </div>
+                  </div>
+                ) : shop.logoUrl ? (
+                  <div className="w-28 h-28 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
+                    <Image src={shop.logoUrl} alt={shop.name} width={112} height={112} className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <DiceBearAvatar
+                    seed={shop.avatarSeed || shop.slug}
+                    style={shop.avatarStyle || "adventurer"}
+                    size="4xl"
+                    className="border-4 border-white shadow-lg rounded-full"
+                  />
+                )}
+                {isEditing && !uploadingField && (
+                  <label className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-moulna-gold text-white flex items-center justify-center shadow-lg cursor-pointer hover:bg-moulna-gold-dark transition-colors">
+                    <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => handleImageUpload(e, "logoUrl")} />
+                    <Camera className="w-4 h-4" />
+                  </label>
+                )}
+                {shop.isVerified && !isEditing && (
+                  <div className="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center shadow">
+                    <Award className="w-4 h-4 text-white" />
                   </div>
                 )}
               </div>
-              <div className="flex-1 pt-4 md:pt-0">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold">{shop.name}</h2>
-                    <div className="flex items-center gap-2 mt-1 text-muted-foreground">
-                      <MapPin className="w-4 h-4" />
-                      <span>{shop.location || "Not set"}</span>
-                    </div>
-                  </div>
-                  <LevelBadge level={user?.level ?? 1} xp={user?.xp ?? 0} showTitle />
+            </div>
+
+            {/* Name, location, badges — clearly below avatar */}
+            <div className="mt-4 flex items-start justify-between">
+              <div>
+                <h2 className="text-2xl font-bold">{shop.name}</h2>
+                <div className="flex items-center gap-2 mt-1 text-muted-foreground">
+                  <MapPin className="w-4 h-4" />
+                  <span>{shop.location || "Not set"}</span>
                 </div>
+                {(shop.isVerified || shop.isArtisan) && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {shop.isVerified && (
+                      <Badge variant="secondary">
+                        <Sparkles className="w-3 h-3 me-1" />
+                        Verified
+                      </Badge>
+                    )}
+                    {shop.isArtisan && (
+                      <Badge variant="secondary">
+                        <Sparkles className="w-3 h-3 me-1" />
+                        Artisan
+                      </Badge>
+                    )}
+                  </div>
+                )}
               </div>
+              <LevelBadge level={user?.level ?? 1} xp={user?.xp ?? 0} showTitle />
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-4 gap-4 mt-6 pt-6 border-t">
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-1 text-xl font-bold">
-                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  {shop.rating}
-                </div>
-                <p className="text-sm text-muted-foreground">{shop.reviewCount} reviews</p>
-              </div>
+            <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t">
               <div className="text-center">
                 <p className="text-xl font-bold">{shop.followerCount.toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground">Followers</p>
               </div>
               <div className="text-center">
                 <p className="text-xl font-bold">{shop.totalListings}</p>
-                <p className="text-sm text-muted-foreground">Products</p>
+                <p className="text-sm text-muted-foreground">Listings</p>
               </div>
               <div className="text-center">
                 <p className="text-xl font-bold text-moulna-gold">{(user?.xp ?? 0).toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground">Total XP</p>
               </div>
             </div>
-
-            {/* Badges */}
-            {(shop.isVerified || shop.isArtisan) && (
-              <div className="flex flex-wrap gap-2 mt-4">
-                {shop.isVerified && (
-                  <Badge variant="secondary">
-                    <Sparkles className="w-3 h-3 me-1" />
-                    Verified
-                  </Badge>
-                )}
-                {shop.isArtisan && (
-                  <Badge variant="secondary">
-                    <Sparkles className="w-3 h-3 me-1" />
-                    Artisan
-                  </Badge>
-                )}
-              </div>
-            )}
           </div>
         </Card>
 

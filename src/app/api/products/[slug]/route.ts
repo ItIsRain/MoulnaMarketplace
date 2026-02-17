@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import { mapDbProduct } from "@/lib/mappers";
 
-const SHOP_SELECT = "id, owner_id, name, slug, avatar_style, avatar_seed, rating, total_listings, location, is_verified, response_time";
+const SHOP_SELECT = "id, owner_id, name, slug, avatar_style, avatar_seed, logo_url, rating, total_listings, location, is_verified, response_time";
 
 // GET /api/products/[slug] — public product detail
 export async function GET(

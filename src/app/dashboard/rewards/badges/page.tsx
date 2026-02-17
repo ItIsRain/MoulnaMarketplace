@@ -42,8 +42,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         description: "Contact your first seller on Moulna",
         icon: MessageCircle,
         xp: 50,
-        earned: true,
-        earnedDate: "2024-01-01",
+        earned: false,
         rarity: "common",
       },
       {
@@ -52,10 +51,9 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         description: "Contact 10 different sellers",
         icon: MessageCircle,
         xp: 200,
-        earned: true,
-        earnedDate: "2024-01-10",
+        earned: false,
         rarity: "uncommon",
-        progress: { current: 10, total: 10 },
+        progress: { current: 0, total: 10 },
       },
       {
         id: "power-browser",
@@ -65,7 +63,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         xp: 500,
         earned: false,
         rarity: "rare",
-        progress: { current: 32, total: 50 },
+        progress: { current: 0, total: 50 },
       },
       {
         id: "collector",
@@ -75,7 +73,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         xp: 300,
         earned: false,
         rarity: "uncommon",
-        progress: { current: 6, total: 10 },
+        progress: { current: 0, total: 10 },
       },
     ],
   },
@@ -89,8 +87,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         description: "Write your first seller review",
         icon: MessageSquare,
         xp: 30,
-        earned: true,
-        earnedDate: "2024-01-05",
+        earned: false,
         rarity: "common",
       },
       {
@@ -101,7 +98,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         xp: 250,
         earned: false,
         rarity: "uncommon",
-        progress: { current: 8, total: 20 },
+        progress: { current: 0, total: 20 },
       },
       {
         id: "social-butterfly",
@@ -109,8 +106,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         description: "Follow 25 shops",
         icon: Heart,
         xp: 150,
-        earned: true,
-        earnedDate: "2024-01-12",
+        earned: false,
         rarity: "common",
       },
       {
@@ -121,7 +117,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         xp: 400,
         earned: false,
         rarity: "rare",
-        progress: { current: 45, total: 100 },
+        progress: { current: 0, total: 100 },
       },
     ],
   },
@@ -135,8 +131,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         description: "7-day login streak",
         icon: Flame,
         xp: 100,
-        earned: true,
-        earnedDate: "2024-01-08",
+        earned: false,
         rarity: "common",
       },
       {
@@ -147,7 +142,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         xp: 500,
         earned: false,
         rarity: "rare",
-        progress: { current: 18, total: 30 },
+        progress: { current: 0, total: 30 },
       },
       {
         id: "year-member",
@@ -157,7 +152,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         xp: 1000,
         earned: false,
         rarity: "legendary",
-        progress: { current: 45, total: 365 },
+        progress: { current: 0, total: 365 },
       },
       {
         id: "referrer",
@@ -167,7 +162,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         xp: 350,
         earned: false,
         rarity: "uncommon",
-        progress: { current: 2, total: 5 },
+        progress: { current: 0, total: 5 },
       },
     ],
   },
@@ -181,8 +176,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         description: "Joined during beta period",
         icon: Medal,
         xp: 200,
-        earned: true,
-        earnedDate: "2023-12-01",
+        earned: false,
         rarity: "legendary",
       },
       {
@@ -211,7 +205,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         xp: 2000,
         earned: false,
         rarity: "legendary",
-        progress: { current: 5, total: 15 },
+        progress: { current: 0, total: 15 },
       },
     ],
   },
@@ -245,8 +239,45 @@ const RARITY_STYLES = {
 };
 
 export default function BadgesPage() {
-  const totalBadges = BADGE_CATEGORIES.flatMap(c => c.badges).length;
-  const earnedBadges = BADGE_CATEGORIES.flatMap(c => c.badges).filter(b => b.earned).length;
+  const [loading, setLoading] = React.useState(true);
+  const [earnedBadgeIds, setEarnedBadgeIds] = React.useState<Map<string, string>>(new Map());
+
+  React.useEffect(() => {
+    fetch("/api/gamification?section=badges")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.badges) {
+          const map = new Map<string, string>();
+          data.badges.forEach((b: { badgeId: string; earnedAt: string }) => {
+            map.set(b.badgeId, b.earnedAt);
+          });
+          setEarnedBadgeIds(map);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Merge earned status from API into static badge definitions
+  const categories = BADGE_CATEGORIES.map((cat) => ({
+    ...cat,
+    badges: cat.badges.map((badge) => ({
+      ...badge,
+      earned: earnedBadgeIds.has(badge.id),
+      earnedDate: earnedBadgeIds.get(badge.id) || badge.earnedDate,
+    })),
+  }));
+
+  const totalBadges = categories.flatMap(c => c.badges).length;
+  const earnedBadges = categories.flatMap(c => c.badges).filter(b => b.earned).length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Lock className="w-8 h-8 animate-pulse text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -270,7 +301,7 @@ export default function BadgesPage() {
         </div>
 
         {/* Badge Categories */}
-        {BADGE_CATEGORIES.map((category, categoryIndex) => (
+        {categories.map((category, categoryIndex) => (
           <motion.section
             key={category.name}
             initial={{ opacity: 0, y: 20 }}

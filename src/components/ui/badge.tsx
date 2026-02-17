@@ -41,6 +41,10 @@ const badgeVariants = cva(
           "bg-gradient-to-r from-blue-500 to-cyan-500 text-white",
         handmade:
           "bg-gradient-to-r from-rose-400 to-pink-500 text-white",
+        sponsored:
+          "bg-gradient-to-r from-moulna-gold to-amber-500 text-white",
+        verified:
+          "bg-gradient-to-r from-emerald-500 to-teal-600 text-white",
         level:
           "border-2 border-current font-bold",
         active:

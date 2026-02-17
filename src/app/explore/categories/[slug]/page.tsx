@@ -16,6 +16,7 @@ import {
   Search, Filter, SlidersHorizontal, Grid3X3, LayoutGrid,
   ChevronDown, Star, Heart, Sparkles, ArrowUpDown
 } from "lucide-react";
+import { useTracking } from "@/hooks/useTracking";
 
 const CATEGORY_DATA: Record<string, {
   name: string;
@@ -133,10 +134,19 @@ export default function CategoryPage() {
   const params = useParams();
   const slug = params.slug as string;
   const category = CATEGORY_DATA[slug] || CATEGORY_DATA["jewelry"];
+  const { trackEvent } = useTracking();
+
+  // Track category view for challenge progress
+  React.useEffect(() => {
+    if (slug) {
+      trackEvent("category_viewed", slug);
+    }
+  }, [slug, trackEvent]);
 
   const [selectedSubcategory, setSelectedSubcategory] = React.useState("All");
   const [viewMode, setViewMode] = React.useState<"grid" | "compact">("grid");
   const [sortBy, setSortBy] = React.useState("popular");
+  const [showMobileFilters, setShowMobileFilters] = React.useState(false);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -196,8 +206,20 @@ export default function CategoryPage() {
         {/* Filters & Products */}
         <section className="container mx-auto px-4 py-8">
           <div className="flex flex-col lg:flex-row gap-8">
+            {/* Mobile Filter Toggle */}
+            <div className="lg:hidden mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+              >
+                <Filter className="w-4 h-4 me-2" />
+                {showMobileFilters ? "Hide Filters" : "Show Filters"}
+              </Button>
+            </div>
+
             {/* Sidebar Filters */}
-            <aside className="lg:w-64 space-y-6">
+            <aside className={cn("lg:w-64 space-y-6", showMobileFilters ? "block" : "hidden lg:block")}>
               <Card className="p-4">
                 <h3 className="font-semibold mb-4 flex items-center gap-2">
                   <Filter className="w-4 h-4" />
@@ -324,7 +346,10 @@ export default function CategoryPage() {
                           />
 
                           {/* Badges */}
-                          <div className="absolute top-3 left-3 flex flex-col gap-1">
+                          <div className="absolute top-3 left-3 flex flex-col items-start gap-1">
+                            {"isSponsored" in product && (product as { isSponsored?: boolean }).isSponsored && (
+                              <Badge variant="sponsored">Sponsored</Badge>
+                            )}
                             {product.isTrending && (
                               <Badge className="bg-moulna-gold text-white">Trending</Badge>
                             )}

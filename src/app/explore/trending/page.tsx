@@ -10,7 +10,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
+import { ShopAvatar } from "@/components/avatar/ShopAvatar";
 import {
   TrendingUp, Flame, Star, Heart, Sparkles, Clock,
   ArrowUpRight, ChevronRight, Zap
@@ -235,7 +235,7 @@ export default function TrendingPage() {
                           {/* Info */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <DiceBearAvatar seed={product.seller.avatar} size="xs" />
+                              <ShopAvatar avatarSeed={product.seller.avatar} name={product.seller.name} size="xs" />
                               <span className="text-xs text-muted-foreground">
                                 {product.seller.name}
                               </span>
@@ -307,7 +307,7 @@ export default function TrendingPage() {
                       )}>
                         {index + 1}
                       </span>
-                      <DiceBearAvatar seed={shop.avatar} size="sm" />
+                      <ShopAvatar avatarSeed={shop.avatar} name={shop.name} size="sm" />
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate group-hover:text-moulna-gold transition-colors">
                           {shop.name}

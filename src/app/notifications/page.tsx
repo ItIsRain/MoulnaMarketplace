@@ -155,7 +155,7 @@ export default function NotificationsPage() {
               </Button>
             )}
             <Button variant="ghost" size="icon" asChild>
-              <Link href="/dashboard/settings/notifications">
+              <Link href="/dashboard/settings">
                 <Settings className="w-5 h-5" />
               </Link>
             </Button>

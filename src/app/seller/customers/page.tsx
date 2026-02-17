@@ -12,91 +12,112 @@ import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
   Users, Search, Filter, Mail, MessageSquare,
   Star, TrendingUp, Calendar, ArrowUpDown,
-  MoreHorizontal, Download, UserPlus
+  MoreHorizontal, Download, UserPlus, Loader2
 } from "lucide-react";
 
-const CUSTOMERS = [
-  {
-    id: "1",
-    name: "Fatima Al Zahra",
-    email: "fatima@email.com",
-    avatar: "fatima-customer",
-    totalInquiries: 12,
-    totalListingsViewed: 45,
-    lastInquiry: "2024-01-15",
-    rating: 4.8,
-    isRepeat: true,
-    tags: ["VIP", "Jewelry Lover"],
-  },
-  {
-    id: "2",
-    name: "Ahmed Hassan",
-    email: "ahmed.h@email.com",
-    avatar: "ahmed-customer",
-    totalInquiries: 8,
-    totalListingsViewed: 23,
-    lastInquiry: "2024-01-12",
-    rating: 5.0,
-    isRepeat: true,
-    tags: ["Oud Enthusiast"],
-  },
-  {
-    id: "3",
-    name: "Mariam Khalid",
-    email: "mariam.k@email.com",
-    avatar: "mariam-customer",
-    totalInquiries: 5,
-    totalListingsViewed: 18,
-    lastInquiry: "2024-01-10",
-    rating: 4.5,
-    isRepeat: true,
-    tags: [],
-  },
-  {
-    id: "4",
-    name: "Omar Nasser",
-    email: "omar.n@email.com",
-    avatar: "omar-customer",
-    totalInquiries: 3,
-    totalListingsViewed: 7,
-    lastInquiry: "2024-01-08",
-    rating: 4.0,
-    isRepeat: false,
-    tags: ["New Customer"],
-  },
-  {
-    id: "5",
-    name: "Sara Abdullah",
-    email: "sara.a@email.com",
-    avatar: "sara-customer",
-    totalInquiries: 15,
-    totalListingsViewed: 62,
-    lastInquiry: "2024-01-14",
-    rating: 4.9,
-    isRepeat: true,
-    tags: ["VIP", "Most Active"],
-  },
-];
+interface Customer {
+  id: string;
+  name: string;
+  username: string;
+  avatarStyle: string | null;
+  avatarSeed: string | null;
+  location: string | null;
+  inquiries: number;
+  lastContact: string;
+  isRepeat: boolean;
+}
 
-const STATS = [
-  { label: "Total Customers", value: "1,245", change: "+12%", icon: Users },
-  { label: "Repeat Customers", value: "68%", change: "+5%", icon: TrendingUp },
-  { label: "Avg. Inquiries", value: "6.2", change: "+8%", icon: MessageSquare },
-  { label: "Avg. Rating", value: "4.7", change: "+0.2", icon: Star },
-];
+interface CustomersData {
+  totalCustomers: number;
+  newCustomers: number;
+  returningRate: number;
+  totalFollowers: number;
+  customers: Customer[];
+}
 
 export default function SellerCustomersPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedFilter, setSelectedFilter] = React.useState("all");
+  const [data, setData] = React.useState<CustomersData | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const filteredCustomers = CUSTOMERS.filter(customer => {
-    const matchesSearch = customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchQuery.toLowerCase());
-    if (selectedFilter === "repeat") return matchesSearch && customer.isRepeat;
-    if (selectedFilter === "new") return matchesSearch && !customer.isRepeat;
-    if (selectedFilter === "vip") return matchesSearch && customer.tags.includes("VIP");
-    return matchesSearch;
-  });
+  React.useEffect(() => {
+    async function fetchCustomers() {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/seller/analytics?section=customers");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch customers data");
+        }
+
+        const result: CustomersData = await response.json();
+        setData(result);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        console.error("Error fetching customers:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCustomers();
+  }, []);
+
+  // Calculate average inquiries from customers data
+  const avgInquiries = React.useMemo(() => {
+    if (!data || data.customers.length === 0) return 0;
+    const total = data.customers.reduce((sum, customer) => sum + customer.inquiries, 0);
+    return (total / data.customers.length).toFixed(1);
+  }, [data]);
+
+  const filteredCustomers = React.useMemo(() => {
+    if (!data) return [];
+
+    return data.customers.filter(customer => {
+      const matchesSearch =
+        customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.username.toLowerCase().includes(searchQuery.toLowerCase());
+
+      if (selectedFilter === "repeat") return matchesSearch && customer.isRepeat;
+      if (selectedFilter === "new") return matchesSearch && !customer.isRepeat;
+      return matchesSearch;
+    });
+  }, [data, searchQuery, selectedFilter]);
+
+  const stats = React.useMemo(() => {
+    if (!data) return [];
+
+    return [
+      { label: "Total Customers", value: data.totalCustomers.toLocaleString(), icon: Users },
+      { label: "Returning Rate", value: `${data.returningRate}%`, icon: TrendingUp },
+      { label: "Avg. Inquiries", value: avgInquiries, icon: MessageSquare },
+      { label: "Followers", value: data.totalFollowers.toLocaleString(), icon: UserPlus },
+    ];
+  }, [data, avgInquiries]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <p className="text-red-500 mb-4">Error: {error}</p>
+        <Button onClick={() => window.location.reload()}>Retry</Button>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">
@@ -116,13 +137,10 @@ export default function SellerCustomersPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {STATS.map((stat) => (
+          {stats.map((stat) => (
             <Card key={stat.label} className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <stat.icon className="w-5 h-5 text-muted-foreground" />
-                <Badge variant="outline" className="text-green-600 bg-green-50">
-                  {stat.change}
-                </Badge>
               </div>
               <p className="text-2xl font-bold">{stat.value}</p>
               <p className="text-sm text-muted-foreground">{stat.label}</p>
@@ -138,12 +156,12 @@ export default function SellerCustomersPage() {
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search customers..."
+                placeholder="Search customers by name or username..."
                 className="ps-10"
               />
             </div>
             <div className="flex gap-2">
-              {["all", "repeat", "new", "vip"].map((filter) => (
+              {["all", "repeat", "new"].map((filter) => (
                 <Button
                   key={filter}
                   variant={selectedFilter === filter ? "default" : "outline"}
@@ -165,11 +183,10 @@ export default function SellerCustomersPage() {
               <thead>
                 <tr className="border-b">
                   <th className="text-start p-4 font-medium">Customer</th>
+                  <th className="text-start p-4 font-medium">Location</th>
                   <th className="text-start p-4 font-medium">Inquiries</th>
-                  <th className="text-start p-4 font-medium">Listings Viewed</th>
-                  <th className="text-start p-4 font-medium">Last Inquiry</th>
-                  <th className="text-start p-4 font-medium">Rating</th>
-                  <th className="text-start p-4 font-medium">Tags</th>
+                  <th className="text-start p-4 font-medium">Last Contact</th>
+                  <th className="text-start p-4 font-medium">Type</th>
                   <th className="p-4"></th>
                 </tr>
               </thead>
@@ -184,47 +201,38 @@ export default function SellerCustomersPage() {
                   >
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <DiceBearAvatar seed={customer.avatar} size="sm" />
+                        <DiceBearAvatar
+                          seed={customer.avatarSeed || customer.username}
+                          style={customer.avatarStyle || undefined}
+                          size="sm"
+                        />
                         <div>
                           <p className="font-medium">{customer.name}</p>
-                          <p className="text-sm text-muted-foreground">{customer.email}</p>
+                          <p className="text-sm text-muted-foreground">@{customer.username}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="p-4">
-                      <span className="font-medium">{customer.totalInquiries}</span>
+                    <td className="p-4 text-muted-foreground">
+                      {customer.location || "N/A"}
                     </td>
                     <td className="p-4">
-                      <span className="font-medium">{customer.totalListingsViewed}</span>
+                      <span className="font-medium">{customer.inquiries}</span>
                     </td>
                     <td className="p-4 text-muted-foreground">
-                      {formatDate(customer.lastInquiry)}
+                      {formatDate(customer.lastContact)}
+                    </td>
+                    <td className="p-4">
+                      <Badge variant={customer.isRepeat ? "default" : "secondary"}>
+                        {customer.isRepeat ? "Repeat" : "New"}
+                      </Badge>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span>{customer.rating}</span>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex flex-wrap gap-1">
-                        {customer.tags.map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" title="Send email">
                           <Mail className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" title="Send message">
                           <MessageSquare className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="w-4 h-4" />
                         </Button>
                       </div>
                     </td>

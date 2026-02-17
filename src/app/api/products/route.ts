@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import { mapDbProduct } from "@/lib/mappers";
 
-const SHOP_SELECT = "id, owner_id, name, slug, avatar_style, avatar_seed, rating, total_listings, location, is_verified, response_time";
+const SHOP_SELECT = "id, owner_id, name, slug, avatar_style, avatar_seed, logo_url, rating, total_listings, location, is_verified, response_time";
 
 // GET /api/products — public product listing with filters
 export async function GET(request: NextRequest) {
@@ -20,11 +21,52 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(parseInt(searchParams.get("limit") || "20") || 20, 50);
   const offset = parseInt(searchParams.get("offset") || "0") || 0;
 
+  // On first page, fetch active boosted products to show at top
+  let sponsoredProducts: ReturnType<typeof mapDbProduct>[] = [];
+  const boostedProductIds: string[] = [];
+
+  if (offset === 0) {
+    const admin = createAdminClient();
+    const now = new Date().toISOString();
+
+    const { data: activeBoosts } = await admin
+      .from("product_boosts")
+      .select("product_id")
+      .eq("status", "active")
+      .lte("starts_at", now)
+      .gte("ends_at", now);
+
+    if (activeBoosts && activeBoosts.length > 0) {
+      const boostIds = activeBoosts.map((b) => b.product_id);
+
+      const { data: boostedRows } = await supabase
+        .from("products")
+        .select(`*, shops!inner(${SHOP_SELECT})`)
+        .in("id", boostIds)
+        .eq("status", "active");
+
+      if (boostedRows) {
+        sponsoredProducts = boostedRows.map((row) => mapDbProduct(row, undefined, true));
+        boostedProductIds.push(...boostedRows.map((r) => r.id));
+
+        // Increment impressions via RPC (fire-and-forget)
+        admin.rpc("increment_boost_impressions", { boost_product_ids: boostIds }).then(() => {});
+      }
+    }
+  }
+
   let query = supabase
     .from("products")
     .select(`*, shops!inner(${SHOP_SELECT})`, { count: "exact" })
     .eq("status", "active")
     .or("expires_at.is.null,expires_at.gt.now()");
+
+  // Exclude boosted products from regular results to avoid duplicates
+  if (boostedProductIds.length > 0) {
+    for (const id of boostedProductIds) {
+      query = query.neq("id", id);
+    }
+  }
 
   if (shop) {
     query = query.eq("shops.slug", shop);
@@ -79,7 +121,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const products = (data || []).map((row) => mapDbProduct(row));
+  const regularProducts = (data || []).map((row) => mapDbProduct(row));
+  const products = offset === 0 ? [...sponsoredProducts, ...regularProducts] : regularProducts;
 
   return NextResponse.json({ products, total: count || 0 });
 }

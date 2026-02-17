@@ -11,67 +11,105 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Check, X, Sparkles, Store, Users, BarChart3,
-  Headphones, Zap, Crown, ChevronDown, HelpCircle
+  Headphones, Zap, Crown, ChevronDown, HelpCircle,
+  Rocket, Shield, Gift, Percent, Globe, Tag,
+  TrendingUp, Star, MessageCircle, Eye
 } from "lucide-react";
 
 const SELLER_PLANS = [
   {
     name: "Starter",
     price: "Free",
-    description: "Perfect for testing the waters",
+    description: "Launch your shop with zero risk",
+    badge: null,
+    icon: Store,
+    gradient: "",
     features: [
-      { text: "Up to 5 products", included: true },
-      { text: "Basic analytics", included: true },
-      { text: "Standard support", included: true },
-      { text: "7.5% transaction fee", included: true },
-      { text: "Moulna branding on shop", included: true },
-      { text: "Coupon codes", included: false },
-      { text: "Flash sales", included: false },
-      { text: "Priority support", included: false },
-      { text: "Featured placement", included: false },
+      { text: "3 active listings", included: true, highlight: false },
+      { text: "Basic shop profile & avatar", included: true, highlight: false },
+      { text: "Views & inquiry analytics", included: true, highlight: false },
+      { text: "XP rewards & badge system", included: true, highlight: false },
+      { text: "Standard search placement", included: true, highlight: false },
+      { text: "Email support", included: true, highlight: false },
+      { text: "AED 5 per listing after limit", included: true, highlight: false },
+      { text: "Promotional tools", included: false, highlight: false },
+      { text: "Boost discounts", included: false, highlight: false },
+      { text: "Advanced analytics", included: false, highlight: false },
+      { text: "Priority support", included: false, highlight: false },
     ],
     cta: "Start Free",
+    ctaVariant: "outline" as const,
     popular: false,
+    highlighted: false,
   },
   {
     name: "Growth",
     price: "99",
     period: "/month",
-    description: "For growing businesses",
+    description: "Scale your business with powerful tools",
+    badge: "Most Popular",
+    icon: Rocket,
+    gradient: "",
     features: [
-      { text: "Up to 100 products", included: true },
-      { text: "Advanced analytics", included: true },
-      { text: "Priority support", included: true },
-      { text: "5% transaction fee", included: true },
-      { text: "Remove Moulna branding", included: true },
-      { text: "Coupon codes", included: true },
-      { text: "Flash sales", included: true },
-      { text: "Featured in collections", included: true },
-      { text: "Homepage featuring", included: false },
+      { text: "30 active listings", included: true, highlight: true },
+      { text: "10 free listings/month (no fee)", included: true, highlight: true },
+      { text: "20% off all boosts", included: true, highlight: true },
+      { text: "Coupon codes & flash sales", included: true, highlight: true },
+      { text: "Advanced analytics & demographics", included: true, highlight: false },
+      { text: "Custom shop branding", included: true, highlight: false },
+      { text: "Featured in category pages", included: true, highlight: false },
+      { text: "Priority customer support", included: true, highlight: false },
+      { text: "Social media shop link", included: true, highlight: false },
+      { text: "Homepage spotlight", included: false, highlight: false },
+      { text: "Free monthly boosts", included: false, highlight: false },
     ],
     cta: "Start Growing",
+    ctaVariant: "gold" as const,
     popular: true,
+    highlighted: false,
   },
   {
     name: "Pro",
     price: "299",
     period: "/month",
-    description: "For established sellers",
+    description: "The ultimate toolkit for top sellers",
+    badge: "Best Value",
+    icon: Crown,
+    gradient: "bg-gradient-to-b from-moulna-charcoal to-moulna-charcoal-dark text-white",
     features: [
-      { text: "Unlimited products", included: true },
-      { text: "Premium analytics + exports", included: true },
-      { text: "24/7 priority support", included: true },
-      { text: "3.5% transaction fee", included: true },
-      { text: "Custom shop domain", included: true },
-      { text: "All promotional tools", included: true },
-      { text: "Homepage featuring", included: true },
-      { text: "API access", included: true },
-      { text: "Dedicated account manager", included: true },
+      { text: "Unlimited active listings", included: true, highlight: true },
+      { text: "No per-listing fees ever", included: true, highlight: true },
+      { text: "50% off all boosts & SOTW", included: true, highlight: true },
+      { text: "1 free 7-day boost every month", included: true, highlight: true },
+      { text: "Premium homepage placement", included: true, highlight: true },
+      { text: "Verified Pro seller badge", included: true, highlight: false },
+      { text: "Premium analytics with exports", included: true, highlight: false },
+      { text: "All promotional tools included", included: true, highlight: false },
+      { text: "Priority search ranking", included: true, highlight: false },
+      { text: "24/7 dedicated account manager", included: true, highlight: false },
+      { text: "Early access to new features", included: true, highlight: false },
     ],
     cta: "Go Pro",
+    ctaVariant: "gold" as const,
     popular: false,
     highlighted: true,
   },
+];
+
+const COMPARISON_ROWS = [
+  { feature: "Active Listings", free: "3", growth: "30", pro: "Unlimited" },
+  { feature: "Per-Listing Fee", free: "AED 5 after limit", growth: "10 free/mo, then AED 5", pro: "None" },
+  { feature: "Boost Discount", free: "—", growth: "20% off", pro: "50% off" },
+  { feature: "Free Monthly Boost", free: "—", growth: "—", pro: "7-day boost" },
+  { feature: "Coupon Codes", free: false, growth: true, pro: true },
+  { feature: "Flash Sales", free: false, growth: true, pro: true },
+  { feature: "Advanced Analytics", free: false, growth: true, pro: true },
+  { feature: "Analytics Exports", free: false, growth: false, pro: true },
+  { feature: "Custom Shop Branding", free: false, growth: true, pro: true },
+  { feature: "Homepage Placement", free: false, growth: false, pro: true },
+  { feature: "Verified Pro Badge", free: false, growth: false, pro: true },
+  { feature: "Priority Search Ranking", free: false, growth: false, pro: true },
+  { feature: "Support", free: "Email", growth: "Priority", pro: "24/7 Dedicated" },
 ];
 
 const BUYER_PERKS = [
@@ -116,8 +154,12 @@ const FAQS = [
     answer: "No contracts! All plans are month-to-month and can be cancelled anytime. Annual plans offer a 2-month discount.",
   },
   {
-    question: "What's included in the transaction fee?",
-    answer: "The transaction fee covers platform maintenance, listing infrastructure, and seller support. There are no hidden fees.",
+    question: "What happens when I hit my listing limit?",
+    answer: "On the Starter plan, additional listings cost AED 5 each. On Growth, you get 10 free listings per month and then AED 5 each after that. Pro sellers never pay per-listing fees.",
+  },
+  {
+    question: "What's included in a Product Boost?",
+    answer: "Boosted listings get priority placement in search results, explore pages, and category feeds. Pro sellers get 50% off all boosts plus one free 7-day boost every month.",
   },
   {
     question: "Do buyers need to pay for anything?",
@@ -128,6 +170,7 @@ const FAQS = [
 export default function PricingPage() {
   const [billingPeriod, setBillingPeriod] = React.useState<"monthly" | "annual">("monthly");
   const [expandedFaq, setExpandedFaq] = React.useState<number | null>(null);
+  const [showComparison, setShowComparison] = React.useState(false);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -155,7 +198,7 @@ export default function PricingPage() {
                   className={cn(
                     "px-6 py-2 rounded-full text-sm font-medium transition-colors",
                     billingPeriod === "monthly"
-                      ? "bg-white shadow text-foreground"
+                      ? "bg-white dark:bg-moulna-charcoal shadow text-foreground"
                       : "text-muted-foreground"
                   )}
                 >
@@ -166,7 +209,7 @@ export default function PricingPage() {
                   className={cn(
                     "px-6 py-2 rounded-full text-sm font-medium transition-colors",
                     billingPeriod === "annual"
-                      ? "bg-white shadow text-foreground"
+                      ? "bg-white dark:bg-moulna-charcoal shadow text-foreground"
                       : "text-muted-foreground"
                   )}
                 >
@@ -197,20 +240,29 @@ export default function PricingPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
+                className="h-full"
               >
                 <Card className={cn(
                   "p-6 relative h-full flex flex-col",
-                  plan.popular && "border-2 border-moulna-gold",
-                  plan.highlighted && "bg-gradient-to-b from-moulna-charcoal to-moulna-charcoal-dark text-white"
+                  plan.popular && "border-2 border-moulna-gold shadow-lg shadow-moulna-gold/10",
+                  plan.highlighted && "bg-gradient-to-b from-moulna-charcoal to-moulna-charcoal-dark text-white border-moulna-gold/30"
                 )}>
-                  {plan.popular && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-moulna-gold">
-                      Most Popular
+                  {plan.badge && (
+                    <Badge className={cn(
+                      "absolute -top-3 left-1/2 -translate-x-1/2",
+                      plan.highlighted ? "bg-gradient-to-r from-moulna-gold to-amber-500 text-white" : "bg-moulna-gold text-white"
+                    )}>
+                      {plan.badge}
                     </Badge>
                   )}
 
                   <div className="text-center mb-6">
-                    {plan.highlighted && <Crown className="w-8 h-8 mx-auto mb-2 text-moulna-gold" />}
+                    <div className={cn(
+                      "w-12 h-12 mx-auto rounded-xl flex items-center justify-center mb-3",
+                      plan.highlighted ? "bg-moulna-gold/20" : "bg-moulna-gold/10"
+                    )}>
+                      <plan.icon className="w-6 h-6 text-moulna-gold" />
+                    </div>
                     <h3 className="font-semibold text-xl mb-2">{plan.name}</h3>
                     <div className="flex items-baseline justify-center gap-1">
                       {plan.price === "Free" ? (
@@ -229,6 +281,11 @@ export default function PricingPage() {
                         </>
                       )}
                     </div>
+                    {billingPeriod === "annual" && plan.price !== "Free" && (
+                      <p className="text-xs text-emerald-500 font-medium mt-1">
+                        Save AED {Math.round(parseInt(plan.price) * 12 - parseInt(plan.price) * 10)}/year
+                      </p>
+                    )}
                     <p className={cn(
                       "text-sm mt-1",
                       plan.highlighted ? "text-white/60" : "text-muted-foreground"
@@ -237,41 +294,166 @@ export default function PricingPage() {
                     </p>
                   </div>
 
-                  <ul className="space-y-3 mb-6 flex-1">
+                  <ul className="space-y-3 flex-1">
                     {plan.features.map((feature) => (
-                      <li key={feature.text} className="flex items-center gap-2 text-sm">
+                      <li key={feature.text} className="flex items-start gap-2.5 text-sm">
                         {feature.included ? (
-                          <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                          <div className={cn(
+                            "w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5",
+                            feature.highlight
+                              ? "bg-moulna-gold text-white"
+                              : "bg-emerald-500/15 text-emerald-500"
+                          )}>
+                            <Check className="w-3 h-3" />
+                          </div>
                         ) : (
-                          <X className={cn(
-                            "w-4 h-4 shrink-0",
-                            plan.highlighted ? "text-white/30" : "text-muted-foreground/50"
-                          )} />
+                          <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 bg-muted">
+                            <X className={cn(
+                              "w-3 h-3",
+                              plan.highlighted ? "text-white/30" : "text-muted-foreground/50"
+                            )} />
+                          </div>
                         )}
-                        <span className={!feature.included ? (plan.highlighted ? "text-white/40" : "text-muted-foreground/60") : ""}>
+                        <span className={cn(
+                          !feature.included
+                            ? (plan.highlighted ? "text-white/40" : "text-muted-foreground/60")
+                            : feature.highlight ? "font-medium" : ""
+                        )}>
                           {feature.text}
                         </span>
                       </li>
                     ))}
                   </ul>
 
-                  <Button
-                    variant={plan.highlighted ? "gold" : plan.popular ? "gold" : "outline"}
-                    className="w-full"
-                    asChild
-                  >
-                    <Link href="/register?type=seller">
-                      {plan.cta}
-                    </Link>
-                  </Button>
+                  <div className="pt-6 mt-auto">
+                    <Button
+                      variant={plan.ctaVariant}
+                      className={cn(
+                        "w-full",
+                        plan.highlighted && plan.ctaVariant === "gold" && "shadow-lg shadow-moulna-gold/25"
+                      )}
+                      size="lg"
+                      asChild
+                    >
+                      <Link href="/register?type=seller">
+                        {plan.cta}
+                      </Link>
+                    </Button>
+                    {plan.price === "Free" && (
+                      <p className={cn(
+                        "text-xs text-center mt-2",
+                        plan.highlighted ? "text-white/50" : "text-muted-foreground"
+                      )}>
+                        No credit card required
+                      </p>
+                    )}
+                  </div>
                 </Card>
               </motion.div>
             ))}
           </div>
 
+          {/* Compare Plans Toggle */}
+          <div className="text-center mt-10">
+            <button
+              onClick={() => setShowComparison(!showComparison)}
+              className="inline-flex items-center gap-2 text-sm font-medium text-moulna-gold hover:underline"
+            >
+              {showComparison ? "Hide" : "Compare all features"}
+              <ChevronDown className={cn(
+                "w-4 h-4 transition-transform",
+                showComparison && "rotate-180"
+              )} />
+            </button>
+          </div>
+
+          {/* Full Feature Comparison Table */}
+          {showComparison && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="max-w-5xl mx-auto mt-8 overflow-hidden"
+            >
+              <Card className="overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="text-left p-4 font-semibold">Feature</th>
+                        <th className="text-center p-4 font-semibold">Starter</th>
+                        <th className="text-center p-4 font-semibold text-moulna-gold">Growth</th>
+                        <th className="text-center p-4 font-semibold">Pro</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {COMPARISON_ROWS.map((row, i) => (
+                        <tr key={row.feature} className={cn("border-b last:border-0", i % 2 === 0 && "bg-muted/20")}>
+                          <td className="p-4 font-medium">{row.feature}</td>
+                          {(["free", "growth", "pro"] as const).map((plan) => {
+                            const val = row[plan];
+                            return (
+                              <td key={plan} className="p-4 text-center">
+                                {typeof val === "boolean" ? (
+                                  val ? (
+                                    <Check className="w-5 h-5 text-emerald-500 mx-auto" />
+                                  ) : (
+                                    <X className="w-5 h-5 text-muted-foreground/40 mx-auto" />
+                                  )
+                                ) : (
+                                  <span className={cn(
+                                    val === "—" ? "text-muted-foreground/40" : "",
+                                    plan === "pro" && val !== "—" ? "font-medium text-moulna-gold" : ""
+                                  )}>
+                                    {val}
+                                  </span>
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            </motion.div>
+          )}
+
           <p className="text-center text-sm text-muted-foreground mt-8">
             Need more? <Link href="/contact" className="text-moulna-gold hover:underline">Contact us</Link> for enterprise pricing.
           </p>
+        </section>
+
+        {/* Why Upgrade — Value Props */}
+        <section className="container mx-auto px-4 py-16">
+          <div className="text-center mb-12">
+            <h2 className="font-display text-2xl font-bold mb-4">Why Sellers Upgrade</h2>
+            <p className="text-muted-foreground">Real results from real Moulna sellers</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            {[
+              { icon: Eye, stat: "7x", label: "more views", desc: "Boosted listings get up to 7x more visibility in search and explore" },
+              { icon: MessageCircle, stat: "3x", label: "more inquiries", desc: "Growth and Pro sellers receive significantly more buyer messages" },
+              { icon: TrendingUp, stat: "89%", label: "renewal rate", desc: "Almost 9 in 10 Growth & Pro sellers renew their plan each month" },
+            ].map((item, index) => (
+              <motion.div
+                key={item.label}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <Card className="p-6 text-center h-full">
+                  <div className="w-12 h-12 mx-auto rounded-xl bg-moulna-gold/10 flex items-center justify-center mb-4">
+                    <item.icon className="w-6 h-6 text-moulna-gold" />
+                  </div>
+                  <div className="text-3xl font-bold text-moulna-gold mb-1">{item.stat}</div>
+                  <p className="font-medium mb-2">{item.label}</p>
+                  <p className="text-sm text-muted-foreground">{item.desc}</p>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
         </section>
 
         {/* Buyer Perks */}
@@ -337,10 +519,10 @@ export default function PricingPage() {
 
           <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
             {[
-              { icon: Zap, title: "Lower Fees", description: "Starting at just 3.5% — keep more of what you earn" },
-              { icon: Sparkles, title: "Gamification", description: "Earn XP, badges, and rewards while you sell" },
-              { icon: BarChart3, title: "Deep Analytics", description: "Understand your customers with detailed insights" },
-              { icon: Headphones, title: "Local Support", description: "UAE-based team available 7 days a week" },
+              { icon: Zap, title: "Lower Fees", description: "Pay-per-listing from AED 5 — no recurring costs until you're ready to scale" },
+              { icon: Sparkles, title: "Gamification", description: "Earn XP, badges, and rewards while you sell — keep buyers coming back" },
+              { icon: BarChart3, title: "Deep Analytics", description: "Understand your customers with traffic sources, demographics, and trends" },
+              { icon: Headphones, title: "Local Support", description: "UAE-based team available 7 days a week with dedicated Pro support" },
             ].map((feature, index) => (
               <motion.div
                 key={feature.title}
@@ -386,7 +568,7 @@ export default function PricingPage() {
                     <span className="font-medium">{faq.question}</span>
                     <ChevronDown
                       className={cn(
-                        "w-5 h-5 text-muted-foreground transition-transform",
+                        "w-5 h-5 text-muted-foreground transition-transform shrink-0 ms-4",
                         expandedFaq === index && "rotate-180"
                       )}
                     />

@@ -6,13 +6,12 @@ import { cn, timeAgo } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Bell, Package, Star, Sparkles, Trophy, Heart,
-  MessageCircle, TrendingDown, CheckCheck, Trash2, Settings
+  MessageCircle, TrendingDown, CheckCheck, Trash2, Settings, Loader2
 } from "lucide-react";
 
-type NotificationType = "listing" | "xp" | "badge" | "review" | "price_drop" | "message" | "streak" | "system";
+type NotificationType = "listing" | "xp" | "badge" | "review" | "price_drop" | "message" | "streak" | "system" | "inquiry" | "level_up" | "promo";
 
 interface Notification {
   id: string;
@@ -27,91 +26,7 @@ interface Notification {
   productImage?: string;
 }
 
-const NOTIFICATIONS: Notification[] = [
-  {
-    id: "notif_1",
-    type: "listing",
-    title: "Seller Replied!",
-    message: "Scent of Arabia responded to your inquiry about the Arabian Oud Perfume.",
-    read: false,
-    createdAt: "2024-02-13T10:30:00Z",
-    link: "/dashboard/messages/conv_1",
-  },
-  {
-    id: "notif_2",
-    type: "xp",
-    title: "XP Earned!",
-    message: "You earned 50 XP for leaving a review on Arabian Oud Perfume.",
-    read: false,
-    createdAt: "2024-02-13T09:15:00Z",
-    xpAmount: 50,
-  },
-  {
-    id: "notif_3",
-    type: "badge",
-    title: "New Badge Unlocked!",
-    message: "Congratulations! You've earned the 'Photo Reviewer' badge.",
-    read: false,
-    createdAt: "2024-02-12T16:45:00Z",
-    badgeName: "Photo Reviewer",
-  },
-  {
-    id: "notif_4",
-    type: "price_drop",
-    title: "Price Drop Alert!",
-    message: "Gold-Plated Pearl Earrings from your wishlist is now 20% off!",
-    read: true,
-    createdAt: "2024-02-12T14:00:00Z",
-    link: "/products/gold-plated-pearl-earrings",
-    productImage: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=100",
-  },
-  {
-    id: "notif_5",
-    type: "streak",
-    title: "Streak Warning!",
-    message: "Your 7-day login streak is at risk! Log in tomorrow to keep it going.",
-    read: true,
-    createdAt: "2024-02-11T20:00:00Z",
-  },
-  {
-    id: "notif_6",
-    type: "message",
-    title: "New Message",
-    message: "Scent of Arabia replied to your inquiry.",
-    read: true,
-    createdAt: "2024-02-11T11:30:00Z",
-    link: "/dashboard/messages/conv_1",
-  },
-  {
-    id: "notif_7",
-    type: "review",
-    title: "Your Review Was Helpful",
-    message: "5 people found your review on Traditional Arabic Calligraphy Art helpful!",
-    read: true,
-    createdAt: "2024-02-10T15:20:00Z",
-    xpAmount: 15,
-  },
-  {
-    id: "notif_8",
-    type: "listing",
-    title: "Listing Saved",
-    message: "Traditional Arabic Calligraphy Art was added to your saved items.",
-    read: true,
-    createdAt: "2024-02-08T12:00:00Z",
-    link: "/dashboard/wishlist",
-  },
-  {
-    id: "notif_9",
-    type: "system",
-    title: "Welcome to Moulna!",
-    message: "Your account has been created successfully. You've earned 100 XP!",
-    read: true,
-    createdAt: "2024-01-15T08:00:00Z",
-    xpAmount: 100,
-  },
-];
-
-const notificationIcons: Record<NotificationType, React.ReactNode> = {
+const notificationIcons: Record<string, React.ReactNode> = {
   listing: <Package className="w-5 h-5 text-blue-500" />,
   xp: <Sparkles className="w-5 h-5 text-moulna-gold" />,
   badge: <Trophy className="w-5 h-5 text-yellow-500" />,
@@ -120,30 +35,84 @@ const notificationIcons: Record<NotificationType, React.ReactNode> = {
   message: <MessageCircle className="w-5 h-5 text-purple-500" />,
   streak: <Heart className="w-5 h-5 text-red-500" />,
   system: <Bell className="w-5 h-5 text-muted-foreground" />,
+  inquiry: <MessageCircle className="w-5 h-5 text-blue-500" />,
+  level_up: <Trophy className="w-5 h-5 text-moulna-gold" />,
+  promo: <Sparkles className="w-5 h-5 text-pink-500" />,
 };
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = React.useState(NOTIFICATIONS);
+  const [notifications, setNotifications] = React.useState<Notification[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const [filter, setFilter] = React.useState<"all" | "unread">("all");
+  const [unreadCount, setUnreadCount] = React.useState(0);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  React.useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  async function fetchNotifications() {
+    try {
+      const res = await fetch("/api/notifications");
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data.notifications || []);
+        setUnreadCount(data.unreadCount || 0);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const filteredNotifications = filter === "all"
     ? notifications
     : notifications.filter(n => !n.read);
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
+  async function markAllAsRead() {
+    try {
+      const res = await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markAllRead: true }),
+      });
+      if (res.ok) {
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        setUnreadCount(0);
+      }
+    } catch {
+      // silently fail
+    }
+  }
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
-  };
+  async function markAsRead(id: string) {
+    try {
+      const res = await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notificationId: id }),
+      });
+      if (res.ok) {
+        setNotifications(prev =>
+          prev.map(n => n.id === id ? { ...n, read: true } : n)
+        );
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } catch {
+      // silently fail
+    }
+  }
 
-  const deleteNotification = (id: string) => {
+  async function deleteNotification(id: string) {
+    const notif = notifications.find(n => n.id === id);
     setNotifications(prev => prev.filter(n => n.id !== id));
-  };
+    if (notif && !notif.read) setUnreadCount(prev => Math.max(0, prev - 1));
+    try {
+      await fetch(`/api/notifications?id=${id}`, { method: "DELETE" });
+    } catch {
+      // silently fail
+    }
+  }
 
   // Group notifications by date
   const groupedNotifications = React.useMemo(() => {
@@ -167,6 +136,14 @@ export default function NotificationsPage() {
 
     return groups;
   }, [filteredNotifications]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -258,16 +235,19 @@ export default function NotificationsPage() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: index * 0.05 }}
                     className={cn(
-                      "p-4 flex items-start gap-4 hover:bg-muted/50 transition-colors",
+                      "p-4 flex items-start gap-4 hover:bg-muted/50 transition-colors cursor-pointer",
                       !notification.read && "bg-moulna-gold/5"
                     )}
-                    onClick={() => markAsRead(notification.id)}
+                    onClick={() => {
+                      if (!notification.read) markAsRead(notification.id);
+                      if (notification.link) window.location.href = notification.link;
+                    }}
                   >
                     <div className={cn(
                       "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
                       !notification.read ? "bg-moulna-gold/10" : "bg-muted"
                     )}>
-                      {notificationIcons[notification.type]}
+                      {notificationIcons[notification.type] || notificationIcons.system}
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -324,7 +304,7 @@ export default function NotificationsPage() {
           </h3>
           <p className="text-muted-foreground">
             {filter === "unread"
-              ? "You've read all your notifications. Great job staying on top of things!"
+              ? "You've read all your notifications."
               : "When you get notifications, they'll appear here."
             }
           </p>

@@ -48,6 +48,32 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
+  const [unreadNotifCount, setUnreadNotifCount] = React.useState(0);
+  const [wishlistCount, setWishlistCount] = React.useState(0);
+  const [unreadMsgCount, setUnreadMsgCount] = React.useState(0);
+
+  // Fetch counts for badges
+  React.useEffect(() => {
+    if (!isAuthenticated) return;
+
+    // Notifications
+    fetch("/api/notifications?limit=1")
+      .then((res) => res.ok ? res.json() : { unreadCount: 0 })
+      .then((data) => setUnreadNotifCount(data.unreadCount || 0))
+      .catch(() => {});
+
+    // Wishlist
+    fetch("/api/wishlist")
+      .then((res) => res.ok ? res.json() : { items: [] })
+      .then((data) => setWishlistCount((data.items || []).length))
+      .catch(() => {});
+
+    // Messages (unread count)
+    fetch("/api/messages/unread-count")
+      .then((res) => res.ok ? res.json() : { count: 0 })
+      .then((data) => setUnreadMsgCount(data.count || 0))
+      .catch(() => {});
+  }, [isAuthenticated, pathname]);
 
   // Handle scroll effect
   React.useEffect(() => {
@@ -130,9 +156,11 @@ export function Navbar() {
                 <Link href="/dashboard/wishlist">
                   <Button variant="ghost" size="icon" className="relative hidden sm:flex">
                     <Heart className="w-5 h-5" />
-                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-[10px] font-bold text-white rounded-full flex items-center justify-center">
-                      3
-                    </span>
+                    {wishlistCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-[10px] font-bold text-white rounded-full flex items-center justify-center">
+                        {wishlistCount > 9 ? "9+" : wishlistCount}
+                      </span>
+                    )}
                   </Button>
                 </Link>
               )}
@@ -142,21 +170,27 @@ export function Navbar() {
                 <Link href="/dashboard/messages">
                   <Button variant="ghost" size="icon" className="relative">
                     <MessageSquare className="w-5 h-5" />
-                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-[10px] font-bold text-white rounded-full flex items-center justify-center">
-                      3
-                    </span>
+                    {unreadMsgCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-[10px] font-bold text-white rounded-full flex items-center justify-center">
+                        {unreadMsgCount > 9 ? "9+" : unreadMsgCount}
+                      </span>
+                    )}
                   </Button>
                 </Link>
               )}
 
               {/* Notifications */}
               {isAuthenticated && (
-                <Button variant="ghost" size="icon" className="relative hidden sm:flex">
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-orange-500 text-[10px] font-bold text-white rounded-full flex items-center justify-center">
-                    5
-                  </span>
-                </Button>
+                <Link href="/dashboard/notifications">
+                  <Button variant="ghost" size="icon" className="relative hidden sm:flex">
+                    <Bell className="w-5 h-5" />
+                    {unreadNotifCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-orange-500 text-[10px] font-bold text-white rounded-full flex items-center justify-center">
+                        {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
+                      </span>
+                    )}
+                  </Button>
+                </Link>
               )}
 
               {/* User Menu / Auth */}

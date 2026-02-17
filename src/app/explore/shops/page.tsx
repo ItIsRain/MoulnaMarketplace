@@ -10,11 +10,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
+import { ShopAvatar } from "@/components/avatar/ShopAvatar";
 import type { Shop } from "@/lib/types";
 import {
   Store, Search, MapPin, Star, Heart, Users,
-  Package, Award, Filter, ArrowUpDown, ChevronRight, Loader2
+  Package, Shield, Filter, ArrowUpDown, ChevronRight, Loader2
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -172,7 +172,6 @@ export default function ShopsPage() {
                   className="text-sm border rounded-lg px-3 py-1.5 bg-background"
                 >
                   <option value="popular">Most Popular</option>
-                  <option value="rating">Highest Rated</option>
                   <option value="newest">Newest</option>
                   <option value="products">Most Products</option>
                 </select>
@@ -228,15 +227,17 @@ export default function ShopsPage() {
                       {/* Avatar */}
                       <div className="relative px-4">
                         <div className="absolute -top-8">
-                          <DiceBearAvatar
-                            seed={shop.avatarSeed || shop.slug}
-                            style={shop.avatarStyle || "adventurer"}
+                          <ShopAvatar
+                            logoUrl={shop.logoUrl}
+                            avatarSeed={shop.avatarSeed || shop.slug}
+                            avatarStyle={shop.avatarStyle}
+                            name={shop.name}
                             size="xl"
                             className="border-4 border-white shadow-lg"
                           />
                           {shop.isVerified && (
-                            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
-                              <Award className="w-3.5 h-3.5 text-white" />
+                            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center" title="ID Verified">
+                              <Shield className="w-3.5 h-3.5 text-white" />
                             </div>
                           )}
                         </div>
@@ -265,7 +266,10 @@ export default function ShopsPage() {
                         {(shop.isVerified || shop.isArtisan) && (
                           <div className="flex flex-wrap gap-1 mb-3">
                             {shop.isVerified && (
-                              <Badge variant="outline" className="text-xs">Verified</Badge>
+                              <Badge variant="verified" className="text-xs">
+                                <Shield className="w-3 h-3 me-1" />
+                                ID Verified
+                              </Badge>
                             )}
                             {shop.isArtisan && (
                               <Badge variant="outline" className="text-xs">Artisan</Badge>
@@ -276,14 +280,9 @@ export default function ShopsPage() {
                         {/* Stats */}
                         <div className="flex items-center justify-between pt-3 border-t">
                           <div className="flex items-center gap-4 text-sm">
-                            <div className="flex items-center gap-1">
-                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                              <span className="font-medium">{shop.rating}</span>
-                              <span className="text-muted-foreground">({shop.reviewCount})</span>
-                            </div>
                             <div className="flex items-center gap-1 text-muted-foreground">
                               <Package className="w-4 h-4" />
-                              {shop.totalListings}
+                              {shop.totalListings} listings
                             </div>
                           </div>
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">

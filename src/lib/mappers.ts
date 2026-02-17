@@ -31,15 +31,12 @@ export function mapDbShop(row: any): Shop {
     policies: row.policies ?? {},
     branding: row.branding ?? {},
     listingPreferences: row.listing_preferences ?? {},
-    rating: Number(row.rating) || 0,
-    reviewCount: row.review_count || 0,
     totalListings: row.total_listings || 0,
     followerCount: row.follower_count || 0,
     isVerified: row.is_verified || false,
     isArtisan: row.is_artisan || false,
     responseTime: row.response_time ?? undefined,
-    videoUrl: row.video_url ?? undefined,
-    galleryImages: row.gallery_images ?? [],
+    workshopSections: row.workshop_sections ?? [],
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -54,8 +51,8 @@ export function mapDbProductSeller(shop: any): ProductSeller {
     slug: shop.slug,
     avatarStyle: shop.avatar_style || "adventurer",
     avatarSeed: shop.avatar_seed ?? undefined,
+    logoUrl: shop.logo_url ?? undefined,
     level: 1, // TODO: derive from profile XP when gamification is wired
-    rating: Number(shop.rating) || 0,
     totalListings: shop.total_listings || 0,
     location: shop.location ?? undefined,
     isVerified: shop.is_verified || false,
@@ -64,7 +61,7 @@ export function mapDbProductSeller(shop: any): ProductSeller {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function mapDbProduct(row: any, shop?: any): Product {
+export function mapDbProduct(row: any, shop?: any, isSponsored = false): Product {
   const createdAt = row.created_at;
   const isNew = (Date.now() - new Date(createdAt).getTime()) < 7 * 24 * 60 * 60 * 1000;
   const isTrending = (row.view_count || 0) > 100 || (row.inquiry_count || 0) > 10;
@@ -74,6 +71,7 @@ export function mapDbProduct(row: any, shop?: any): Product {
   if (isTrending) badges.push("trending");
   if (isNew) badges.push("new");
   if (row.is_handmade) badges.push("handmade");
+  if (isSponsored) badges.push("sponsored");
 
   const seller: ProductSeller = shop
     ? mapDbProductSeller(shop)
@@ -84,8 +82,8 @@ export function mapDbProduct(row: any, shop?: any): Product {
         slug: row.shops?.slug || "",
         avatarStyle: row.shops?.avatar_style || "adventurer",
         avatarSeed: row.shops?.avatar_seed ?? undefined,
+        logoUrl: row.shops?.logo_url ?? undefined,
         level: 1,
-        rating: Number(row.shops?.rating) || 0,
         totalListings: row.shops?.total_listings || 0,
         location: row.shops?.location ?? undefined,
         isVerified: row.shops?.is_verified || false,
@@ -121,15 +119,15 @@ export function mapDbProduct(row: any, shop?: any): Product {
     inquiryCount: row.inquiry_count || 0,
     viewCount: row.view_count || 0,
     xpReward: row.xp_reward || 5,
-    rating: 0, // TODO: derive from reviews table
-    reviewCount: 0,
     seller,
     badges,
     isTrending,
     isNew,
+    isSponsored,
     available,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    customFields: row.custom_fields || [],
     publishedAt: row.published_at ?? undefined,
   };
 }

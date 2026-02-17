@@ -4,82 +4,57 @@ import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, timeAgo, formatAED } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
+import { ShopAvatar } from "@/components/avatar/ShopAvatar";
 import {
   ArrowLeft, Send, Paperclip, Image, MoreVertical,
-  Phone, Video, Star, Flag, Trash2, Archive, Search,
-  Check, CheckCheck, Smile
+  Store, CheckCheck, Check, Smile, Loader2
 } from "lucide-react";
 
-const CONVERSATION = {
-  id: "conv-1",
-  participant: {
-    name: "Arabian Scents Boutique",
-    avatar: "arabian-scents",
-    isOnline: true,
-    isVerified: true,
-    type: "seller",
-  },
-  messages: [
-    {
-      id: "1",
-      sender: "them",
-      content: "Hello! Thank you for your interest in our Premium Oud Collection. How can I help you today?",
-      timestamp: "10:30 AM",
-      status: "read",
-    },
-    {
-      id: "2",
-      sender: "me",
-      content: "Hi! I wanted to ask about meetup options in Abu Dhabi. Also, do you offer gift wrapping?",
-      timestamp: "10:32 AM",
-      status: "read",
-    },
-    {
-      id: "3",
-      sender: "them",
-      content: "I can meet you in Abu Dhabi! I'm usually available on weekends. And yes, I can include gift wrapping for free! 🎁",
-      timestamp: "10:35 AM",
-      status: "read",
-    },
-    {
-      id: "4",
-      sender: "me",
-      content: "That's perfect! I'm ordering it as a gift. Can you also include a handwritten note?",
-      timestamp: "10:38 AM",
-      status: "read",
-    },
-    {
-      id: "5",
-      sender: "them",
-      content: "Absolutely! Just let me know your message and we'll include a beautiful handwritten card with your gift. Is there anything else you'd like to know?",
-      timestamp: "10:40 AM",
-      status: "read",
-    },
-    {
-      id: "6",
-      sender: "me",
-      content: "That sounds wonderful! One more thing - do you have any ongoing promotions?",
-      timestamp: "10:42 AM",
-      status: "delivered",
-    },
-  ],
-  relatedInquiry: {
-    id: "INQ-2024-1234",
-    listing: "Premium Oud Collection Set",
-    price: 450,
-  },
-};
+interface Participant {
+  id: string;
+  name: string;
+  username: string;
+  avatarStyle: string;
+  avatarSeed: string;
+  level: number;
+  isShop: boolean;
+  shopName?: string;
+  shopSlug?: string;
+  logoUrl?: string;
+}
+
+interface Message {
+  id: string;
+  senderId: string;
+  content: string;
+  isFromMe: boolean;
+  read: boolean;
+  createdAt: string;
+}
+
+interface RelatedProduct {
+  id: string;
+  title: string;
+  slug: string;
+  priceFils: number;
+  image: string | null;
+}
 
 export default function ConversationPage() {
   const params = useParams();
+  const conversationId = params.conversationId as string;
+  const [participant, setParticipant] = React.useState<Participant | null>(null);
+  const [messages, setMessages] = React.useState<Message[]>([]);
+  const [relatedProduct, setRelatedProduct] = React.useState<RelatedProduct | null>(null);
+  const [loading, setLoading] = React.useState(true);
   const [message, setMessage] = React.useState("");
-  const [isTyping, setIsTyping] = React.useState(false);
+  const [sending, setSending] = React.useState(false);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -87,14 +62,64 @@ export default function ConversationPage() {
   };
 
   React.useEffect(() => {
-    scrollToBottom();
-  }, [CONVERSATION.messages]);
+    fetch(`/api/messages?conversationId=${conversationId}`)
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data) {
+          setParticipant(data.participant);
+          setMessages(data.messages || []);
+          setRelatedProduct(data.relatedProduct);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [conversationId]);
 
-  const handleSend = () => {
-    if (!message.trim()) return;
-    // In real app, send message
-    setMessage("");
-  };
+  React.useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  async function handleSend() {
+    if (!message.trim() || sending) return;
+    setSending(true);
+    try {
+      const res = await fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conversationId,
+          content: message.trim(),
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: data.messageId,
+            senderId: "",
+            content: message.trim(),
+            isFromMe: true,
+            read: false,
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+        setMessage("");
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setSending(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
+      </div>
+    );
+  }
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col">
@@ -107,78 +132,81 @@ export default function ConversationPage() {
             </Link>
           </Button>
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <DiceBearAvatar seed={CONVERSATION.participant.avatar} size="md" />
-              {CONVERSATION.participant.isOnline && (
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
-              )}
-            </div>
+            {participant?.isShop ? (
+              <ShopAvatar
+                logoUrl={participant.logoUrl}
+                avatarSeed={participant.avatarSeed}
+                avatarStyle={participant.avatarStyle}
+                name={participant.shopName || participant.name}
+                size="md"
+              />
+            ) : (
+              <DiceBearAvatar
+                seed={participant?.avatarSeed || "user"}
+                style={participant?.avatarStyle || "adventurer"}
+                size="md"
+              />
+            )}
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-semibold">{CONVERSATION.participant.name}</h1>
-                {CONVERSATION.participant.isVerified && (
-                  <Badge className="bg-blue-100 text-blue-700 text-xs">Verified</Badge>
+                <h1 className="font-semibold">
+                  {participant?.isShop
+                    ? participant.shopName || participant.name
+                    : participant?.name || "Unknown"}
+                </h1>
+                {participant?.isShop && (
+                  <Badge variant="outline" className="text-xs">
+                    <Store className="w-3 h-3 me-1" />
+                    Shop
+                  </Badge>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">
-                {CONVERSATION.participant.isOnline ? "Online" : "Last seen 2h ago"}
-              </p>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon">
-            <Search className="w-5 h-5" />
-          </Button>
-          <Button variant="ghost" size="icon">
-            <Phone className="w-5 h-5" />
-          </Button>
-          <Button variant="ghost" size="icon">
-            <Video className="w-5 h-5" />
-          </Button>
-          <Button variant="ghost" size="icon">
-            <MoreVertical className="w-5 h-5" />
-          </Button>
-        </div>
+        <Button variant="ghost" size="icon">
+          <MoreVertical className="w-5 h-5" />
+        </Button>
       </div>
 
       <div className="flex-1 flex gap-4 mt-4 min-h-0">
         {/* Messages Area */}
-        <div className="flex-1 flex flex-col min-h-0">
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-            {/* Date Separator */}
-            <div className="flex items-center gap-4 my-4">
-              <div className="flex-1 border-t" />
-              <span className="text-xs text-muted-foreground">Today</span>
-              <div className="flex-1 border-t" />
+        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+          {messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              <p>No messages yet. Start the conversation!</p>
             </div>
-
-            {CONVERSATION.messages.map((msg, index) => (
+          ) : (
+            messages.map((msg, index) => (
               <motion.div
                 key={msg.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: index * 0.03 }}
                 className={cn(
                   "flex",
-                  msg.sender === "me" ? "justify-end" : "justify-start"
+                  msg.isFromMe ? "justify-end" : "justify-start"
                 )}
               >
                 <div className={cn(
                   "max-w-[70%] rounded-2xl px-4 py-2",
-                  msg.sender === "me"
+                  msg.isFromMe
                     ? "bg-moulna-gold text-white rounded-br-none"
                     : "bg-muted rounded-bl-none"
                 )}>
                   <p>{msg.content}</p>
                   <div className={cn(
                     "flex items-center gap-1 mt-1 text-xs",
-                    msg.sender === "me" ? "text-white/70 justify-end" : "text-muted-foreground"
+                    msg.isFromMe ? "text-white/70 justify-end" : "text-muted-foreground"
                   )}>
-                    <span>{msg.timestamp}</span>
-                    {msg.sender === "me" && (
-                      msg.status === "read" ? (
+                    <span>
+                      {new Date(msg.createdAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                    {msg.isFromMe && (
+                      msg.read ? (
                         <CheckCheck className="w-4 h-4" />
                       ) : (
                         <Check className="w-4 h-4" />
@@ -187,141 +215,114 @@ export default function ConversationPage() {
                   </div>
                 </div>
               </motion.div>
-            ))}
-
-            {/* Typing Indicator */}
-            {isTyping && (
-              <div className="flex items-center gap-2">
-                <DiceBearAvatar seed={CONVERSATION.participant.avatar} size="xs" />
-                <div className="bg-muted rounded-2xl px-4 py-2">
-                  <div className="flex gap-1">
-                    <motion.span
-                      animate={{ opacity: [0.4, 1, 0.4] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                      className="w-2 h-2 bg-gray-400 rounded-full"
-                    />
-                    <motion.span
-                      animate={{ opacity: [0.4, 1, 0.4] }}
-                      transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
-                      className="w-2 h-2 bg-gray-400 rounded-full"
-                    />
-                    <motion.span
-                      animate={{ opacity: [0.4, 1, 0.4] }}
-                      transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}
-                      className="w-2 h-2 bg-gray-400 rounded-full"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Input Area */}
-          <div className="pt-4 border-t mt-4">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon">
-                <Paperclip className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <Image className="w-5 h-5" />
-              </Button>
-              <div className="flex-1 relative">
-                <Input
-                  placeholder="Type a message..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                  className="pe-12"
-                />
-                <button className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                  <Smile className="w-5 h-5" />
-                </button>
-              </div>
-              <Button
-                onClick={handleSend}
-                disabled={!message.trim()}
-                className="bg-moulna-gold hover:bg-moulna-gold-dark"
-              >
-                <Send className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
+            ))
+          )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Sidebar */}
-        <div className="w-80 hidden lg:block space-y-4">
+        <div className="w-80 hidden lg:block space-y-4 flex-shrink-0">
           {/* Participant Info */}
           <Card className="p-4">
             <div className="text-center mb-4">
-              <DiceBearAvatar
-                seed={CONVERSATION.participant.avatar}
-                size="xl"
-                className="w-20 h-20 mx-auto mb-3"
-              />
-              <h3 className="font-semibold">{CONVERSATION.participant.name}</h3>
-              <Badge variant="secondary" className="mt-1">
-                {CONVERSATION.participant.type === "seller" ? "Seller" : "Buyer"}
-              </Badge>
+              {participant?.isShop ? (
+                <div className="mx-auto mb-3 flex justify-center">
+                  <ShopAvatar
+                    logoUrl={participant.logoUrl}
+                    avatarSeed={participant.avatarSeed}
+                    avatarStyle={participant.avatarStyle}
+                    name={participant.shopName || participant.name}
+                    size="xl"
+                  />
+                </div>
+              ) : (
+                <DiceBearAvatar
+                  seed={participant?.avatarSeed || "user"}
+                  style={participant?.avatarStyle || "adventurer"}
+                  size="xl"
+                  className="mx-auto mb-3"
+                />
+              )}
+              <h3 className="font-semibold">
+                {participant?.isShop
+                  ? participant.shopName || participant.name
+                  : participant?.name || "Unknown"}
+              </h3>
             </div>
-            <div className="flex justify-center gap-2">
-              <Button variant="outline" size="sm">
-                <Star className="w-4 h-4 me-1" />
-                Follow
-              </Button>
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/shops/${CONVERSATION.participant.avatar}`}>
+            {participant?.isShop && participant.shopSlug && (
+              <Button variant="outline" size="sm" className="w-full" asChild>
+                <Link href={`/shops/${participant.shopSlug}`}>
                   View Shop
                 </Link>
               </Button>
-            </div>
+            )}
           </Card>
 
-          {/* Related Inquiry */}
-          {CONVERSATION.relatedInquiry && (
+          {/* Related Product */}
+          {relatedProduct && (
             <Card className="p-4">
               <h4 className="font-medium text-sm mb-3">Related Listing</h4>
               <div className="flex gap-3">
-                <div className="w-16 h-16 rounded-lg bg-muted" />
+                {relatedProduct.image ? (
+                  <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                    <img
+                      src={relatedProduct.image}
+                      alt={relatedProduct.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-lg bg-muted flex-shrink-0" />
+                )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {CONVERSATION.relatedInquiry.listing}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {CONVERSATION.relatedInquiry.id}
-                  </p>
+                  <p className="text-sm font-medium truncate">{relatedProduct.title}</p>
                   <p className="font-semibold text-moulna-gold mt-1">
-                    AED {CONVERSATION.relatedInquiry.price}
+                    {formatAED(relatedProduct.priceFils)}
                   </p>
                 </div>
               </div>
               <Button variant="outline" size="sm" className="w-full mt-3" asChild>
-                <Link href={`/dashboard/orders/${CONVERSATION.relatedInquiry.id}`}>
-                  View Inquiry
+                <Link href={`/products/${relatedProduct.slug}`}>
+                  View Listing
                 </Link>
               </Button>
             </Card>
           )}
+        </div>
+      </div>
 
-          {/* Actions */}
-          <Card className="p-4">
-            <h4 className="font-medium text-sm mb-3">Actions</h4>
-            <div className="space-y-2">
-              <Button variant="ghost" size="sm" className="w-full justify-start">
-                <Archive className="w-4 h-4 me-2" />
-                Archive Conversation
-              </Button>
-              <Button variant="ghost" size="sm" className="w-full justify-start">
-                <Flag className="w-4 h-4 me-2" />
-                Report User
-              </Button>
-              <Button variant="ghost" size="sm" className="w-full justify-start text-red-500">
-                <Trash2 className="w-4 h-4 me-2" />
-                Delete Conversation
-              </Button>
-            </div>
-          </Card>
+      {/* Input Area — full width below messages + sidebar */}
+      <div className="pt-4 border-t mt-4">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="flex-shrink-0">
+            <Paperclip className="w-5 h-5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="flex-shrink-0">
+            <Image className="w-5 h-5" />
+          </Button>
+          <div className="flex-1 relative">
+            <Input
+              placeholder="Type a message..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              className="pe-12"
+            />
+            <button className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <Smile className="w-5 h-5" />
+            </button>
+          </div>
+          <Button
+            onClick={handleSend}
+            disabled={!message.trim() || sending}
+            className="bg-moulna-gold hover:bg-moulna-gold-dark flex-shrink-0"
+          >
+            {sending ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Send className="w-5 h-5" />
+            )}
+          </Button>
         </div>
       </div>
     </div>

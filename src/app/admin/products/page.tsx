@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, formatDate, formatAED } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,89 +10,94 @@ import { Input } from "@/components/ui/input";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
   Package, Search, Filter, CheckCircle, XCircle, Clock, Eye,
-  Flag, Trash2, Download, Star, Store, AlertTriangle,
-  Calendar, Tag
+  Trash2, Download, Star, Store, AlertTriangle,
+  Calendar, Tag, Loader2
 } from "lucide-react";
 
-const PRODUCTS = [
-  {
-    id: "1",
-    name: "Premium Oud Collection Set",
-    seller: "Arabian Scents Boutique",
-    sellerAvatar: "arabian-scents",
-    price: 450,
-    category: "Oud",
-    status: "approved",
-    rating: 4.9,
-    reviews: 156,
-    reportCount: 0,
-    createdAt: "Mar 10, 2024",
-  },
-  {
-    id: "2",
-    name: "Arabian Nights Perfume 100ml",
-    seller: "Arabian Scents Boutique",
-    sellerAvatar: "arabian-scents",
-    price: 320,
-    category: "Perfumes",
-    status: "pending",
-    rating: 0,
-    reviews: 0,
-    reportCount: 0,
-    createdAt: "Mar 12, 2024",
-  },
-  {
-    id: "3",
-    name: "Handmade Silver Jewelry Set",
-    seller: "Dubai Crafts Co.",
-    sellerAvatar: "dubai-crafts",
-    price: 890,
-    category: "Jewelry",
-    status: "pending",
-    rating: 0,
-    reviews: 0,
-    reportCount: 0,
-    createdAt: "Mar 13, 2024",
-  },
-  {
-    id: "4",
-    name: "Suspicious Product",
-    seller: "Unknown Seller",
-    sellerAvatar: "unknown-seller",
-    price: 50,
-    category: "Other",
-    status: "flagged",
-    rating: 1.2,
-    reviews: 8,
-    reportCount: 5,
-    createdAt: "Mar 8, 2024",
-  },
-  {
-    id: "5",
-    name: "Traditional Bakhoor Set",
-    seller: "Emirates Artisan",
-    sellerAvatar: "emirates-artisan",
-    price: 150,
-    category: "Bakhoor",
-    status: "approved",
-    rating: 4.7,
-    reviews: 234,
-    reportCount: 0,
-    createdAt: "Feb 28, 2024",
-  },
-];
+interface Product {
+  id: string;
+  title: string;
+  slug: string;
+  seller: string;
+  sellerAvatarSeed: string;
+  sellerAvatarStyle: string;
+  category: string;
+  priceFils: number;
+  status: string;
+  rating: number;
+  reviewCount: number;
+  inquiryCount: number;
+  viewCount: number;
+  createdAt: string;
+}
+
+interface StatusCounts {
+  all: number;
+  active: number;
+  pending: number;
+  draft: number;
+}
 
 const STATUS_OPTIONS = [
   { id: "all", label: "All Products" },
+  { id: "active", label: "Active" },
   { id: "pending", label: "Pending Review" },
-  { id: "approved", label: "Approved" },
-  { id: "flagged", label: "Flagged" },
-  { id: "rejected", label: "Rejected" },
+  { id: "draft", label: "Draft" },
 ];
+
+const PAGE_SIZE = 20;
 
 export default function AdminProductsPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedStatus, setSelectedStatus] = React.useState("all");
+  const [page, setPage] = React.useState(1);
+  const [products, setProducts] = React.useState<Product[]>([]);
+  const [totalCount, setTotalCount] = React.useState(0);
+  const [statusCounts, setStatusCounts] = React.useState<StatusCounts>({
+    all: 0,
+    active: 0,
+    pending: 0,
+    draft: 0,
+  });
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    async function fetchProducts() {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `/api/admin/products?page=${page}&status=${selectedStatus}`
+        );
+        if (!res.ok) throw new Error("Failed to fetch products");
+        const data = await res.json();
+        if (cancelled) return;
+        setProducts(data.products);
+        setTotalCount(data.totalCount);
+        setStatusCounts(data.statusCounts);
+      } catch (err) {
+        console.error("Error fetching products:", err);
+        if (!cancelled) {
+          setProducts([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchProducts();
+    return () => {
+      cancelled = true;
+    };
+  }, [page, selectedStatus]);
+
+  // Reset to page 1 when status filter changes
+  React.useEffect(() => {
+    setPage(1);
+  }, [selectedStatus]);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background p-8">
@@ -119,7 +124,9 @@ export default function AdminProductsPage() {
           <div className="flex items-center gap-3">
             <Package className="w-8 h-8 text-blue-600" />
             <div>
-              <p className="text-2xl font-bold">2,456</p>
+              <p className="text-2xl font-bold">
+                {statusCounts.all.toLocaleString()}
+              </p>
               <p className="text-sm text-muted-foreground">Total Products</p>
             </div>
           </div>
@@ -128,17 +135,21 @@ export default function AdminProductsPage() {
           <div className="flex items-center gap-3">
             <Clock className="w-8 h-8 text-yellow-600" />
             <div>
-              <p className="text-2xl font-bold">34</p>
+              <p className="text-2xl font-bold">
+                {statusCounts.pending.toLocaleString()}
+              </p>
               <p className="text-sm text-muted-foreground">Pending Review</p>
             </div>
           </div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <Flag className="w-8 h-8 text-red-600" />
+            <Package className="w-8 h-8 text-gray-500" />
             <div>
-              <p className="text-2xl font-bold">8</p>
-              <p className="text-sm text-muted-foreground">Flagged</p>
+              <p className="text-2xl font-bold">
+                {statusCounts.draft.toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground">Draft</p>
             </div>
           </div>
         </Card>
@@ -146,8 +157,10 @@ export default function AdminProductsPage() {
           <div className="flex items-center gap-3">
             <CheckCircle className="w-8 h-8 text-green-600" />
             <div>
-              <p className="text-2xl font-bold">2,389</p>
-              <p className="text-sm text-muted-foreground">Approved</p>
+              <p className="text-2xl font-bold">
+                {statusCounts.active.toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground">Active</p>
             </div>
           </div>
         </Card>
@@ -200,104 +213,136 @@ export default function AdminProductsPage() {
               </tr>
             </thead>
             <tbody>
-              {PRODUCTS.map((product, index) => (
-                <motion.tr
-                  key={product.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={cn(
-                    "border-b last:border-0 hover:bg-muted/30",
-                    product.status === "flagged" && "bg-red-50/50"
-                  )}
-                >
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-muted to-muted/50" />
-                      <div>
-                        <p className="font-medium">{product.name}</p>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {product.createdAt}
-                        </p>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="p-12">
+                    <div className="flex items-center justify-center gap-3 text-muted-foreground">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Loading products...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : products.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-12">
+                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                      <Package className="w-10 h-10" />
+                      <p className="font-medium">No products found</p>
+                      <p className="text-sm">
+                        Try adjusting your filters or search query.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                products.map((product, index) => (
+                  <motion.tr
+                    key={product.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="border-b last:border-0 hover:bg-muted/30"
+                  >
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-muted to-muted/50" />
+                        <div>
+                          <p className="font-medium">{product.title}</p>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {formatDate(product.createdAt)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <DiceBearAvatar seed={product.sellerAvatar} size="sm" />
-                      <span className="text-sm">{product.seller}</span>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <Badge variant="secondary">
-                      <Tag className="w-3 h-3 me-1" />
-                      {product.category}
-                    </Badge>
-                  </td>
-                  <td className="p-4 font-medium">AED {product.price}</td>
-                  <td className="p-4">
-                    <Badge
-                      className={cn(
-                        product.status === "approved" && "bg-green-100 text-green-700",
-                        product.status === "pending" && "bg-yellow-100 text-yellow-700",
-                        product.status === "flagged" && "bg-red-100 text-red-700",
-                        product.status === "rejected" && "bg-gray-100 text-gray-700"
-                      )}
-                    >
-                      {product.status === "approved" && <CheckCircle className="w-3 h-3 me-1" />}
-                      {product.status === "pending" && <Clock className="w-3 h-3 me-1" />}
-                      {product.status === "flagged" && <Flag className="w-3 h-3 me-1" />}
-                      {product.status === "rejected" && <XCircle className="w-3 h-3 me-1" />}
-                      {product.status}
-                      {product.reportCount > 0 && ` (${product.reportCount})`}
-                    </Badge>
-                  </td>
-                  <td className="p-4">
-                    {product.rating > 0 ? (
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-medium">{product.rating}</span>
-                        <span className="text-xs text-muted-foreground">
-                          ({product.reviews})
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <DiceBearAvatar
+                          seed={product.sellerAvatarSeed}
+                          style={product.sellerAvatarStyle}
+                          size="sm"
+                        />
+                        <span className="text-sm">{product.seller}</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <Badge variant="secondary">
+                        <Tag className="w-3 h-3 me-1" />
+                        {product.category}
+                      </Badge>
+                    </td>
+                    <td className="p-4 font-medium">
+                      {formatAED(product.priceFils)}
+                    </td>
+                    <td className="p-4">
+                      <Badge
+                        className={cn(
+                          product.status === "active" &&
+                            "bg-green-100 text-green-700",
+                          product.status === "pending" &&
+                            "bg-yellow-100 text-yellow-700",
+                          product.status === "draft" &&
+                            "bg-gray-100 text-gray-700"
+                        )}
+                      >
+                        {product.status === "active" && (
+                          <CheckCircle className="w-3 h-3 me-1" />
+                        )}
+                        {product.status === "pending" && (
+                          <Clock className="w-3 h-3 me-1" />
+                        )}
+                        {product.status === "draft" && (
+                          <Package className="w-3 h-3 me-1" />
+                        )}
+                        {product.status}
+                      </Badge>
+                    </td>
+                    <td className="p-4">
+                      {product.rating > 0 ? (
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          <span className="font-medium">{product.rating}</span>
+                          <span className="text-xs text-muted-foreground">
+                            ({product.reviewCount})
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">
+                          No reviews
                         </span>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">No reviews</span>
-                    )}
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      {product.status === "pending" ? (
-                        <>
-                          <Button size="icon" className="bg-green-600 hover:bg-green-700">
-                            <CheckCircle className="w-4 h-4" />
-                          </Button>
-                          <Button variant="destructive" size="icon">
-                            <XCircle className="w-4 h-4" />
-                          </Button>
-                        </>
-                      ) : product.status === "flagged" ? (
-                        <>
-                          <Button size="icon" className="bg-green-600 hover:bg-green-700">
-                            <CheckCircle className="w-4 h-4" />
-                          </Button>
-                          <Button variant="destructive" size="icon">
+                      )}
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="icon">
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        {product.status === "pending" ? (
+                          <>
+                            <Button
+                              size="icon"
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </Button>
+                            <Button variant="destructive" size="icon">
+                              <XCircle className="w-4 h-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-600"
+                          >
                             <Trash2 className="w-4 h-4" />
                           </Button>
-                        </>
-                      ) : (
-                        <Button variant="ghost" size="icon" className="text-red-600">
-                          <Flag className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </td>
-                </motion.tr>
-              ))}
+                        )}
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -305,13 +350,23 @@ export default function AdminProductsPage() {
         {/* Pagination */}
         <div className="flex items-center justify-between p-4 border-t">
           <p className="text-sm text-muted-foreground">
-            Showing 1-5 of 2,456 products
+            Page {page} of {totalPages}
           </p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
               Previous
             </Button>
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
               Next
             </Button>
           </div>

@@ -197,16 +197,49 @@ const RARITY_STYLES = {
 
 export default function SellerAchievementsPage() {
   const [selectedCategory, setSelectedCategory] = React.useState("all");
+  const [loading, setLoading] = React.useState(true);
+  const [earnedBadgeIds, setEarnedBadgeIds] = React.useState<Map<string, string>>(new Map());
 
-  const filteredAchievements = ACHIEVEMENTS.filter(
+  React.useEffect(() => {
+    fetch("/api/gamification?section=badges")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.badges) {
+          const map = new Map<string, string>();
+          data.badges.forEach((b: { badgeId: string; earnedAt: string }) => {
+            map.set(b.badgeId, b.earnedAt);
+          });
+          setEarnedBadgeIds(map);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Merge earned status from API
+  const achievements = ACHIEVEMENTS.map((a) => ({
+    ...a,
+    unlocked: earnedBadgeIds.has(a.id),
+    unlockedDate: earnedBadgeIds.get(a.id) || a.unlockedDate,
+  }));
+
+  const filteredAchievements = achievements.filter(
     (a) => selectedCategory === "all" || a.category === selectedCategory
   );
 
-  const unlockedCount = ACHIEVEMENTS.filter((a) => a.unlocked).length;
-  const totalXP = ACHIEVEMENTS.filter((a) => a.unlocked).reduce(
+  const unlockedCount = achievements.filter((a) => a.unlocked).length;
+  const totalXP = achievements.filter((a) => a.unlocked).reduce(
     (sum, a) => sum + a.xpReward,
     0
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Trophy className="w-8 h-8 animate-pulse text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -227,7 +260,7 @@ export default function SellerAchievementsPage() {
         </Card>
         <Card className="p-4 text-center">
           <Lock className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-          <p className="text-2xl font-bold">{ACHIEVEMENTS.length - unlockedCount}</p>
+          <p className="text-2xl font-bold">{achievements.length - unlockedCount}</p>
           <p className="text-sm text-muted-foreground">Locked</p>
         </Card>
         <Card className="p-4 text-center">
@@ -238,7 +271,7 @@ export default function SellerAchievementsPage() {
         <Card className="p-4 text-center">
           <Target className="w-8 h-8 mx-auto text-green-500 mb-2" />
           <p className="text-2xl font-bold">
-            {Math.round((unlockedCount / ACHIEVEMENTS.length) * 100)}%
+            {Math.round((unlockedCount / achievements.length) * 100)}%
           </p>
           <p className="text-sm text-muted-foreground">Completion</p>
         </Card>

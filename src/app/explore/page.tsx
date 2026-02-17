@@ -46,6 +46,7 @@ export default function ExplorePage() {
   const [showVerifiedOnly, setShowVerifiedOnly] = React.useState(false);
   const [priceRange, setPriceRange] = React.useState<[number, number]>([0, 0]);
   const [wishlist, setWishlist] = React.useState<string[]>([]);
+  const [showMobileFilters, setShowMobileFilters] = React.useState(false);
   const [products, setProducts] = React.useState<Product[]>([]);
   const [total, setTotal] = React.useState(0);
   const [loading, setLoading] = React.useState(true);
@@ -92,12 +93,39 @@ export default function ExplorePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortBy, selectedCategory, showHandmadeOnly, showVerifiedOnly, priceRange]);
 
-  const toggleWishlist = (productId: string) => {
+  // Load user's wishlist on mount
+  React.useEffect(() => {
+    fetch("/api/wishlist")
+      .then((res) => res.ok ? res.json() : { items: [] })
+      .then((data) => {
+        const ids = (data.items || []).map((i: { productId: string }) => i.productId);
+        setWishlist(ids);
+      })
+      .catch(() => {});
+  }, []);
+
+  const toggleWishlist = async (productId: string) => {
+    const isInWishlist = wishlist.includes(productId);
+    // Optimistic update
     setWishlist(prev =>
-      prev.includes(productId)
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
+      isInWishlist ? prev.filter(id => id !== productId) : [...prev, productId]
     );
+    try {
+      if (isInWishlist) {
+        await fetch(`/api/wishlist?productId=${productId}`, { method: "DELETE" });
+      } else {
+        await fetch("/api/wishlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId }),
+        });
+      }
+    } catch {
+      // Revert on error
+      setWishlist(prev =>
+        isInWishlist ? [...prev, productId] : prev.filter(id => id !== productId)
+      );
+    }
   };
 
   return (
@@ -145,8 +173,8 @@ export default function ExplorePage() {
                         className={cn(
                           "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
                           selectedCategory === cat.id
-                            ? "bg-moulna-gold/10 text-moulna-gold font-medium"
-                            : "hover:bg-muted"
+                            ? "bg-moulna-gold/10 text-moulna-gold font-semibold"
+                            : "text-moulna-gold/80 hover:bg-moulna-gold/5 hover:text-moulna-gold"
                         )}
                       >
                         <span>{cat.icon}</span>
@@ -253,6 +281,7 @@ export default function ExplorePage() {
                     variant="outline"
                     size="sm"
                     className="lg:hidden"
+                    onClick={() => setShowMobileFilters(!showMobileFilters)}
                   >
                     <Filter className="w-4 h-4 me-2" />
                     Filters
@@ -300,6 +329,55 @@ export default function ExplorePage() {
                 </div>
               </div>
 
+              {/* Mobile Filters */}
+              {showMobileFilters && (
+                <div className="lg:hidden mb-6 space-y-4">
+                  <Card className="p-4">
+                    <h3 className="font-semibold mb-4">Categories</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {CATEGORIES.map((cat) => (
+                        <button
+                          key={cat.id}
+                          onClick={() => setSelectedCategory(cat.id)}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition-colors",
+                            selectedCategory === cat.id
+                              ? "bg-moulna-gold/10 text-moulna-gold font-semibold"
+                              : "bg-muted hover:bg-muted/80"
+                          )}
+                        >
+                          <span>{cat.icon}</span>
+                          <span>{cat.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </Card>
+                  <Card className="p-4">
+                    <h3 className="font-semibold mb-3">Filters</h3>
+                    <div className="space-y-3">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={showHandmadeOnly}
+                          onChange={(e) => setShowHandmadeOnly(e.target.checked)}
+                          className="w-4 h-4 rounded border-muted-foreground"
+                        />
+                        <span className="text-sm">Handmade Only</span>
+                      </label>
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={showVerifiedOnly}
+                          onChange={(e) => setShowVerifiedOnly(e.target.checked)}
+                          className="w-4 h-4 rounded border-muted-foreground"
+                        />
+                        <span className="text-sm">Verified Sellers</span>
+                      </label>
+                    </div>
+                  </Card>
+                </div>
+              )}
+
               {/* Loading State */}
               {loading && products.length === 0 ? (
                 <div className="py-20 text-center">
@@ -344,7 +422,7 @@ export default function ExplorePage() {
                             {/* Image */}
                             <div className={cn(
                               "relative overflow-hidden",
-                              view === "grid" ? "aspect-square" : "w-48 flex-shrink-0"
+                              view === "grid" ? "aspect-square" : "w-24 sm:w-32 lg:w-48 flex-shrink-0"
                             )}>
                               {product.images[0] ? (
                                 <Image
@@ -360,7 +438,10 @@ export default function ExplorePage() {
                               )}
 
                               {/* Badges */}
-                              <div className="absolute top-3 start-3 flex flex-col gap-2">
+                              <div className="absolute top-3 start-3 flex flex-col items-start gap-2">
+                                {product.isSponsored && (
+                                  <Badge variant="sponsored">Sponsored</Badge>
+                                )}
                                 {product.isTrending && (
                                   <Badge variant="trending">Trending</Badge>
                                 )}

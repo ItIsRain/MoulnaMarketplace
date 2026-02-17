@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
+import { ShopAvatar } from "@/components/avatar/ShopAvatar";
 import {
   Search, Filter, Grid, List, Star, Heart, MessageCircle,
   SlidersHorizontal, X, MapPin, Store
@@ -107,6 +107,7 @@ export default function SearchPage() {
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = React.useState("relevance");
   const [showFilters, setShowFilters] = React.useState(true);
+  const [showMobileFilters, setShowMobileFilters] = React.useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background">
@@ -133,8 +134,13 @@ export default function SearchPage() {
             </div>
             <Button
               variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className="hidden md:flex"
+              onClick={() => {
+                if (window.innerWidth < 768) {
+                  setShowMobileFilters(!showMobileFilters);
+                } else {
+                  setShowFilters(!showFilters);
+                }
+              }}
             >
               <SlidersHorizontal className="w-4 h-4 me-2" />
               Filters
@@ -192,6 +198,54 @@ export default function SearchPage() {
             </div>
           </div>
         </div>
+
+        {/* Mobile Filters */}
+        {showMobileFilters && (
+          <div className="md:hidden mb-6">
+            <Card className="p-4">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <Filter className="w-4 h-4" />
+                Filters
+              </h3>
+              <div className="mb-4">
+                <h4 className="text-sm font-medium mb-2">Category</h4>
+                <div className="flex flex-wrap gap-2">
+                  {FILTERS.categories.map((category) => (
+                    <label key={category} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted text-sm">
+                      <input type="checkbox" className="rounded" />
+                      <span>{category}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="mb-4">
+                <h4 className="text-sm font-medium mb-2">Price Range</h4>
+                <div className="flex flex-wrap gap-2">
+                  {FILTERS.priceRanges.map((range) => (
+                    <label key={range} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted text-sm">
+                      <input type="radio" name="price-mobile" className="rounded-full" />
+                      <span>{range}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="mb-4">
+                <h4 className="text-sm font-medium mb-2">Location</h4>
+                <div className="flex flex-wrap gap-2">
+                  {FILTERS.locations.map((location) => (
+                    <label key={location} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted text-sm">
+                      <input type="checkbox" className="rounded" />
+                      <span>{location}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <Button variant="outline" className="w-full" onClick={() => setShowMobileFilters(false)}>
+                Apply Filters
+              </Button>
+            </Card>
+          </div>
+        )}
 
         <div className="flex gap-8">
           {/* Filters Sidebar */}
@@ -283,7 +337,7 @@ export default function SearchPage() {
                       </div>
                       <div className="p-4">
                         <Link href={`/shops/${product.sellerAvatar}`} className="flex items-center gap-2 mb-2">
-                          <DiceBearAvatar seed={product.sellerAvatar} size="xs" />
+                          <ShopAvatar avatarSeed={product.sellerAvatar} name={product.seller} size="xs" />
                           <span className="text-xs text-muted-foreground hover:text-moulna-gold">
                             {product.seller}
                           </span>
@@ -320,7 +374,7 @@ export default function SearchPage() {
                   ) : (
                     <Card className="group p-4 hover:shadow-lg transition-all">
                       <div className="flex gap-4">
-                        <div className="relative w-32 h-32 rounded-lg bg-gradient-to-br from-muted to-muted/50 flex-shrink-0">
+                        <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-lg bg-gradient-to-br from-muted to-muted/50 flex-shrink-0">
                           {product.originalPrice && (
                             <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs">
                               Sale
@@ -329,7 +383,7 @@ export default function SearchPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <Link href={`/shops/${product.sellerAvatar}`} className="flex items-center gap-2 mb-1">
-                            <DiceBearAvatar seed={product.sellerAvatar} size="xs" />
+                            <ShopAvatar avatarSeed={product.sellerAvatar} name={product.seller} size="xs" />
                             <span className="text-xs text-muted-foreground hover:text-moulna-gold">
                               {product.seller}
                             </span>

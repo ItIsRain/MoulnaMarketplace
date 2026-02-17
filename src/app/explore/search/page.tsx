@@ -267,7 +267,10 @@ function SearchContent() {
                             )}
 
                             {/* Badges */}
-                            <div className="absolute top-3 start-3 flex flex-col gap-1">
+                            <div className="absolute top-3 start-3 flex flex-col items-start gap-1">
+                              {product.isSponsored && (
+                                <Badge variant="sponsored">Sponsored</Badge>
+                              )}
                               {product.isTrending && (
                                 <Badge variant="trending">Trending</Badge>
                               )}

@@ -11,22 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { XPBar } from "@/components/gamification/XPBar";
 import { BadgeWithName } from "@/components/gamification/BadgeCard";
 import { DailyChallengePanel } from "@/components/gamification/DailyChallenge";
+import type { DailyChallenge } from "@/lib/types";
 import {
   Sparkles, Trophy, Star, Crown, Flame, Gift, Target,
-  ChevronRight, Lock, Check, TrendingUp, Zap
+  ChevronRight, Lock, Check, TrendingUp, Zap, Loader2
 } from "lucide-react";
-
-// Mock data
-const USER_STATS = {
-  xp: 2450,
-  level: 4,
-  levelTitle: "Enthusiast",
-  totalXPEarned: 3200,
-  badgesEarned: 7,
-  badgesTotal: 25,
-  rank: 156,
-  totalUsers: 5420,
-};
 
 const LEVELS = [
   { level: 1, title: "Newcomer", xpRequired: 0, color: "#94a3b8", unlocks: ["Basic avatar styles"] },
@@ -41,51 +30,89 @@ const LEVELS = [
   { level: 10, title: "Patron", xpRequired: 100000, color: "#fbbf24", unlocks: ["Lifetime perks", "All rewards"] },
 ];
 
-// Local badge type for rewards page (extends Badge with progress tracking)
-interface RewardsBadge {
+// Badge definitions (config — always the same)
+const BADGE_DEFS = [
+  { id: "first_inquiry", name: "First Inquiry", icon: "💬", description: "Contacted your first seller", category: "engagement" as const, xpReward: 100 },
+  { id: "week_warrior", name: "Week Warrior", icon: "🔥", description: "7-day login streak", category: "streak" as const, xpReward: 100 },
+  { id: "listing_curator", name: "Listing Curator", icon: "❤️", description: "Saved 20 listings to wishlist", category: "engagement" as const, xpReward: 50 },
+  { id: "category_explorer", name: "Category Explorer", icon: "🗺️", description: "Browsed 5 different categories", category: "engagement" as const, xpReward: 150 },
+  { id: "monthly_master", name: "Monthly Master", icon: "📅", description: "30-day login streak", category: "streak" as const, xpReward: 500 },
+  { id: "super_explorer", name: "Super Explorer", icon: "💎", description: "Contact 50 different sellers", category: "engagement" as const, xpReward: 500 },
+  { id: "social_butterfly", name: "Social Butterfly", icon: "🦋", description: "Shared 10 listings", category: "social" as const, xpReward: 150 },
+  { id: "influencer", name: "Influencer", icon: "📣", description: "Referred 5 friends", category: "social" as const, xpReward: 500 },
+  { id: "trendsetter", name: "Trendsetter", icon: "🌟", description: "Reach Level 6", category: "seasonal" as const, xpReward: 500 },
+];
+
+interface XPEvent {
   id: string;
-  name: string;
-  icon: string;
-  description: string;
-  category: "engagement" | "social" | "seller" | "streak" | "seasonal";
-  xpReward: number;
-  earned: boolean;
-  earnedAt?: string;
-  progress?: number;
-  target?: number;
+  amount: number;
+  action: string;
+  description: string | null;
+  createdAt: string;
 }
-
-const BADGES: RewardsBadge[] = [
-  { id: "bdg_1", name: "First Inquiry", icon: "💬", description: "Contacted your first seller", category: "engagement", xpReward: 100, earned: true, earnedAt: "2024-01-15" },
-  { id: "bdg_2", name: "Review Master", icon: "⭐", description: "Left 5 reviews", category: "social", xpReward: 200, earned: true, earnedAt: "2024-01-20" },
-  { id: "bdg_3", name: "Social Butterfly", icon: "🦋", description: "Shared 10 listings", category: "social", xpReward: 150, earned: true, earnedAt: "2024-02-01" },
-  { id: "bdg_4", name: "Week Warrior", icon: "🔥", description: "7-day login streak", category: "streak", xpReward: 100, earned: true, earnedAt: "2024-02-05" },
-  { id: "bdg_5", name: "Listing Curator", icon: "❤️", description: "Saved 20 listings", category: "engagement", xpReward: 50, earned: true, earnedAt: "2024-02-08" },
-  { id: "bdg_6", name: "Category Explorer", icon: "🗺️", description: "Browsed 5 different categories", category: "engagement", xpReward: 150, earned: true, earnedAt: "2024-02-10" },
-  { id: "bdg_7", name: "Photo Reviewer", icon: "📸", description: "Added photos to 3 reviews", category: "social", xpReward: 150, earned: true, earnedAt: "2024-02-12" },
-  { id: "bdg_8", name: "Monthly Master", icon: "📅", description: "30-day login streak", category: "streak", xpReward: 500, earned: false, progress: 7, target: 30 },
-  { id: "bdg_9", name: "Super Explorer", icon: "💎", description: "Contact 50 different sellers", category: "engagement", xpReward: 500, earned: false, progress: 23, target: 50 },
-  { id: "bdg_10", name: "Influencer", icon: "📣", description: "Referred 5 friends", category: "social", xpReward: 500, earned: false, progress: 1, target: 5 },
-  { id: "bdg_11", name: "Top Reviewer", icon: "✍️", description: "Left 20 reviews", category: "social", xpReward: 300, earned: false, progress: 5, target: 20 },
-  { id: "bdg_12", name: "Trendsetter", icon: "🌟", description: "Reach Level 6", category: "seasonal", xpReward: 500, earned: false },
-];
-
-const DAILY_CHALLENGES = [
-  { id: "ch_1", task: "Browse 3 different categories", xp: 30, icon: "👀", completed: true },
-  { id: "ch_2", task: "Save 2 listings", xp: 20, icon: "❤️", completed: false, progress: 1, target: 2 },
-  { id: "ch_3", task: "Contact a seller about a listing", xp: 50, icon: "✍️", completed: false },
-];
-
-const XP_HISTORY = [
-  { action: "Daily login", xp: 10, date: "Today" },
-  { action: "Left a review", xp: 50, date: "Yesterday" },
-  { action: "Contacted a seller", xp: 77, date: "Feb 10" },
-  { action: "7-day streak bonus", xp: 100, date: "Feb 9" },
-  { action: "Added to wishlist", xp: 5, date: "Feb 8" },
-];
 
 export default function RewardsPage() {
   const [activeTab, setActiveTab] = React.useState<"overview" | "badges" | "levels">("overview");
+  const [loading, setLoading] = React.useState(true);
+  const [stats, setStats] = React.useState({ xp: 0, level: 1, streakDays: 0, badgeCount: 0 });
+  const [earnedBadgeIds, setEarnedBadgeIds] = React.useState<Set<string>>(new Set());
+  const [recentXP, setRecentXP] = React.useState<XPEvent[]>([]);
+  const [dailyChallenges, setDailyChallenges] = React.useState<DailyChallenge[]>([]);
+
+  React.useEffect(() => {
+    Promise.all([
+      fetch("/api/gamification").then((r) => r.ok ? r.json() : null),
+      fetch("/api/gamification?section=badges").then((r) => r.ok ? r.json() : null),
+      fetch("/api/gamification?section=history").then((r) => r.ok ? r.json() : null),
+      fetch("/api/challenges?period=daily&audience=buyer").then((r) => r.ok ? r.json() : null),
+    ])
+      .then(([overview, badges, history, challengesData]) => {
+        if (overview) {
+          setStats({
+            xp: overview.xp || 0,
+            level: overview.level || 1,
+            streakDays: overview.streakDays || 0,
+            badgeCount: overview.badgeCount || 0,
+          });
+        }
+        if (badges) {
+          setEarnedBadgeIds(new Set((badges.badges || []).map((b: { badgeId: string }) => b.badgeId)));
+        }
+        if (history) {
+          setRecentXP((history.events || []).slice(0, 5));
+        }
+        if (challengesData) {
+          const mapped: DailyChallenge[] = (challengesData.challenges || []).map(
+            (c: { id: string; title: string; description: string; xp: number; icon: string; completed: boolean; progress?: number; target?: number }) => ({
+              id: c.id,
+              task: c.title,
+              description: c.description,
+              xp: c.xp,
+              icon: c.icon,
+              completed: c.completed,
+              progress: c.progress,
+              target: c.target,
+            })
+          );
+          setDailyChallenges(mapped);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const badges = BADGE_DEFS.map((def) => ({
+    ...def,
+    earned: earnedBadgeIds.has(def.id),
+  }));
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -103,7 +130,7 @@ export default function RewardsPage() {
         <div className="text-end">
           <div className="flex items-center gap-2 text-moulna-gold">
             <Sparkles className="w-5 h-5" />
-            <span className="font-bold text-2xl">{USER_STATS.xp.toLocaleString()}</span>
+            <span className="font-bold text-2xl">{stats.xp.toLocaleString()}</span>
           </div>
           <p className="text-sm text-muted-foreground">Total XP</p>
         </div>
@@ -111,7 +138,7 @@ export default function RewardsPage() {
 
       {/* XP Progress Card */}
       <Card className="p-6 bg-gradient-to-r from-moulna-gold/10 via-moulna-gold/5 to-transparent">
-        <XPBar xp={USER_STATS.xp} showLabels />
+        <XPBar xp={stats.xp} showLabels />
       </Card>
 
       {/* Tabs */}
@@ -146,11 +173,11 @@ export default function RewardsPage() {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "Current Level", value: USER_STATS.level, icon: Star, color: "text-moulna-gold" },
-                { label: "Badges Earned", value: `${USER_STATS.badgesEarned}/${USER_STATS.badgesTotal}`, icon: Trophy, color: "text-yellow-500" },
-                { label: "Global Rank", value: `#${USER_STATS.rank}`, icon: Crown, color: "text-purple-500" },
-                { label: "Total XP", value: USER_STATS.totalXPEarned.toLocaleString(), icon: Sparkles, color: "text-moulna-gold" },
-              ].map((stat, i) => (
+                { label: "Current Level", value: stats.level, icon: Star, color: "text-moulna-gold" },
+                { label: "Badges Earned", value: `${stats.badgeCount}/${BADGE_DEFS.length}`, icon: Trophy, color: "text-yellow-500" },
+                { label: "Login Streak", value: `${stats.streakDays} days`, icon: Flame, color: "text-orange-500" },
+                { label: "Total XP", value: stats.xp.toLocaleString(), icon: Sparkles, color: "text-moulna-gold" },
+              ].map((stat) => (
                 <Card key={stat.label} className="p-4">
                   <stat.icon className={cn("w-5 h-5 mb-2", stat.color)} />
                   <p className="text-2xl font-bold">{stat.value}</p>
@@ -166,18 +193,26 @@ export default function RewardsPage() {
                 Recent XP Activity
               </h3>
               <div className="space-y-3">
-                {XP_HISTORY.map((item, i) => (
-                  <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
-                    <div>
-                      <p className="font-medium text-sm">{item.action}</p>
-                      <p className="text-xs text-muted-foreground">{item.date}</p>
+                {recentXP.length > 0 ? (
+                  recentXP.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                      <div>
+                        <p className="font-medium text-sm">{item.description || item.action}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(item.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 text-moulna-gold font-medium">
+                        <Sparkles className="w-4 h-4" />
+                        +{item.amount}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 text-moulna-gold font-medium">
-                      <Sparkles className="w-4 h-4" />
-                      +{item.xp}
-                    </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-muted-foreground text-sm py-2">
+                    No XP activity yet. Start exploring to earn XP!
+                  </p>
+                )}
               </div>
               <Button variant="link" className="w-full mt-4" asChild>
                 <Link href="/dashboard/rewards/history">
@@ -198,7 +233,7 @@ export default function RewardsPage() {
                 </Button>
               </div>
               <div className="grid grid-cols-4 sm:grid-cols-7 gap-4">
-                {BADGES.slice(0, 7).map((badge) => (
+                {badges.slice(0, 7).map((badge) => (
                   <BadgeWithName
                     key={badge.id}
                     badge={badge}
@@ -212,7 +247,7 @@ export default function RewardsPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            <DailyChallengePanel challenges={DAILY_CHALLENGES} />
+            <DailyChallengePanel challenges={dailyChallenges} maxItems={3} />
 
             {/* Next Rewards */}
             <Card className="p-6">
@@ -221,7 +256,7 @@ export default function RewardsPage() {
                 Next Rewards
               </h3>
               <div className="space-y-4">
-                {LEVELS.slice(USER_STATS.level, USER_STATS.level + 2).map((level) => (
+                {LEVELS.slice(stats.level, stats.level + 2).map((level) => (
                   <div key={level.level} className="p-3 rounded-lg bg-muted/50">
                     <div className="flex items-center gap-2 mb-2">
                       <div
@@ -254,29 +289,36 @@ export default function RewardsPage() {
           <div>
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <Check className="w-5 h-5 text-emerald-500" />
-              Earned Badges ({BADGES.filter(b => b.earned).length})
+              Earned Badges ({badges.filter(b => b.earned).length})
             </h3>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-6">
-              {BADGES.filter(b => b.earned).map((badge) => (
-                <motion.div
-                  key={badge.id}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                >
-                  <BadgeWithName badge={badge} earned size="md" />
-                </motion.div>
-              ))}
-            </div>
+            {badges.filter(b => b.earned).length > 0 ? (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-6">
+                {badges.filter(b => b.earned).map((badge) => (
+                  <motion.div
+                    key={badge.id}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                  >
+                    <BadgeWithName badge={badge} earned size="md" />
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <Card className="p-8 text-center">
+                <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                <p className="text-muted-foreground">No badges earned yet. Keep exploring!</p>
+              </Card>
+            )}
           </div>
 
           {/* Locked Badges */}
           <div>
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <Lock className="w-5 h-5 text-muted-foreground" />
-              Locked Badges ({BADGES.filter(b => !b.earned).length})
+              Locked Badges ({badges.filter(b => !b.earned).length})
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {BADGES.filter(b => !b.earned).map((badge) => (
+              {badges.filter(b => !b.earned).map((badge) => (
                 <Card key={badge.id} className="p-4">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center text-2xl opacity-50">
@@ -285,14 +327,6 @@ export default function RewardsPage() {
                     <div className="flex-1">
                       <p className="font-medium">{badge.name}</p>
                       <p className="text-sm text-muted-foreground mb-2">{badge.description}</p>
-                      {badge.progress !== undefined && badge.target && (
-                        <div className="space-y-1">
-                          <Progress value={(badge.progress / badge.target) * 100} className="h-1.5" />
-                          <p className="text-xs text-muted-foreground">
-                            {badge.progress} / {badge.target}
-                          </p>
-                        </div>
-                      )}
                       <div className="flex items-center gap-1 text-xs text-moulna-gold mt-2">
                         <Sparkles className="w-3 h-3" />
                         +{badge.xpReward} XP reward
@@ -308,9 +342,9 @@ export default function RewardsPage() {
 
       {activeTab === "levels" && (
         <div className="space-y-6">
-          {LEVELS.map((level, i) => {
-            const isCurrentLevel = level.level === USER_STATS.level;
-            const isUnlocked = level.level <= USER_STATS.level;
+          {LEVELS.map((level) => {
+            const isCurrentLevel = level.level === stats.level;
+            const isUnlocked = level.level <= stats.level;
 
             return (
               <Card
@@ -364,7 +398,6 @@ export default function RewardsPage() {
           })}
         </div>
       )}
-
     </div>
   );
 }

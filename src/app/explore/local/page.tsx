@@ -12,7 +12,7 @@ import {
   MapPin, Search, Navigation, Store, Star, Clock,
   Heart, Filter, ChevronRight, Building2
 } from "lucide-react";
-import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
+import { ShopAvatar } from "@/components/avatar/ShopAvatar";
 
 const EMIRATES = [
   { id: "dubai", name: "Dubai", shops: 234, color: "from-blue-500 to-cyan-500" },
@@ -236,7 +236,7 @@ export default function LocalPage() {
                   )}>
                     <div className="flex gap-4">
                       <div className="relative">
-                        <DiceBearAvatar seed={shop.slug} size="lg" className="w-20 h-20" />
+                        <ShopAvatar avatarSeed={shop.slug} name={shop.name} size="lg" className="w-20 h-20" />
                         {shop.featured && (
                           <Badge className="absolute -top-2 -right-2 bg-moulna-gold text-xs">
                             Featured

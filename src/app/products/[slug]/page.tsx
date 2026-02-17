@@ -12,23 +12,29 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
+import { ShopAvatar } from "@/components/avatar/ShopAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
-import type { Product } from "@/lib/types";
+import { useAuthStore } from "@/store/useAuthStore";
+import type { Product, CustomField } from "@/lib/types";
 import {
   Star, Heart, Share2, Shield,
   ChevronRight, MessageCircle,
-  Sparkles, Clock, MapPin, ChevronLeft, Phone, Loader2
+  Sparkles, Clock, MapPin, ChevronLeft, Phone, Loader2, Pencil,
+  Check, X
 } from "lucide-react";
+import { useTracking } from "@/hooks/useTracking";
 
 export default function ProductPage() {
   const params = useParams();
   const slug = params.slug as string;
+  const { isAuthenticated, user } = useAuthStore();
+  const { trackEvent } = useTracking();
   const [product, setProduct] = React.useState<Product | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
   const [selectedImage, setSelectedImage] = React.useState(0);
   const [isWishlisted, setIsWishlisted] = React.useState(false);
+  const [wishlistLoading, setWishlistLoading] = React.useState(false);
 
   React.useEffect(() => {
     async function load() {
@@ -45,6 +51,44 @@ export default function ProductPage() {
     }
     load();
   }, [slug]);
+
+  // Track listing view for challenge progress
+  React.useEffect(() => {
+    if (product) {
+      trackEvent("listing_viewed", product.id);
+    }
+  }, [product, trackEvent]);
+
+  // Check wishlist status
+  React.useEffect(() => {
+    if (!isAuthenticated || !product) return;
+    fetch(`/api/wishlist/check?productId=${product.id}`)
+      .then((res) => res.json())
+      .then((data) => setIsWishlisted(data.inWishlist))
+      .catch(() => {});
+  }, [isAuthenticated, product]);
+
+  async function toggleWishlist() {
+    if (!isAuthenticated || !product || wishlistLoading) return;
+    setWishlistLoading(true);
+    try {
+      if (isWishlisted) {
+        const res = await fetch(`/api/wishlist?productId=${product.id}`, { method: "DELETE" });
+        if (res.ok) setIsWishlisted(false);
+      } else {
+        const res = await fetch("/api/wishlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId: product.id }),
+        });
+        if (res.ok) setIsWishlisted(true);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setWishlistLoading(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -102,7 +146,7 @@ export default function ProductPage() {
             <span className="text-foreground">{product.title}</span>
           </nav>
 
-          <div className="grid lg:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
             {/* Image Gallery */}
             <div className="space-y-4">
               <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
@@ -132,7 +176,7 @@ export default function ProductPage() {
                 )}
 
                 {/* Badges */}
-                <div className="absolute top-4 start-4 flex flex-col gap-2">
+                <div className="absolute top-4 start-4 flex flex-col items-start gap-2">
                   {product.isTrending && <Badge variant="trending">Trending</Badge>}
                   {product.isHandmade && <Badge variant="handmade">Handmade</Badge>}
                   {discount > 0 && (
@@ -169,7 +213,7 @@ export default function ProductPage() {
                       key={index}
                       onClick={() => setSelectedImage(index)}
                       className={cn(
-                        "relative w-20 h-20 rounded-lg overflow-hidden border-2 transition-all",
+                        "relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all",
                         selectedImage === index
                           ? "border-moulna-gold"
                           : "border-transparent hover:border-moulna-gold/50"
@@ -241,24 +285,83 @@ export default function ProductPage() {
                 </div>
               )}
 
-              {/* Contact Seller Actions */}
+              {/* Custom Specifications */}
+              {product.customFields && product.customFields.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider">
+                    Specifications
+                  </h3>
+                  <div className="grid gap-2">
+                    {product.customFields.map((field: CustomField) => (
+                      <div
+                        key={field.id}
+                        className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/40"
+                      >
+                        <span className="text-sm font-medium text-muted-foreground">{field.label}</span>
+                        <span className="text-sm font-medium">
+                          {field.type === "boolean" ? (
+                            field.value === "true" ? (
+                              <span className="flex items-center gap-1 text-emerald-600">
+                                <Check className="w-4 h-4" /> Yes
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1 text-red-500">
+                                <X className="w-4 h-4" /> No
+                              </span>
+                            )
+                          ) : field.type === "select" ? (
+                            <Badge variant="outline">{field.value}</Badge>
+                          ) : (
+                            field.value
+                          )}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <Separator className="mt-4" />
+                </div>
+              )}
+
+              {/* Actions */}
               <div className="space-y-3">
-                <Button variant="gold" size="lg" className="w-full" asChild>
-                  <Link href={`/dashboard/messages/new?seller=${product.seller.slug}`}>
-                    <MessageCircle className="w-5 h-5 me-2" />
-                    Contact Seller
-                  </Link>
-                </Button>
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => setIsWishlisted(!isWishlisted)}
-                    className="flex-1"
-                  >
-                    <Heart className={cn("w-5 h-5 me-2", isWishlisted && "fill-red-500 text-red-500")} />
-                    {isWishlisted ? "Saved" : "Save"}
+                {isAuthenticated && user?.id === product.ownerId ? (
+                  <Button variant="gold" size="lg" className="w-full" asChild>
+                    <Link href={`/seller/products/${product.id}/edit`}>
+                      <Pencil className="w-5 h-5 me-2" />
+                      Edit Listing
+                    </Link>
                   </Button>
+                ) : (
+                  <Button variant="gold" size="lg" className="w-full" asChild>
+                    <Link href={`/dashboard/messages/new?seller=${product.seller.slug}`}>
+                      <MessageCircle className="w-5 h-5 me-2" />
+                      Contact Seller
+                    </Link>
+                  </Button>
+                )}
+                <div className="flex gap-3">
+                  {isAuthenticated && user?.id === product.ownerId ? (
+                    <Button variant="outline" size="lg" className="flex-1" asChild>
+                      <Link href="/seller/products">
+                        View All Listings
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={toggleWishlist}
+                      disabled={wishlistLoading || !isAuthenticated}
+                      className="flex-1"
+                    >
+                      {wishlistLoading ? (
+                        <Loader2 className="w-5 h-5 me-2 animate-spin" />
+                      ) : (
+                        <Heart className={cn("w-5 h-5 me-2", isWishlisted && "fill-red-500 text-red-500")} />
+                      )}
+                      {isWishlisted ? "Saved" : "Save"}
+                    </Button>
+                  )}
                   <Button variant="outline" size="lg" className="flex-1">
                     <Share2 className="w-5 h-5 me-2" />
                     Share
@@ -267,9 +370,9 @@ export default function ProductPage() {
               </div>
 
               {/* Trust Badges */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 {[
-                  { icon: Shield, label: "Verified Seller", sublabel: product.seller.isVerified ? "Identity confirmed" : "Not verified" },
+                  { icon: Shield, label: product.seller.isVerified ? "ID Verified" : "Unverified", sublabel: product.seller.isVerified ? "KYC identity confirmed" : "Not yet verified" },
                   { icon: Clock, label: "Response Time", sublabel: product.seller.responseTime || "Not set" },
                   { icon: MapPin, label: "Location", sublabel: product.seller.location || "UAE" },
                 ].map((item, i) => (
@@ -287,9 +390,11 @@ export default function ProductPage() {
               <Card className="p-4">
                 <div className="flex items-start gap-4">
                   <Link href={`/shops/${product.seller.slug}`}>
-                    <DiceBearAvatar
-                      seed={product.seller.avatarSeed || product.seller.name}
-                      style={product.seller.avatarStyle}
+                    <ShopAvatar
+                      logoUrl={product.seller.logoUrl}
+                      avatarSeed={product.seller.avatarSeed}
+                      avatarStyle={product.seller.avatarStyle}
+                      name={product.seller.name}
                       size="xl"
                       className="rounded-xl"
                     />
@@ -304,14 +409,13 @@ export default function ProductPage() {
                       </Link>
                       <LevelBadge level={product.seller.level} size="sm" />
                       {product.seller.isVerified && (
-                        <Badge variant="gold" className="text-xs">Verified</Badge>
+                        <Badge variant="verified" className="text-xs">
+                          <Shield className="w-3 h-3 me-1" />
+                          ID Verified
+                        </Badge>
                       )}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-moulna-gold text-moulna-gold" />
-                        {product.seller.rating.toFixed(1)}
-                      </span>
                       <span>{product.seller.totalListings} listings</span>
                       {product.seller.location && (
                         <span className="flex items-center gap-1">
@@ -355,13 +459,6 @@ export default function ProductPage() {
             </div>
           )}
 
-          {/* Reviews placeholder */}
-          <section id="reviews" className="mt-8">
-            <h2 className="font-display text-2xl font-bold mb-6">Reviews</h2>
-            <Card className="p-8 text-center">
-              <p className="text-muted-foreground">Reviews coming soon.</p>
-            </Card>
-          </section>
         </div>
       </main>
 

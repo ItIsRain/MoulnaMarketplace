@@ -105,6 +105,36 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
 
+  // Listing limit enforcement: if publishing (not draft), check plan limit
+  if (body.status === "active") {
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const admin = createAdminClient();
+
+    const { count: nonDraftCount } = await admin
+      .from("products")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", user.id)
+      .neq("status", "draft");
+
+    // Get seller's plan from their shop
+    const { data: sellerShop } = await admin
+      .from("shops")
+      .select("plan")
+      .eq("owner_id", user.id)
+      .single();
+
+    const shopPlan = (sellerShop?.plan as string) || "free";
+    const planLimits: Record<string, number> = { free: 3, growth: 30, pro: 999999 };
+    const limit = planLimits[shopPlan] ?? 3;
+
+    if ((nonDraftCount ?? 0) >= limit) {
+      return NextResponse.json(
+        { error: "FREE_LIMIT_REACHED", requiresPayment: true },
+        { status: 402 }
+      );
+    }
+  }
+
   // Validate required fields
   if (!body.title || body.title.length < 3) {
     return NextResponse.json(
@@ -146,6 +176,7 @@ export async function POST(request: NextRequest) {
     processing_time: body.processingTime || null,
     meetup_preference: body.meetupPreference || null,
     is_handmade: body.isHandmade || false,
+    custom_fields: body.customFields || [],
   };
 
   const { data: product, error: insertError } = await supabase

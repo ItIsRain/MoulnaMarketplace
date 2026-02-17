@@ -101,6 +101,15 @@ export async function POST(request: NextRequest) {
     html: verifyEmailTemplate(code, fullName),
   });
 
+  // Send welcome notification
+  await adminClient.from("notifications").insert({
+    user_id: authData.user.id,
+    type: "system",
+    title: "Welcome to Moulna!",
+    message: `Your account has been created successfully. Start exploring unique handmade items from local artisans.`,
+    xp_amount: 100,
+  });
+
   return NextResponse.json({
     user: authData.user,
     requiresKYC: role === "seller",

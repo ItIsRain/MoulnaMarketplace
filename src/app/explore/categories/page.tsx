@@ -138,7 +138,7 @@ export default function CategoriesPage() {
         <section className="bg-gradient-to-b from-moulna-gold/10 to-transparent py-16">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-2xl mx-auto">
-              <h1 className="font-display text-4xl font-bold mb-4">
+              <h1 className="font-display text-4xl font-bold mb-4" style={{ color: 'var(--moulna-gold)' }}>
                 Explore Categories
               </h1>
               <p className="text-lg text-muted-foreground">
@@ -187,7 +187,7 @@ export default function CategoriesPage() {
 
                         {/* Category Name */}
                         <div className="absolute bottom-4 left-4 right-4">
-                          <h2 className="text-xl font-bold text-white mb-1">
+                          <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--moulna-gold)' }}>
                             {category.name}
                           </h2>
                           <p className="text-sm text-white/80">

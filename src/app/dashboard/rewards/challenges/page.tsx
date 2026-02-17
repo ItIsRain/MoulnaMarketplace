@@ -4,115 +4,72 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  Target, Flame, Clock, Gift, Star, Search,
-  MessageSquare, Users, Sparkles, Trophy, Zap,
+  Target, Flame, Clock, Gift,
+  Sparkles, Trophy, Zap,
   Calendar, CheckCircle, ChevronRight, Timer
 } from "lucide-react";
 
-const DAILY_CHALLENGES = [
-  {
-    id: "daily-1",
-    title: "Daily Visit",
-    description: "Visit Moulna today",
-    xp: 10,
-    progress: { current: 1, total: 1 },
-    completed: true,
-    icon: Sparkles,
-  },
-  {
-    id: "daily-2",
-    title: "Listing Explorer",
-    description: "Browse 5 different listings",
-    xp: 15,
-    progress: { current: 3, total: 5 },
-    completed: false,
-    icon: Search,
-  },
-  {
-    id: "daily-3",
-    title: "Show Some Love",
-    description: "Save 3 listings",
-    xp: 20,
-    progress: { current: 1, total: 3 },
-    completed: false,
-    icon: Star,
-  },
-  {
-    id: "daily-4",
-    title: "Social Sharer",
-    description: "Share a listing with a friend",
-    xp: 25,
-    progress: { current: 0, total: 1 },
-    completed: false,
-    icon: Users,
-  },
-];
-
-const WEEKLY_CHALLENGES = [
-  {
-    id: "weekly-1",
-    title: "Review Master",
-    description: "Write 3 seller reviews this week",
-    xp: 100,
-    progress: { current: 2, total: 3 },
-    completed: false,
-    icon: MessageSquare,
-    daysLeft: 4,
-  },
-  {
-    id: "weekly-2",
-    title: "Active Buyer",
-    description: "Contact a seller this week",
-    xp: 75,
-    progress: { current: 1, total: 1 },
-    completed: true,
-    icon: MessageSquare,
-    daysLeft: 4,
-  },
-  {
-    id: "weekly-3",
-    title: "Explorer",
-    description: "Discover 5 new shops",
-    xp: 80,
-    progress: { current: 3, total: 5 },
-    completed: false,
-    icon: Target,
-    daysLeft: 4,
-  },
-];
-
-const SPECIAL_CHALLENGES = [
-  {
-    id: "special-1",
-    title: "New Year Explorer",
-    description: "Contact 5 sellers during the New Year event",
-    xp: 500,
-    progress: { current: 3, total: 5 },
-    completed: false,
-    icon: Gift,
-    endsIn: "3 days",
-    bonus: "Featured profile badge",
-  },
-  {
-    id: "special-2",
-    title: "Refer & Earn",
-    description: "Invite a friend who joins Moulna",
-    xp: 300,
-    progress: { current: 0, total: 1 },
-    completed: false,
-    icon: Users,
-    endsIn: "7 days",
-    bonus: "Exclusive badge",
-  },
-];
+interface Challenge {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  xp: number;
+  target: number;
+  progress: number;
+  completed: boolean;
+  completedAt: string | null;
+  bonusReward: string | null;
+  endsAt: string | null;
+}
 
 export default function ChallengesPage() {
-  const totalDailyXP = DAILY_CHALLENGES.reduce((sum, c) => sum + c.xp, 0);
-  const earnedDailyXP = DAILY_CHALLENGES.filter(c => c.completed).reduce((sum, c) => sum + c.xp, 0);
+  const [loading, setLoading] = React.useState(true);
+  const [streakDays, setStreakDays] = React.useState(0);
+  const [dailyChallenges, setDailyChallenges] = React.useState<Challenge[]>([]);
+  const [weeklyChallenges, setWeeklyChallenges] = React.useState<Challenge[]>([]);
+  const [specialChallenges, setSpecialChallenges] = React.useState<Challenge[]>([]);
+
+  React.useEffect(() => {
+    Promise.all([
+      fetch("/api/gamification").then((r) => r.ok ? r.json() : null),
+      fetch("/api/challenges?period=daily&audience=buyer").then((r) => r.ok ? r.json() : null),
+      fetch("/api/challenges?period=weekly&audience=buyer").then((r) => r.ok ? r.json() : null),
+      fetch("/api/challenges?period=special&audience=buyer").then((r) => r.ok ? r.json() : null),
+    ])
+      .then(([overview, daily, weekly, special]) => {
+        if (overview) {
+          setStreakDays(overview.streakDays || 0);
+        }
+        if (daily?.challenges) {
+          setDailyChallenges(daily.challenges);
+        }
+        if (weekly?.challenges) {
+          setWeeklyChallenges(weekly.challenges);
+        }
+        if (special?.challenges) {
+          setSpecialChallenges(special.challenges);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const daysLeft = 7 - new Date().getDay();
+
+  const totalDailyXP = dailyChallenges.reduce((sum, c) => sum + c.xp, 0);
+  const earnedDailyXP = dailyChallenges.filter(c => c.completed).reduce((sum, c) => sum + c.xp, 0);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Target className="w-8 h-8 animate-pulse text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -130,8 +87,8 @@ export default function ChallengesPage() {
           <Card className="px-4 py-2 flex items-center gap-3 bg-gradient-to-r from-orange-500/10 to-transparent">
             <Flame className="w-6 h-6 text-orange-500" />
             <div>
-              <p className="text-lg font-bold">12 Day Streak</p>
-              <p className="text-xs text-muted-foreground">Keep it going!</p>
+              <p className="text-lg font-bold">{streakDays} Day Streak</p>
+              <p className="text-xs text-muted-foreground">{streakDays > 0 ? "Keep it going!" : "Start your streak!"}</p>
             </div>
           </Card>
         </div>
@@ -148,11 +105,11 @@ export default function ChallengesPage() {
               <span className="text-sm text-muted-foreground">Resets in 8h 32m</span>
             </div>
           </div>
-          <Progress value={(earnedDailyXP / totalDailyXP) * 100} className="h-3 mb-2" />
+          <Progress value={totalDailyXP > 0 ? (earnedDailyXP / totalDailyXP) * 100 : 0} className="h-3 mb-2" />
           <div className="flex justify-between text-sm">
             <span>{earnedDailyXP} / {totalDailyXP} XP earned today</span>
             <span className="text-moulna-gold font-medium">
-              {DAILY_CHALLENGES.filter(c => c.completed).length}/{DAILY_CHALLENGES.length} completed
+              {dailyChallenges.filter(c => c.completed).length}/{dailyChallenges.length} completed
             </span>
           </div>
         </Card>
@@ -164,7 +121,7 @@ export default function ChallengesPage() {
             Today&apos;s Challenges
           </h2>
           <div className="grid md:grid-cols-2 gap-4">
-            {DAILY_CHALLENGES.map((challenge, index) => (
+            {dailyChallenges.map((challenge, index) => (
               <motion.div
                 key={challenge.id}
                 initial={{ opacity: 0, x: -20 }}
@@ -185,7 +142,7 @@ export default function ChallengesPage() {
                       {challenge.completed ? (
                         <CheckCircle className="w-6 h-6" />
                       ) : (
-                        <challenge.icon className="w-6 h-6" />
+                        <span className="text-xl">{challenge.icon}</span>
                       )}
                     </div>
                     <div className="flex-1">
@@ -202,11 +159,11 @@ export default function ChallengesPage() {
                       {!challenge.completed && (
                         <>
                           <Progress
-                            value={(challenge.progress.current / challenge.progress.total) * 100}
+                            value={challenge.target > 0 ? (challenge.progress / challenge.target) * 100 : 0}
                             className="h-2 mb-1"
                           />
                           <p className="text-xs text-muted-foreground">
-                            {challenge.progress.current} / {challenge.progress.total}
+                            {challenge.progress} / {challenge.target}
                           </p>
                         </>
                       )}
@@ -229,11 +186,11 @@ export default function ChallengesPage() {
             <Zap className="w-5 h-5 text-blue-500" />
             Weekly Challenges
             <Badge variant="outline" className="ms-auto">
-              {WEEKLY_CHALLENGES[0].daysLeft} days left
+              {daysLeft} days left
             </Badge>
           </h2>
           <div className="space-y-4">
-            {WEEKLY_CHALLENGES.map((challenge, index) => (
+            {weeklyChallenges.map((challenge, index) => (
               <motion.div
                 key={challenge.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -254,7 +211,7 @@ export default function ChallengesPage() {
                       {challenge.completed ? (
                         <CheckCircle className="w-6 h-6" />
                       ) : (
-                        <challenge.icon className="w-6 h-6" />
+                        <span className="text-xl">{challenge.icon}</span>
                       )}
                     </div>
                     <div className="flex-1">
@@ -274,14 +231,14 @@ export default function ChallengesPage() {
                         <Badge className="bg-green-500">Done</Badge>
                       ) : (
                         <span className="text-sm font-medium">
-                          {challenge.progress.current}/{challenge.progress.total}
+                          {challenge.progress}/{challenge.target}
                         </span>
                       )}
                     </div>
                   </div>
                   {!challenge.completed && (
                     <Progress
-                      value={(challenge.progress.current / challenge.progress.total) * 100}
+                      value={challenge.target > 0 ? (challenge.progress / challenge.target) * 100 : 0}
                       className="h-2 mt-3"
                     />
                   )}
@@ -298,7 +255,7 @@ export default function ChallengesPage() {
             Special Events
           </h2>
           <div className="grid md:grid-cols-2 gap-4">
-            {SPECIAL_CHALLENGES.map((challenge, index) => (
+            {specialChallenges.map((challenge, index) => (
               <motion.div
                 key={challenge.id}
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -309,41 +266,45 @@ export default function ChallengesPage() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
-                        <challenge.icon className="w-6 h-6" />
+                        <span className="text-xl">{challenge.icon}</span>
                       </div>
                       <div>
                         <h3 className="font-semibold">{challenge.title}</h3>
                         <p className="text-sm text-muted-foreground">{challenge.description}</p>
                       </div>
                     </div>
-                    <Badge variant="outline" className="bg-white">
-                      <Clock className="w-3 h-3 me-1" />
-                      {challenge.endsIn}
-                    </Badge>
+                    {challenge.endsAt && (
+                      <Badge variant="outline" className="bg-white">
+                        <Clock className="w-3 h-3 me-1" />
+                        {challenge.endsAt}
+                      </Badge>
+                    )}
                   </div>
 
                   <Progress
-                    value={(challenge.progress.current / challenge.progress.total) * 100}
+                    value={challenge.target > 0 ? (challenge.progress / challenge.target) * 100 : 0}
                     className="h-2 mb-2"
                   />
                   <div className="flex items-center justify-between text-sm mb-4">
                     <span>
-                      {typeof challenge.progress.current === 'number' && challenge.progress.total > 100
-                        ? `AED ${challenge.progress.current}`
-                        : challenge.progress.current} / {typeof challenge.progress.total === 'number' && challenge.progress.total > 100
-                        ? `AED ${challenge.progress.total}`
-                        : challenge.progress.total}
+                      {challenge.target > 100
+                        ? `AED ${challenge.progress}`
+                        : challenge.progress} / {challenge.target > 100
+                        ? `AED ${challenge.target}`
+                        : challenge.target}
                     </span>
                     <span className="text-purple-600 font-medium">+{challenge.xp} XP</span>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <Gift className="w-4 h-4 text-purple-500" />
-                      <span className="text-sm font-medium">Bonus: {challenge.bonus}</span>
+                  {challenge.bonusReward && (
+                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Gift className="w-4 h-4 text-purple-500" />
+                        <span className="text-sm font-medium">Bonus: {challenge.bonusReward}</span>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </div>
+                  )}
                 </Card>
               </motion.div>
             ))}

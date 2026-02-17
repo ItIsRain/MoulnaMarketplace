@@ -45,11 +45,6 @@ const SIDEBAR_ITEMS = [
     icon: Users,
   },
   {
-    label: "Reviews",
-    href: "/seller/reviews",
-    icon: Star,
-  },
-  {
     label: "Promotions",
     href: "/seller/promotions",
     icon: Tag,

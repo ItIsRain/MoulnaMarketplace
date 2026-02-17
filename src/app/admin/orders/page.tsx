@@ -2,93 +2,116 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
-  MessageSquare, Search, Filter, Eye, Download, Calendar,
-  CheckCircle, Clock, Flag, AlertCircle, MapPin, RefreshCw
+  MessageSquare, Search, Eye, Download, Calendar,
+  CheckCircle, Clock, AlertCircle, Archive, Loader2, ShoppingBag
 } from "lucide-react";
 
-const INQUIRIES = [
-  {
-    id: "INQ-2024-8923",
-    buyer: "Sarah Ahmed",
-    buyerAvatar: "sarah-ahmed",
-    seller: "Arabian Scents Boutique",
-    sellerAvatar: "arabian-scents",
-    listing: "Premium Oud Collection",
-    status: "active",
-    date: "Mar 12, 2024",
-    location: "Dubai, UAE",
-  },
-  {
-    id: "INQ-2024-8924",
-    buyer: "Mohammed Ali",
-    buyerAvatar: "mohammed-ali",
-    seller: "Dubai Crafts Co.",
-    sellerAvatar: "dubai-crafts",
-    listing: "Handwoven Silk Scarf",
-    status: "resolved",
-    date: "Mar 13, 2024",
-    location: "Abu Dhabi, UAE",
-  },
-  {
-    id: "INQ-2024-8925",
-    buyer: "Fatima Hassan",
-    buyerAvatar: "fatima-hassan",
-    seller: "Emirates Artisan",
-    sellerAvatar: "emirates-artisan",
-    listing: "Arabic Calligraphy Set",
-    status: "active",
-    date: "Mar 13, 2024",
-    location: "Sharjah, UAE",
-  },
-  {
-    id: "INQ-2024-8926",
-    buyer: "Ahmed Khalid",
-    buyerAvatar: "ahmed-khalid",
-    seller: "Arabian Scents Boutique",
-    sellerAvatar: "arabian-scents",
-    listing: "Rose Oud Mist",
-    status: "pending",
-    date: "Mar 13, 2024",
-    location: "Ajman, UAE",
-  },
-  {
-    id: "INQ-2024-8927",
-    buyer: "Layla Omar",
-    buyerAvatar: "layla-omar",
-    seller: "Pearl Boutique",
-    sellerAvatar: "pearl-boutique",
-    listing: "Gold Pearl Earrings Set",
-    status: "reported",
-    date: "Mar 10, 2024",
-    location: "Dubai, UAE",
-  },
-];
+interface InquiryBuyer {
+  name: string;
+  avatarSeed: string;
+  avatarStyle: string;
+}
+
+interface InquirySeller {
+  name: string;
+  avatarSeed: string;
+  avatarStyle: string;
+}
+
+interface Inquiry {
+  id: string;
+  buyer: InquiryBuyer;
+  seller: InquirySeller;
+  product: string;
+  status: "new" | "replied" | "sold" | "archived";
+  lastMessage: string;
+  salePriceFils: number;
+  createdAt: string;
+}
+
+interface StatusCounts {
+  all: number;
+  new: number;
+  replied: number;
+  sold: number;
+  archived: number;
+}
+
+const PAGE_SIZE = 20;
 
 const STATUS_OPTIONS = [
   { id: "all", label: "All Inquiries" },
-  { id: "pending", label: "Pending" },
-  { id: "active", label: "Active" },
-  { id: "resolved", label: "Resolved" },
-  { id: "reported", label: "Reported" },
+  { id: "new", label: "New" },
+  { id: "replied", label: "Replied" },
+  { id: "sold", label: "Sold" },
+  { id: "archived", label: "Archived" },
 ];
 
 const STATUS_STYLES = {
-  pending: { bg: "bg-yellow-100", text: "text-yellow-700", icon: Clock },
-  active: { bg: "bg-blue-100", text: "text-blue-700", icon: MessageSquare },
-  resolved: { bg: "bg-green-100", text: "text-green-700", icon: CheckCircle },
-  reported: { bg: "bg-red-100", text: "text-red-700", icon: Flag },
+  new: { bg: "bg-blue-100", text: "text-blue-700", icon: Clock },
+  replied: { bg: "bg-green-100", text: "text-green-700", icon: CheckCircle },
+  sold: { bg: "bg-purple-100", text: "text-purple-700", icon: ShoppingBag },
+  archived: { bg: "bg-gray-100", text: "text-gray-700", icon: Archive },
 };
 
 export default function AdminInquiriesPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedStatus, setSelectedStatus] = React.useState("all");
+  const [loading, setLoading] = React.useState(true);
+  const [inquiries, setInquiries] = React.useState<Inquiry[]>([]);
+  const [totalCount, setTotalCount] = React.useState(0);
+  const [statusCounts, setStatusCounts] = React.useState<StatusCounts>({
+    all: 0,
+    new: 0,
+    replied: 0,
+    sold: 0,
+    archived: 0,
+  });
+  const [page, setPage] = React.useState(1);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    async function fetchInquiries() {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `/api/admin/stats?section=inquiries&page=${page}&status=${selectedStatus}`
+        );
+        if (!res.ok) throw new Error("Failed to fetch inquiries");
+        const data = await res.json();
+        if (cancelled) return;
+        setInquiries(data.inquiries ?? []);
+        setTotalCount(data.totalCount ?? 0);
+        setStatusCounts(data.statusCounts ?? {
+          all: 0,
+          new: 0,
+          replied: 0,
+          sold: 0,
+          archived: 0,
+        });
+      } catch (err) {
+        console.error("Error fetching inquiries:", err);
+        if (!cancelled) {
+          setInquiries([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchInquiries();
+    return () => { cancelled = true; };
+  }, [page, selectedStatus]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background p-8">
@@ -112,24 +135,34 @@ export default function AdminInquiriesPage() {
       {/* Stats */}
       <div className="grid md:grid-cols-5 gap-4 mb-6">
         <Card className="p-4 text-center">
-          <p className="text-2xl font-bold">12,450</p>
+          <p className="text-2xl font-bold">
+            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : statusCounts.all.toLocaleString()}
+          </p>
           <p className="text-sm text-muted-foreground">Total Inquiries</p>
         </Card>
         <Card className="p-4 text-center">
-          <p className="text-2xl font-bold text-yellow-600">45</p>
-          <p className="text-sm text-muted-foreground">Pending</p>
+          <p className="text-2xl font-bold text-blue-600">
+            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : statusCounts.new.toLocaleString()}
+          </p>
+          <p className="text-sm text-muted-foreground">New</p>
         </Card>
         <Card className="p-4 text-center">
-          <p className="text-2xl font-bold text-blue-600">890</p>
-          <p className="text-sm text-muted-foreground">Active</p>
+          <p className="text-2xl font-bold text-green-600">
+            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : statusCounts.replied.toLocaleString()}
+          </p>
+          <p className="text-sm text-muted-foreground">Replied</p>
         </Card>
         <Card className="p-4 text-center">
-          <p className="text-2xl font-bold text-green-600">11,510</p>
-          <p className="text-sm text-muted-foreground">Resolved</p>
+          <p className="text-2xl font-bold text-purple-600">
+            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : statusCounts.sold.toLocaleString()}
+          </p>
+          <p className="text-sm text-muted-foreground">Sold</p>
         </Card>
         <Card className="p-4 text-center">
-          <p className="text-2xl font-bold text-red-600">5</p>
-          <p className="text-sm text-muted-foreground">Reported</p>
+          <p className="text-2xl font-bold text-gray-600">
+            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : statusCounts.archived.toLocaleString()}
+          </p>
+          <p className="text-sm text-muted-foreground">Archived</p>
         </Card>
       </div>
 
@@ -151,7 +184,7 @@ export default function AdminInquiriesPage() {
                 key={option.id}
                 variant={selectedStatus === option.id ? "default" : "outline"}
                 size="sm"
-                onClick={() => setSelectedStatus(option.id)}
+                onClick={() => { setSelectedStatus(option.id); setPage(1); }}
                 className={cn(
                   selectedStatus === option.id &&
                     "bg-moulna-gold hover:bg-moulna-gold-dark"
@@ -173,79 +206,94 @@ export default function AdminInquiriesPage() {
                 <th className="text-start p-4 font-medium">Inquiry ID</th>
                 <th className="text-start p-4 font-medium">Buyer</th>
                 <th className="text-start p-4 font-medium">Seller</th>
-                <th className="text-start p-4 font-medium">Listing</th>
+                <th className="text-start p-4 font-medium">Product</th>
                 <th className="text-start p-4 font-medium">Status</th>
                 <th className="text-end p-4 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {INQUIRIES.map((inquiry, index) => {
-                const statusStyle = STATUS_STYLES[inquiry.status as keyof typeof STATUS_STYLES];
-                const StatusIcon = statusStyle?.icon || Clock;
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="p-12 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
+                      <p className="text-muted-foreground">Loading inquiries...</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : inquiries.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-12 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <AlertCircle className="w-8 h-8 text-muted-foreground" />
+                      <p className="text-muted-foreground">No inquiries found</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                inquiries.map((inquiry, index) => {
+                  const statusStyle = STATUS_STYLES[inquiry.status];
+                  const StatusIcon = statusStyle?.icon || Clock;
 
-                return (
-                  <motion.tr
-                    key={inquiry.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.05 }}
-                    className={cn(
-                      "border-b last:border-0 hover:bg-muted/30",
-                      inquiry.status === "reported" && "bg-red-50/50"
-                    )}
-                  >
-                    <td className="p-4">
-                      <div>
-                        <p className="font-mono font-medium">{inquiry.id}</p>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {inquiry.date}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <DiceBearAvatar seed={inquiry.buyerAvatar} size="sm" />
+                  return (
+                    <motion.tr
+                      key={inquiry.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="border-b last:border-0 hover:bg-muted/30"
+                    >
+                      <td className="p-4">
                         <div>
-                          <p className="text-sm font-medium">{inquiry.buyer}</p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {inquiry.location}
+                          <p className="font-mono font-medium">
+                            {inquiry.id.slice(0, 8).toUpperCase()}
+                          </p>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {formatDate(inquiry.createdAt)}
                           </p>
                         </div>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <DiceBearAvatar seed={inquiry.sellerAvatar} size="sm" />
-                        <span className="text-sm">{inquiry.seller}</span>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <span className="text-sm">{inquiry.listing}</span>
-                    </td>
-                    <td className="p-4">
-                      <Badge className={cn(statusStyle?.bg, statusStyle?.text)}>
-                        <StatusIcon className="w-3 h-3 me-1" />
-                        {inquiry.status}
-                      </Badge>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        {inquiry.status === "reported" && (
-                          <Button size="sm" variant="outline" className="text-blue-600">
-                            <RefreshCw className="w-4 h-4 me-1" />
-                            Review
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <DiceBearAvatar
+                            seed={inquiry.buyer.avatarSeed}
+                            style={inquiry.buyer.avatarStyle}
+                            size="sm"
+                          />
+                          <span className="text-sm font-medium">{inquiry.buyer.name}</span>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <DiceBearAvatar
+                            seed={inquiry.seller.avatarSeed}
+                            style={inquiry.seller.avatarStyle}
+                            size="sm"
+                          />
+                          <span className="text-sm">{inquiry.seller.name}</span>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <span className="text-sm">{inquiry.product}</span>
+                      </td>
+                      <td className="p-4">
+                        <Badge className={cn(statusStyle?.bg, statusStyle?.text)}>
+                          <StatusIcon className="w-3 h-3 me-1" />
+                          {inquiry.status}
+                        </Badge>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button variant="ghost" size="icon">
+                            <Eye className="w-4 h-4" />
                           </Button>
-                        )}
-                      </div>
-                    </td>
-                  </motion.tr>
-                );
-              })}
+                        </div>
+                      </td>
+                    </motion.tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
@@ -253,13 +301,23 @@ export default function AdminInquiriesPage() {
         {/* Pagination */}
         <div className="flex items-center justify-between p-4 border-t">
           <p className="text-sm text-muted-foreground">
-            Showing 1-5 of 12,450 inquiries
+            Page {page} of {totalPages}
           </p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
               Previous
             </Button>
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
               Next
             </Button>
           </div>

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/layout/Navbar";
@@ -12,8 +13,8 @@ import { StreakCounter } from "@/components/gamification/StreakCounter";
 import { XPBar } from "@/components/gamification/XPBar";
 import {
   LayoutDashboard, Package, Inbox, BarChart3,
-  Settings, Tag, Wallet, Star, MessageCircle,
-  Users, Megaphone, Loader2
+  Settings, MessageCircle,
+  Users, Megaphone, Loader2, Store, BookOpen, Hammer, Pencil, ExternalLink, Plus
 } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -23,13 +24,16 @@ const SIDEBAR_LINKS = [
   { href: "/seller/products", label: "Listings", icon: Package },
   { href: "/seller/orders", label: "Inquiries", icon: Inbox },
   { href: "/seller/customers", label: "Customers", icon: Users },
-  { href: "/seller/reviews", label: "Reviews", icon: Star },
   { href: "/seller/messages", label: "Messages", icon: MessageCircle },
   { href: "/seller/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/seller/promotions", label: "Promotions", icon: Megaphone },
-  { href: "/seller/listings", label: "Listing Plans", icon: Tag },
-  { href: "/seller/finances", label: "Finances", icon: Wallet },
   { href: "/seller/settings", label: "Settings", icon: Settings },
+];
+
+const SHOP_LINKS = [
+  { href: "/seller/shop", label: "Shop Profile", icon: Pencil, exact: true },
+  { href: "/seller/shop/story", label: "Story", icon: BookOpen },
+  { href: "/seller/shop/gallery", label: "Workshop", icon: Hammer },
 ];
 
 export default function SellerLayout({
@@ -104,11 +108,17 @@ export default function SellerLayout({
                   {/* Seller Card */}
                   <Card className="p-4">
                     <div className="flex items-center gap-3 mb-4">
-                      <DiceBearAvatar
-                        seed={user?.avatar?.seed || user?.username || "seller"}
-                        style={user?.avatar?.style || "adventurer"}
-                        size="xl"
-                      />
+                      {shop?.logoUrl ? (
+                        <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-moulna-gold/30 flex-shrink-0">
+                          <Image src={shop.logoUrl} alt={shop.name} width={64} height={64} className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <DiceBearAvatar
+                          seed={shop?.avatarSeed || shop?.slug || user?.username || "seller"}
+                          style={shop?.avatarStyle || "adventurer"}
+                          size="xl"
+                        />
+                      )}
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold truncate">{shop?.name || user?.name || "My Shop"}</p>
                         <div className="flex items-center gap-2">
@@ -147,29 +157,56 @@ export default function SellerLayout({
                           </Link>
                         );
                       })}
+
+                      {/* Divider + My Shop section */}
+                      <div className="pt-2 mt-2 border-t">
+                        <p className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          My Shop
+                        </p>
+                      </div>
+
+                      {SHOP_LINKS.map((link) => {
+                        const isActive = link.exact
+                          ? pathname === link.href
+                          : pathname.startsWith(link.href);
+                        const Icon = link.icon;
+
+                        return (
+                          <Link
+                            key={link.href}
+                            href={link.href}
+                            className={cn(
+                              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                              isActive
+                                ? "bg-moulna-gold/10 text-moulna-gold font-medium"
+                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                            )}
+                          >
+                            <Icon className="w-4 h-4" />
+                            <span>{link.label}</span>
+                          </Link>
+                        );
+                      })}
+
+                      <Link
+                        href={`/shops/${shop?.slug || user?.username || "my-shop"}`}
+                        target="_blank"
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        <span>View Public Page</span>
+                      </Link>
                     </nav>
                   </Card>
 
-                  {/* Quick Actions */}
-                  <Card className="p-4">
-                    <h3 className="font-semibold text-sm mb-3">Quick Actions</h3>
-                    <div className="space-y-2">
-                      <Link
-                        href="/seller/products/new"
-                        className="flex items-center gap-2 text-sm text-moulna-gold hover:underline"
-                      >
-                        <Package className="w-4 h-4" />
-                        Add New Listing
-                      </Link>
-                      <Link
-                        href={`/shops/${shop?.slug || user?.username || "my-shop"}`}
-                        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-                      >
-                        <LayoutDashboard className="w-4 h-4" />
-                        View My Shop
-                      </Link>
-                    </div>
-                  </Card>
+                  {/* Quick Action */}
+                  <Link
+                    href="/seller/products/new"
+                    className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg text-sm font-medium bg-moulna-gold text-white hover:bg-moulna-gold-dark transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    New Listing
+                  </Link>
                 </div>
               </aside>
 

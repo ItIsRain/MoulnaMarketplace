@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
+import { ShopAvatar } from "@/components/avatar/ShopAvatar";
 
 const NEW_PRODUCTS = [
   {
@@ -258,7 +258,7 @@ export default function NewArrivalsPage() {
                   </div>
                   <div className="p-4">
                     <Link href={`/shops/${product.shop.slug}`} className="flex items-center gap-2 mb-2 group/shop">
-                      <DiceBearAvatar seed={product.shop.avatar} size="xs" />
+                      <ShopAvatar avatarSeed={product.shop.avatar} name={product.shop.name} size="xs" />
                       <span className="text-xs text-muted-foreground group-hover/shop:text-moulna-gold transition-colors">
                         {product.shop.name}
                       </span>
@@ -306,7 +306,7 @@ export default function NewArrivalsPage() {
                       <div className="flex items-start justify-between">
                         <div>
                           <Link href={`/shops/${product.shop.slug}`} className="flex items-center gap-2 mb-1">
-                            <DiceBearAvatar seed={product.shop.avatar} size="xs" />
+                            <ShopAvatar avatarSeed={product.shop.avatar} name={product.shop.name} size="xs" />
                             <span className="text-xs text-muted-foreground hover:text-moulna-gold">
                               {product.shop.name}
                             </span>

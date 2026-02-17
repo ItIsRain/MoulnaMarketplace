@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -13,95 +14,118 @@ import { XPBar } from "@/components/gamification/XPBar";
 import { DailyChallengePanel } from "@/components/gamification/DailyChallenge";
 import { StreakCard } from "@/components/gamification/StreakCounter";
 import { useAuthStore } from "@/store/useAuthStore";
+import type { DailyChallenge } from "@/lib/types";
 import {
   MessageSquare, Heart, Star, Trophy, Sparkles,
-  ChevronRight, Check
+  ChevronRight, Check, Loader2
 } from "lucide-react";
 
-// Mock data
-const RECENT_CONVERSATIONS = [
-  {
-    id: "conv_1",
-    seller: { name: "Scent of Arabia", avatar: "scent-arabia", level: 6 },
-    listing: {
-      title: "Arabian Oud Perfume - 100ml",
-      image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=100",
-    },
-    lastMessage: "Yes, it's still available! I can meet in Dubai Marina tomorrow.",
-    date: "2024-02-13T10:30:00Z",
-    unread: true,
-  },
-  {
-    id: "conv_2",
-    seller: { name: "Gulf Gems", avatar: "gulf-gems", level: 5 },
-    listing: {
-      title: "Gold-Plated Pearl Earrings",
-      image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=100",
-    },
-    lastMessage: "Thank you for your interest! The price for 2 sets would be AED 550.",
-    date: "2024-02-12T15:20:00Z",
-    unread: false,
-  },
-  {
-    id: "conv_3",
-    seller: { name: "Elegance UAE", avatar: "elegance-uae", level: 8 },
-    listing: {
-      title: "Embroidered Abaya with Gold Thread",
-      image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=100",
-    },
-    lastMessage: "I have size M and L available. Would you like to see it in person?",
-    date: "2024-02-11T09:45:00Z",
-    unread: false,
-  },
-];
-
-const DAILY_CHALLENGES = [
-  { id: "ch_1", task: "Browse 3 different categories", xp: 30, icon: "👀", completed: true },
-  { id: "ch_2", task: "Save 2 items to your wishlist", xp: 20, icon: "❤️", completed: false, progress: 1, target: 2 },
-  { id: "ch_3", task: "Contact a seller about a listing", xp: 50, icon: "💬", completed: false },
-];
-
-const RECOMMENDED_PRODUCTS = [
-  {
-    id: "prd_1",
-    title: "Handcrafted Ceramic Vase",
-    image: "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=300",
-    price: 45000,
-    rating: 4.8,
-  },
-  {
-    id: "prd_2",
-    title: "Traditional Arabic Coffee Set",
-    image: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=300",
-    price: 89000,
-    rating: 4.9,
-  },
-  {
-    id: "prd_3",
-    title: "Embroidered Cushion Covers",
-    image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=300",
-    price: 35000,
-    rating: 4.7,
-  },
-];
+interface DashboardOverview {
+  stats: {
+    conversations: number;
+    savedItems: number;
+    reviewsGiven: number;
+    badgesEarned: number;
+  };
+  recentConversations: {
+    id: string;
+    otherUser: {
+      name: string;
+      avatarSeed: string;
+      avatarStyle: string;
+      level: number;
+    };
+    product: string;
+    lastMessage: string;
+    updatedAt: string;
+    unread: boolean;
+  }[];
+  recommendedProducts: {
+    id: string;
+    title: string;
+    slug: string;
+    priceFils: number;
+    rating: number;
+    image: string | null;
+  }[];
+  streaks: {
+    login: number;
+    purchase: number;
+    review: number;
+  };
+}
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<DashboardOverview | null>(null);
+  const [challenges, setChallenges] = useState<DailyChallenge[]>([]);
 
-  // Mock user data
-  const displayUser = user ?? {
-    name: "Sarah",
-    xp: 2450,
-    level: 4,
-    levelTitle: "Enthusiast",
-  };
+  // Fetch dashboard overview data
+  useEffect(() => {
+    async function fetchOverview() {
+      try {
+        const res = await fetch("/api/dashboard/overview");
+        if (res.ok) {
+          const json = await res.json();
+          setData(json);
+        }
+      } catch (err) {
+        console.error("Failed to fetch dashboard overview:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchOverview();
+  }, []);
+
+  // Fetch daily challenges from API
+  useEffect(() => {
+    async function fetchChallenges() {
+      try {
+        const res = await fetch("/api/challenges?period=daily&audience=buyer");
+        if (res.ok) {
+          const json = await res.json();
+          const mapped: DailyChallenge[] = (json.challenges ?? []).map(
+            (c: { id: string; title: string; description: string; xp: number; icon: string; completed: boolean; progress?: number; target?: number }) => ({
+              id: c.id,
+              task: c.title,
+              description: c.description,
+              xp: c.xp,
+              icon: c.icon,
+              completed: c.completed,
+              progress: c.progress,
+              target: c.target,
+            })
+          );
+          setChallenges(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch challenges:", err);
+      }
+    }
+    fetchChallenges();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
+      </div>
+    );
+  }
+
+  const stats = data?.stats ?? { conversations: 0, savedItems: 0, reviewsGiven: 0, badgesEarned: 0 };
+  const recentConversations = data?.recentConversations ?? [];
+  const recommendedProducts = (data?.recommendedProducts ?? []).slice(0, 3);
+  const streaks = data?.streaks ?? { login: 0, purchase: 0, review: 0 };
 
   return (
     <div className="space-y-8">
       {/* Welcome Header */}
       <div>
         <h1 className="font-display text-3xl font-bold mb-2">
-          Welcome back, {displayUser.name.split(" ")[0]}! 👋
+          Welcome back, {user?.name?.split(" ")[0] ?? "there"}! 👋
         </h1>
         <p className="text-muted-foreground">
           Here&apos;s what&apos;s happening with your account today
@@ -111,10 +135,10 @@ export default function DashboardPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Conversations", value: "12", icon: MessageSquare, color: "text-blue-500" },
-          { label: "Saved Items", value: "8", icon: Heart, color: "text-red-500" },
-          { label: "Reviews Given", value: "5", icon: Star, color: "text-yellow-500" },
-          { label: "Badges Earned", value: "7", icon: Trophy, color: "text-moulna-gold" },
+          { label: "Conversations", value: String(stats.conversations), icon: MessageSquare, color: "text-blue-500" },
+          { label: "Saved Items", value: String(stats.savedItems), icon: Heart, color: "text-red-500" },
+          { label: "Reviews Given", value: String(stats.reviewsGiven), icon: Star, color: "text-yellow-500" },
+          { label: "Badges Earned", value: String(stats.badgesEarned), icon: Trophy, color: "text-moulna-gold" },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -149,7 +173,7 @@ export default function DashboardPage() {
               </Link>
             </div>
             <XPBar
-              xp={displayUser.xp}
+              xp={user?.xp ?? 0}
               showLabels
             />
           </Card>
@@ -163,42 +187,42 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            <div className="space-y-4">
-              {RECENT_CONVERSATIONS.map((conv) => (
-                <Link
-                  key={conv.id}
-                  href={`/dashboard/messages/${conv.id}`}
-                  className="block"
-                >
-                  <div className={cn(
-                    "flex items-center gap-4 p-4 rounded-lg border hover:border-moulna-gold/50 transition-colors",
-                    conv.unread && "border-blue-200 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-900/10"
-                  )}>
-                    <DiceBearAvatar seed={conv.seller.avatar} size="md" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="font-medium text-sm">{conv.seller.name}</span>
-                        <LevelBadge level={conv.seller.level} size="sm" />
-                        {conv.unread && (
-                          <span className="w-2 h-2 rounded-full bg-blue-500" />
-                        )}
+            {recentConversations.length > 0 ? (
+              <div className="space-y-4">
+                {recentConversations.map((conv) => (
+                  <Link
+                    key={conv.id}
+                    href={`/dashboard/messages/${conv.id}`}
+                    className="block"
+                  >
+                    <div className={cn(
+                      "flex items-center gap-4 p-4 rounded-lg border hover:border-moulna-gold/50 transition-colors",
+                      conv.unread && "border-blue-200 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-900/10"
+                    )}>
+                      <DiceBearAvatar seed={conv.otherUser.avatarSeed} style={conv.otherUser.avatarStyle} size="md" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="font-medium text-sm">{conv.otherUser.name}</span>
+                          <LevelBadge level={conv.otherUser.level} size="sm" />
+                          {conv.unread && (
+                            <span className="w-2 h-2 rounded-full bg-blue-500" />
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Re: {conv.product}
+                        </p>
+                        <p className="text-sm text-muted-foreground line-clamp-1">
+                          {conv.lastMessage}
+                        </p>
                       </div>
-                      <p className="text-xs text-muted-foreground mb-1">
-                        Re: {conv.listing.title}
-                      </p>
-                      <p className="text-sm text-muted-foreground line-clamp-1">
-                        {conv.lastMessage}
-                      </p>
+                      <div className="text-end flex-shrink-0">
+                        <p className="text-xs text-muted-foreground">{timeAgo(conv.updatedAt)}</p>
+                      </div>
                     </div>
-                    <div className="text-end flex-shrink-0">
-                      <p className="text-xs text-muted-foreground">{timeAgo(conv.date)}</p>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-
-            {RECENT_CONVERSATIONS.length === 0 && (
+                  </Link>
+                ))}
+              </div>
+            ) : (
               <div className="text-center py-8">
                 <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
                 <p className="text-muted-foreground mb-4">No conversations yet</p>
@@ -218,37 +242,53 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              {RECOMMENDED_PRODUCTS.map((product) => (
-                <Link key={product.id} href={`/products/${product.id}`} className="group">
-                  <div className="relative aspect-square rounded-lg overflow-hidden mb-2">
-                    <Image
-                      src={product.image}
-                      alt={product.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform"
-                    />
-                  </div>
-                  <p className="text-sm font-medium line-clamp-1 group-hover:text-moulna-gold transition-colors">
-                    {product.title}
-                  </p>
-                  <p className="text-sm font-bold">{formatAED(product.price)}</p>
-                </Link>
-              ))}
-            </div>
+            {recommendedProducts.length > 0 ? (
+              <div className="grid grid-cols-3 gap-4">
+                {recommendedProducts.map((product) => (
+                  <Link key={product.id} href={`/products/${product.slug}`} className="group">
+                    <div className="relative aspect-square rounded-lg overflow-hidden mb-2">
+                      {product.image ? (
+                        <Image
+                          src={product.image}
+                          alt={product.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-moulna-gold/20 to-moulna-gold/5 flex items-center justify-center">
+                          <Sparkles className="w-8 h-8 text-moulna-gold/40" />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm font-medium line-clamp-1 group-hover:text-moulna-gold transition-colors">
+                      {product.title}
+                    </p>
+                    <p className="text-sm font-bold">{formatAED(product.priceFils)}</p>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Sparkles className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                <p className="text-muted-foreground mb-4">No recommendations yet</p>
+                <Button variant="gold" asChild>
+                  <Link href="/explore">Start Exploring</Link>
+                </Button>
+              </div>
+            )}
           </Card>
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Daily Challenges */}
-          <DailyChallengePanel challenges={DAILY_CHALLENGES} />
+          <DailyChallengePanel challenges={challenges} maxItems={3} />
 
           {/* Streak Card */}
           <StreakCard
-            loginStreak={7}
-            purchaseStreak={2}
-            reviewStreak={1}
+            loginStreak={streaks.login}
+            purchaseStreak={streaks.purchase}
+            reviewStreak={streaks.review}
           />
 
           {/* Level Up Tip */}

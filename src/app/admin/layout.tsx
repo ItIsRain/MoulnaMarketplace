@@ -9,7 +9,7 @@ import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
   LayoutDashboard, Users, Store, Package, Flag,
   Settings, BarChart3, Shield, Bell, LogOut, ChevronDown,
-  Menu, X, DollarSign, Tag, MessageSquare
+  Menu, X, DollarSign, Tag, MessageSquare, Trophy
 } from "lucide-react";
 
 const ADMIN_NAV = [
@@ -19,6 +19,7 @@ const ADMIN_NAV = [
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/orders", label: "Inquiries", icon: MessageSquare },
   { href: "/admin/reports", label: "Reports", icon: Flag },
+  { href: "/admin/sotw", label: "SOTW Auctions", icon: Trophy },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/finances", label: "Finances", icon: DollarSign },
   { href: "/admin/categories", label: "Categories", icon: Tag },

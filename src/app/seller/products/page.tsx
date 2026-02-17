@@ -19,7 +19,6 @@ import {
 const statusConfig: Record<string, { label: string; variant: "active" | "lowStock" | "outOfStock" | "draft" }> = {
   active: { label: "Active", variant: "active" },
   expired: { label: "Expired", variant: "lowStock" },
-  sold: { label: "Sold", variant: "outOfStock" },
   draft: { label: "Draft", variant: "draft" },
   hidden: { label: "Hidden", variant: "draft" },
 };
@@ -36,6 +35,21 @@ export default function SellerProductsPage() {
   const [products, setProducts] = React.useState<Product[]>([]);
   const [total, setTotal] = React.useState(0);
   const [loading, setLoading] = React.useState(true);
+  const [listingStatus, setListingStatus] = React.useState<{
+    activeListingCount: number;
+    freeListingLimit: number;
+    freeRemaining: number;
+    requiresPayment: boolean;
+  } | null>(null);
+
+  React.useEffect(() => {
+    fetch("/api/seller/listing-status")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.activeListingCount !== undefined) setListingStatus(data);
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchProducts = React.useCallback(async () => {
     setLoading(true);
@@ -64,7 +78,6 @@ export default function SellerProductsPage() {
     total,
     active: products.filter(p => p.status === "active").length,
     expired: products.filter(p => p.status === "expired").length,
-    sold: products.filter(p => p.status === "sold").length,
     draft: products.filter(p => p.status === "draft").length,
   };
 
@@ -89,13 +102,56 @@ export default function SellerProductsPage() {
         </Button>
       </div>
 
+      {/* Listing Limit Banner */}
+      {listingStatus && listingStatus.freeRemaining <= 1 && (
+        <Card className={cn(
+          "p-4",
+          listingStatus.requiresPayment
+            ? "border-amber-300 bg-amber-50/50 dark:bg-amber-900/10"
+            : "border-blue-300 bg-blue-50/50 dark:bg-blue-900/10"
+        )}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Package className={cn(
+                "w-5 h-5",
+                listingStatus.requiresPayment ? "text-amber-600" : "text-blue-600"
+              )} />
+              <div>
+                <p className="font-medium text-sm">
+                  {listingStatus.requiresPayment
+                    ? "All free listings used"
+                    : `${listingStatus.freeRemaining} free listing remaining`
+                  }
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {listingStatus.requiresPayment
+                    ? "Next listing: just AED 5 — bundle with a boost and save 20%"
+                    : "After this, listings require a small fee to publish"
+                  }
+                </p>
+              </div>
+            </div>
+            <div className="w-20 h-2 rounded-full bg-muted overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full",
+                  listingStatus.requiresPayment ? "bg-amber-500" : "bg-blue-500"
+                )}
+                style={{
+                  width: `${Math.min(100, (listingStatus.activeListingCount / listingStatus.freeListingLimit) * 100)}%`,
+                }}
+              />
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-5 gap-4">
         {[
           { label: "Total", value: stats.total, color: "text-foreground" },
           { label: "Active", value: stats.active, color: "text-emerald-600" },
           { label: "Expired", value: stats.expired, color: "text-yellow-600" },
-          { label: "Sold", value: stats.sold, color: "text-red-600" },
           { label: "Draft", value: stats.draft, color: "text-muted-foreground" },
         ].map((stat) => (
           <Card key={stat.label} className="p-4 text-center">
@@ -118,7 +174,7 @@ export default function SellerProductsPage() {
             />
           </div>
           <div className="flex gap-2">
-            {["all", "active", "expired", "sold", "draft"].map((status) => (
+            {["all", "active", "expired", "draft"].map((status) => (
               <Button
                 key={status}
                 variant={statusFilter === status ? "default" : "outline"}

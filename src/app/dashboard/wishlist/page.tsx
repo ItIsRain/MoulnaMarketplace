@@ -8,99 +8,66 @@ import { cn, formatAED } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import type { Product } from "@/lib/types";
 import {
-  Heart, MessageCircle, Trash2, Star, Bell, Share2,
-  Grid3X3, List, Sparkles
+  Heart, MessageCircle, Trash2, Star, Share2,
+  Grid3X3, List, Sparkles, Loader2
 } from "lucide-react";
 
-const SAVED_ITEMS = [
-  {
-    id: "wish_1",
-    product: {
-      id: "prd_1",
-      title: "Handcrafted Arabian Oud Perfume - Premium Collection",
-      slug: "handcrafted-arabian-oud-perfume",
-      image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400",
-      priceFils: 45000,
-      compareAtPriceFils: 55000,
-      rating: 4.8,
-      reviewCount: 124,
-      available: true,
-      seller: "Scent of Arabia",
-    },
-    addedDate: "Feb 10, 2024",
-  },
-  {
-    id: "wish_2",
-    product: {
-      id: "prd_2",
-      title: "Traditional Arabic Calligraphy Art - Custom Name",
-      slug: "traditional-arabic-calligraphy-art",
-      image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400",
-      priceFils: 89000,
-      rating: 5.0,
-      reviewCount: 56,
-      available: true,
-      seller: "Khalid Arts",
-    },
-    addedDate: "Feb 8, 2024",
-  },
-  {
-    id: "wish_3",
-    product: {
-      id: "prd_3",
-      title: "Gold-Plated Pearl Earrings - Handmade",
-      slug: "gold-plated-pearl-earrings",
-      image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400",
-      priceFils: 32000,
-      rating: 4.9,
-      reviewCount: 89,
-      available: true,
-      seller: "Gulf Gems",
-    },
-    addedDate: "Feb 5, 2024",
-  },
-  {
-    id: "wish_4",
-    product: {
-      id: "prd_4",
-      title: "Moroccan Ceramic Vase Set - Limited Edition",
-      slug: "moroccan-ceramic-vase-set",
-      image: "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=400",
-      priceFils: 67500,
-      compareAtPriceFils: 85000,
-      rating: 4.7,
-      reviewCount: 42,
-      available: false,
-      seller: "Desert Home",
-    },
-    addedDate: "Jan 28, 2024",
-    priceDropAlert: true,
-  },
-  {
-    id: "wish_5",
-    product: {
-      id: "prd_5",
-      title: "Embroidered Abaya with Gold Thread",
-      slug: "embroidered-abaya-gold-thread",
-      image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=400",
-      priceFils: 125000,
-      rating: 4.9,
-      reviewCount: 78,
-      available: true,
-      seller: "Elegance UAE",
-    },
-    addedDate: "Jan 20, 2024",
-  },
-];
+interface WishlistItem {
+  id: string;
+  productId: string;
+  addedAt: string;
+  product: Product | null;
+}
 
 export default function SavedItemsPage() {
-  const [items, setItems] = React.useState(SAVED_ITEMS);
+  const [items, setItems] = React.useState<WishlistItem[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [removing, setRemoving] = React.useState<string | null>(null);
   const [view, setView] = React.useState<"grid" | "list">("grid");
 
-  const removeItem = (id: string) => {
-    setItems(prev => prev.filter(item => item.id !== id));
-  };
+  React.useEffect(() => {
+    fetchWishlist();
+  }, []);
+
+  async function fetchWishlist() {
+    try {
+      const res = await fetch("/api/wishlist");
+      if (res.ok) {
+        const data = await res.json();
+        setItems(data.items || []);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function removeItem(productId: string) {
+    setRemoving(productId);
+    try {
+      const res = await fetch(`/api/wishlist?productId=${productId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setItems((prev) => prev.filter((item) => item.productId !== productId));
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setRemoving(null);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -111,7 +78,7 @@ export default function SavedItemsPage() {
             Saved Items
           </h1>
           <p className="text-muted-foreground">
-            {items.length} items saved
+            {items.length} {items.length === 1 ? "item" : "items"} saved
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -157,116 +124,119 @@ export default function SavedItemsPage() {
             : "grid-cols-1"
         )}>
           <AnimatePresence>
-            {items.map((item, index) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Card className={cn(
-                  "overflow-hidden group",
-                  view === "list" && "flex"
-                )}>
-                  {/* Image */}
-                  <div className={cn(
-                    "relative overflow-hidden",
-                    view === "grid" ? "aspect-square" : "w-40 flex-shrink-0"
+            {items.map((item, index) => {
+              const product = item.product;
+              if (!product) return null;
+
+              return (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Card className={cn(
+                    "overflow-hidden group",
+                    view === "list" && "flex"
                   )}>
-                    <Image
-                      src={item.product.image}
-                      alt={item.product.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    {!item.product.available && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <Badge variant="outOfStock">
-                          Unavailable
+                    {/* Image */}
+                    <div className={cn(
+                      "relative overflow-hidden",
+                      view === "grid" ? "aspect-square" : "w-40 flex-shrink-0"
+                    )}>
+                      {product.images[0] ? (
+                        <Image
+                          src={product.images[0]}
+                          alt={product.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted flex items-center justify-center">
+                          <Heart className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                      )}
+                      {!product.available && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <Badge variant="outline" className="bg-white/90">
+                            Unavailable
+                          </Badge>
+                        </div>
+                      )}
+                      {product.compareAtPriceFils && (
+                        <Badge variant="default" className="absolute top-3 start-3 bg-red-500">
+                          Reduced
                         </Badge>
-                      </div>
-                    )}
-                    {item.product.compareAtPriceFils && (
-                      <Badge variant="default" className="absolute top-3 start-3 bg-red-500">
-                        Reduced
-                      </Badge>
-                    )}
-                    {item.priceDropAlert && (
-                      <Badge variant="outline" className="absolute top-3 end-3 bg-white/90">
-                        <Bell className="w-3 h-3 me-1" />
-                        Alert On
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-4 flex-1">
-                    <Link href={`/products/${item.product.slug}`}>
-                      <h3 className="font-medium hover:text-moulna-gold transition-colors line-clamp-2 mb-1">
-                        {item.product.title}
-                      </h3>
-                    </Link>
-
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {item.product.seller}
-                    </p>
-
-                    {/* Rating */}
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-moulna-gold text-moulna-gold" />
-                        <span className="text-sm font-medium">{item.product.rating}</span>
-                      </div>
-                      <span className="text-sm text-muted-foreground">
-                        ({item.product.reviewCount})
-                      </span>
-                    </div>
-
-                    {/* Price */}
-                    <div className="flex items-center gap-2 mb-4">
-                      <span className="font-bold text-lg">
-                        {formatAED(item.product.priceFils)}
-                      </span>
-                      {item.product.compareAtPriceFils && (
-                        <span className="text-sm text-muted-foreground line-through">
-                          {formatAED(item.product.compareAtPriceFils)}
-                        </span>
                       )}
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-2">
-                      <Button
-                        variant="gold"
-                        size="sm"
-                        className="flex-1"
-                        asChild
-                      >
-                        <Link href={`/products/${item.product.slug}`}>
-                          <MessageCircle className="w-4 h-4 me-2" />
-                          Contact Seller
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeItem(item.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Share2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    {/* Content */}
+                    <div className="p-4 flex-1">
+                      <Link href={`/products/${product.slug}`}>
+                        <h3 className="font-medium hover:text-moulna-gold transition-colors line-clamp-2 mb-1">
+                          {product.title}
+                        </h3>
+                      </Link>
 
-                    <p className="text-xs text-muted-foreground mt-3">
-                      Saved on {item.addedDate}
-                    </p>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {product.seller.name}
+                      </p>
+
+                      {/* Price */}
+                      <div className="flex items-center gap-2 mb-4">
+                        <span className="font-bold text-lg">
+                          {formatAED(product.priceFils)}
+                        </span>
+                        {product.compareAtPriceFils && (
+                          <span className="text-sm text-muted-foreground line-through">
+                            {formatAED(product.compareAtPriceFils)}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-2">
+                        <Button
+                          variant="gold"
+                          size="sm"
+                          className="flex-1"
+                          asChild
+                        >
+                          <Link href={`/products/${product.slug}`}>
+                            <MessageCircle className="w-4 h-4 me-2" />
+                            Contact Seller
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={removing === item.productId}
+                          onClick={() => removeItem(item.productId)}
+                        >
+                          {removing === item.productId ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Share2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground mt-3">
+                        Saved on {new Date(item.addedAt).toLocaleDateString("en-AE", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </div>
       ) : (

@@ -2,58 +2,82 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
+import { cn, formatAED } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import {
-  ArrowLeft, Tag, Percent, Gift, Calendar, Users,
-  Zap, Info, CheckCircle, Sparkles
+  ArrowLeft, Rocket, CheckCircle, Loader2, Package, Sparkles
 } from "lucide-react";
 
-const PROMOTION_TYPES = [
-  {
-    id: "percentage",
-    name: "Percentage Discount",
-    description: "Offer a percentage off the original price",
-    icon: Percent,
-    example: "e.g., 20% off all products",
-  },
-  {
-    id: "fixed",
-    name: "Fixed Amount Off",
-    description: "Offer a fixed amount discount",
-    icon: Tag,
-    example: "e.g., AED 50 off listings over AED 200",
-  },
-  {
-    id: "bogo",
-    name: "Buy One Get One",
-    description: "Offer free or discounted items with a deal",
-    icon: Gift,
-    example: "e.g., Buy 2 get 1 free",
-  },
-  {
-    id: "featured-boost",
-    name: "Featured Boost",
-    description: "Boost your listing to the top of search results",
-    icon: Sparkles,
-    example: "e.g., Boost listing for 7 days",
-  },
+interface SellerProduct {
+  id: string;
+  title: string;
+  slug: string;
+  images: string[];
+  price_fils: number;
+  status: string;
+}
+
+const DURATIONS = [
+  { days: 3, label: "3 Days", description: "Quick visibility boost" },
+  { days: 7, label: "7 Days", description: "Most popular", popular: true },
+  { days: 14, label: "14 Days", description: "Extended reach" },
+  { days: 30, label: "30 Days", description: "Maximum exposure" },
 ];
 
-const APPLIES_TO_OPTIONS = [
-  { id: "all", label: "All Products" },
-  { id: "category", label: "Specific Categories" },
-  { id: "products", label: "Specific Products" },
-];
+const PRICE_PER_DAY_FILS = 1500; // Will be fetched from API in checkout
 
-export default function NewPromotionPage() {
-  const [selectedType, setSelectedType] = React.useState("percentage");
-  const [appliesTo, setAppliesTo] = React.useState("all");
+export default function NewBoostPage() {
+  const [step, setStep] = React.useState(1);
+  const [products, setProducts] = React.useState<SellerProduct[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [selectedProduct, setSelectedProduct] = React.useState<SellerProduct | null>(null);
+  const [selectedDuration, setSelectedDuration] = React.useState(7);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  React.useEffect(() => {
+    fetch("/api/seller/products?status=active")
+      .then((res) => res.json())
+      .then((data) => setProducts(data.products || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const totalFils = PRICE_PER_DAY_FILS * selectedDuration;
+
+  const handleCheckout = async () => {
+    if (!selectedProduct) return;
+    setSubmitting(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/ads/boost/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: selectedProduct.id,
+          durationDays: selectedDuration,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to create checkout session");
+        return;
+      }
+
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -65,284 +89,266 @@ export default function NewPromotionPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Create Promotion</h1>
+          <h1 className="text-2xl font-bold">Boost a Product</h1>
           <p className="text-muted-foreground">
-            Set up a new discount or promotional offer
+            Get your product featured at the top of explore &amp; search
           </p>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Main Form */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Promotion Type */}
-          <Card className="p-6">
-            <h2 className="font-semibold mb-4">Promotion Type</h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              {PROMOTION_TYPES.map((type) => (
+      {/* Progress Steps */}
+      <div className="flex items-center gap-4">
+        {[
+          { num: 1, label: "Select Product" },
+          { num: 2, label: "Choose Duration" },
+          { num: 3, label: "Confirm & Pay" },
+        ].map((s) => (
+          <div key={s.num} className="flex items-center gap-2">
+            <div
+              className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
+                step >= s.num
+                  ? "bg-moulna-gold text-white"
+                  : "bg-muted text-muted-foreground"
+              )}
+            >
+              {step > s.num ? <CheckCircle className="w-4 h-4" /> : s.num}
+            </div>
+            <span className={cn("text-sm hidden sm:block", step >= s.num ? "font-medium" : "text-muted-foreground")}>
+              {s.label}
+            </span>
+            {s.num < 3 && <div className="w-8 h-px bg-border" />}
+          </div>
+        ))}
+      </div>
+
+      {/* Step 1: Select Product */}
+      {step === 1 && (
+        <Card className="p-6">
+          <h2 className="font-semibold mb-4">Select a product to boost</h2>
+          {loading ? (
+            <div className="py-12 text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
+            </div>
+          ) : products.length === 0 ? (
+            <div className="py-12 text-center">
+              <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No active products to boost</p>
+              <Button variant="outline" className="mt-4" asChild>
+                <Link href="/seller/products">Go to Products</Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {products.map((product) => (
                 <div
-                  key={type.id}
-                  onClick={() => setSelectedType(type.id)}
+                  key={product.id}
+                  onClick={() => {
+                    setSelectedProduct(product);
+                    setStep(2);
+                  }}
                   className={cn(
-                    "p-4 rounded-lg border-2 cursor-pointer transition-all",
-                    selectedType === type.id
+                    "p-4 rounded-lg border-2 cursor-pointer transition-all hover:border-moulna-gold/50",
+                    selectedProduct?.id === product.id
                       ? "border-moulna-gold bg-moulna-gold/5"
-                      : "border-muted hover:border-moulna-gold/50"
+                      : "border-muted"
                   )}
                 >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={cn(
-                        "w-10 h-10 rounded-lg flex items-center justify-center",
-                        selectedType === type.id
-                          ? "bg-moulna-gold text-white"
-                          : "bg-muted"
-                      )}
-                    >
-                      <type.icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium mb-1">{type.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        {type.description}
-                      </p>
-                      <p className="text-xs text-moulna-gold">{type.example}</p>
-                    </div>
-                    {selectedType === type.id && (
-                      <CheckCircle className="w-5 h-5 text-moulna-gold" />
+                  <div className="aspect-square rounded-lg overflow-hidden bg-muted mb-3 relative">
+                    {product.images[0] ? (
+                      <Image
+                        src={product.images[0]}
+                        alt={product.title}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="w-8 h-8 text-muted-foreground" />
+                      </div>
                     )}
                   </div>
+                  <h3 className="font-medium line-clamp-2 mb-1">{product.title}</h3>
+                  <p className="text-sm text-moulna-gold font-semibold">
+                    {formatAED(product.price_fils)}
+                  </p>
                 </div>
               ))}
             </div>
-          </Card>
+          )}
+        </Card>
+      )}
 
-          {/* Promotion Details */}
-          <Card className="p-6">
-            <h2 className="font-semibold mb-4">Promotion Details</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-1 block">
-                  Promotion Name
-                </label>
-                <Input placeholder="e.g., Summer Sale 2024" />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-1 block">
-                  Promotion Code (Optional)
-                </label>
-                <div className="flex gap-2">
-                  <Input placeholder="e.g., SUMMER20" className="uppercase" />
-                  <Button variant="outline">Generate</Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Leave empty to apply automatically
-                </p>
-              </div>
-
-              {selectedType === "percentage" && (
-                <div>
-                  <label className="text-sm font-medium mb-1 block">
-                    Discount Percentage
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      placeholder="20"
-                      className="w-32"
-                      min={1}
-                      max={100}
-                    />
-                    <span className="text-lg font-medium">%</span>
-                  </div>
-                </div>
-              )}
-
-              {selectedType === "fixed" && (
-                <div>
-                  <label className="text-sm font-medium mb-1 block">
-                    Discount Amount
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-medium">AED</span>
-                    <Input
-                      type="number"
-                      placeholder="50"
-                      className="w-32"
-                      min={1}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="text-sm font-medium mb-1 block">
-                  Minimum Deal Value (Optional)
-                </label>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">AED</span>
-                  <Input
-                    type="number"
-                    placeholder="100"
-                    className="w-32"
-                    min={0}
-                  />
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* Applies To */}
-          <Card className="p-6">
-            <h2 className="font-semibold mb-4">Applies To</h2>
-            <div className="space-y-4">
-              <div className="flex gap-2">
-                {APPLIES_TO_OPTIONS.map((option) => (
-                  <Button
-                    key={option.id}
-                    variant={appliesTo === option.id ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setAppliesTo(option.id)}
+      {/* Step 2: Choose Duration */}
+      {step === 2 && (
+        <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <Card className="p-6">
+              <h2 className="font-semibold mb-4">Choose boost duration</h2>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {DURATIONS.map((d) => (
+                  <div
+                    key={d.days}
+                    onClick={() => setSelectedDuration(d.days)}
                     className={cn(
-                      appliesTo === option.id &&
-                        "bg-moulna-gold hover:bg-moulna-gold-dark"
+                      "p-5 rounded-lg border-2 cursor-pointer transition-all relative",
+                      selectedDuration === d.days
+                        ? "border-moulna-gold bg-moulna-gold/5"
+                        : "border-muted hover:border-moulna-gold/50"
                     )}
                   >
-                    {option.label}
-                  </Button>
+                    {d.popular && (
+                      <Badge variant="sponsored" className="absolute -top-2.5 right-3 text-xs">
+                        Popular
+                      </Badge>
+                    )}
+                    <h3 className="text-xl font-bold mb-1">{d.label}</h3>
+                    <p className="text-sm text-muted-foreground mb-3">{d.description}</p>
+                    <p className="text-lg font-semibold text-moulna-gold">
+                      {formatAED(PRICE_PER_DAY_FILS * d.days)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatAED(PRICE_PER_DAY_FILS)}/day
+                    </p>
+                    {selectedDuration === d.days && (
+                      <CheckCircle className="absolute top-4 right-4 w-5 h-5 text-moulna-gold" />
+                    )}
+                  </div>
                 ))}
               </div>
-
-              {appliesTo === "category" && (
-                <div className="p-4 bg-muted/50 rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Select categories:
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {["Oud", "Perfumes", "Bakhoor", "Gift Sets"].map((cat) => (
-                      <Badge
-                        key={cat}
-                        variant="outline"
-                        className="cursor-pointer hover:bg-moulna-gold/10"
-                      >
-                        {cat}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {appliesTo === "products" && (
-                <div className="p-4 bg-muted/50 rounded-lg">
-                  <Input placeholder="Search products to add..." />
-                </div>
-              )}
-            </div>
-          </Card>
-
-          {/* Schedule */}
-          <Card className="p-6">
-            <h2 className="font-semibold mb-4">Schedule</h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-1 block">
-                  Start Date
-                </label>
-                <Input type="datetime-local" />
+              <div className="flex gap-3 mt-6">
+                <Button variant="outline" onClick={() => setStep(1)}>
+                  Back
+                </Button>
+                <Button
+                  className="bg-moulna-gold hover:bg-moulna-gold-dark"
+                  onClick={() => setStep(3)}
+                >
+                  Continue
+                </Button>
               </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">
-                  End Date
-                </label>
-                <Input type="datetime-local" />
-              </div>
-            </div>
-          </Card>
-
-          {/* Limits */}
-          <Card className="p-6">
-            <h2 className="font-semibold mb-4">Usage Limits</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Limit total uses</p>
-                  <p className="text-sm text-muted-foreground">
-                    Maximum number of times this promotion can be used
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch />
-                  <Input
-                    type="number"
-                    placeholder="100"
-                    className="w-24"
-                    min={1}
-                  />
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Limit per customer</p>
-                  <p className="text-sm text-muted-foreground">
-                    Maximum uses per customer
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch defaultChecked />
-                  <Input
-                    type="number"
-                    defaultValue="1"
-                    className="w-24"
-                    min={1}
-                  />
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Preview */}
-          <Card className="p-6">
-            <h3 className="font-semibold mb-4">Preview</h3>
-            <div className="p-4 bg-gradient-to-br from-moulna-gold/20 to-amber-50 rounded-lg text-center">
-              <Percent className="w-12 h-12 text-moulna-gold mx-auto mb-3" />
-              <p className="font-bold text-xl mb-1">20% OFF</p>
-              <p className="text-sm text-muted-foreground">All Products</p>
-              <Badge className="mt-3 bg-moulna-gold">SUMMER20</Badge>
-            </div>
-          </Card>
-
-          {/* Tips */}
-          <Card className="p-6 bg-blue-50 border-blue-200">
-            <div className="flex items-start gap-3">
-              <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-semibold text-blue-900 mb-2">Tips</h3>
-                <ul className="text-sm text-blue-800 space-y-2">
-                  <li>• Use clear, memorable promotion codes</li>
-                  <li>• Set reasonable minimum deal values</li>
-                  <li>• Time promotions with holidays or events</li>
-                  <li>• Promote your deals on social media</li>
-                </ul>
-              </div>
-            </div>
-          </Card>
-
-          {/* Actions */}
-          <div className="space-y-3">
-            <Button className="w-full bg-moulna-gold hover:bg-moulna-gold-dark">
-              <Zap className="w-4 h-4 me-2" />
-              Create Promotion
-            </Button>
-            <Button variant="outline" className="w-full">
-              Save as Draft
-            </Button>
+            </Card>
           </div>
+
+          {/* Selected Product Sidebar */}
+          <Card className="p-6 h-fit">
+            <h3 className="font-semibold mb-3">Selected Product</h3>
+            {selectedProduct && (
+              <div>
+                <div className="aspect-square rounded-lg overflow-hidden bg-muted mb-3 relative">
+                  {selectedProduct.images[0] ? (
+                    <Image
+                      src={selectedProduct.images[0]}
+                      alt={selectedProduct.title}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Package className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+                <h4 className="font-medium line-clamp-2">{selectedProduct.title}</h4>
+                <p className="text-sm text-moulna-gold font-semibold">
+                  {formatAED(selectedProduct.price_fils)}
+                </p>
+                <button
+                  onClick={() => setStep(1)}
+                  className="text-xs text-blue-500 hover:underline mt-2"
+                >
+                  Change product
+                </button>
+              </div>
+            )}
+          </Card>
         </div>
-      </div>
+      )}
+
+      {/* Step 3: Confirm & Pay */}
+      {step === 3 && selectedProduct && (
+        <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <Card className="p-6">
+              <h2 className="font-semibold mb-6">Boost Summary</h2>
+
+              <div className="space-y-4">
+                <div className="flex justify-between py-3 border-b">
+                  <span className="text-muted-foreground">Product</span>
+                  <span className="font-medium">{selectedProduct.title}</span>
+                </div>
+                <div className="flex justify-between py-3 border-b">
+                  <span className="text-muted-foreground">Duration</span>
+                  <span className="font-medium">{selectedDuration} days</span>
+                </div>
+                <div className="flex justify-between py-3 border-b">
+                  <span className="text-muted-foreground">Rate</span>
+                  <span>{formatAED(PRICE_PER_DAY_FILS)}/day</span>
+                </div>
+                <div className="flex justify-between py-3 text-lg">
+                  <span className="font-semibold">Total</span>
+                  <span className="font-bold text-moulna-gold">{formatAED(totalFils)}</span>
+                </div>
+              </div>
+
+              {error && (
+                <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex gap-3 mt-6">
+                <Button variant="outline" onClick={() => setStep(2)}>
+                  Back
+                </Button>
+                <Button
+                  className="bg-moulna-gold hover:bg-moulna-gold-dark flex-1"
+                  onClick={handleCheckout}
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                      Redirecting to Stripe...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 me-2" />
+                      Proceed to Payment — {formatAED(totalFils)}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </Card>
+          </div>
+
+          {/* What you get */}
+          <Card className="p-6 h-fit bg-moulna-gold/5 border-moulna-gold/20">
+            <h3 className="font-semibold mb-4 flex items-center gap-2">
+              <Rocket className="w-5 h-5 text-moulna-gold" />
+              What you get
+            </h3>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                <span>Your product appears at the top of explore &amp; search results</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                <span>Eye-catching &quot;Sponsored&quot; golden badge</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                <span>Impression &amp; click tracking on your promotions dashboard</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                <span>Boost starts immediately after payment</span>
+              </li>
+            </ul>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

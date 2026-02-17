@@ -55,11 +55,16 @@ export function DailyChallenge({
           {/* Content */}
           <div className="flex-1 min-w-0">
             <p className={cn(
-              "font-medium",
+              "font-medium text-sm",
               challenge.completed && "line-through text-muted-foreground"
             )}>
               {challenge.task}
             </p>
+            {challenge.description && (
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {challenge.description}
+              </p>
+            )}
 
             {/* Progress bar if applicable */}
             {challenge.target && !challenge.completed && (
@@ -89,20 +94,23 @@ export function DailyChallenge({
   );
 }
 
-// Panel showing all daily challenges
+// Panel showing daily challenges
 interface DailyChallengePanelProps {
   challenges: DailyChallengeType[];
+  maxItems?: number;
   refreshTime?: string;
   className?: string;
 }
 
 export function DailyChallengePanel({
   challenges,
+  maxItems,
   refreshTime = "8h 23m",
   className,
 }: DailyChallengePanelProps) {
   const completedCount = challenges.filter((c) => c.completed).length;
   const totalXP = challenges.reduce((sum, c) => sum + c.xp, 0);
+  const displayed = maxItems ? challenges.slice(0, maxItems) : challenges;
 
   return (
     <Card className={cn("p-5", className)}>
@@ -122,7 +130,7 @@ export function DailyChallengePanel({
       {/* Progress */}
       <div className="mb-4">
         <Progress
-          value={(completedCount / challenges.length) * 100}
+          value={challenges.length > 0 ? (completedCount / challenges.length) * 100 : 0}
           className="h-2"
           indicatorClassName="bg-gradient-to-r from-moulna-gold to-moulna-gold-light"
         />
@@ -130,7 +138,7 @@ export function DailyChallengePanel({
 
       {/* Challenges */}
       <div className="space-y-3">
-        {challenges.map((challenge) => (
+        {displayed.map((challenge) => (
           <DailyChallenge
             key={challenge.id}
             challenge={challenge}

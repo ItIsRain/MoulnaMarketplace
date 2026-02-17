@@ -56,6 +56,7 @@ export interface Level {
 export interface DailyChallenge {
   id: string;
   task: string;
+  description?: string;
   xp: number;
   icon: string;
   completed: boolean;
@@ -86,8 +87,8 @@ export interface ProductSeller {
   slug: string;
   avatarStyle: string;
   avatarSeed?: string;
+  logoUrl?: string;
   level: number;
-  rating: number;
   totalListings: number;
   location?: string;
   isVerified: boolean;
@@ -95,7 +96,7 @@ export interface ProductSeller {
 }
 
 // Product Types
-export type ProductStatus = 'active' | 'draft' | 'sold' | 'expired' | 'hidden';
+export type ProductStatus = 'active' | 'draft' | 'expired' | 'hidden';
 export type ProductCondition = 'new' | 'like_new' | 'good' | 'fair';
 
 export interface Product {
@@ -124,16 +125,16 @@ export interface Product {
   processingTime?: string;
   meetupPreference?: string;
   isHandmade: boolean;
+  customFields?: CustomField[];
   inquiryCount: number;
   viewCount: number;
   xpReward: number;
-  rating: number;
-  reviewCount: number;
   seller: ProductSeller;
   badges: ProductBadge[];
   // Derived fields (not stored in DB)
   isTrending: boolean;
   isNew: boolean;
+  isSponsored: boolean;
   available: boolean;
   createdAt: string;
   updatedAt: string;
@@ -145,7 +146,15 @@ export interface ProductVariant {
   options: string[];
 }
 
-export type ProductBadge = 'trending' | 'new' | 'flash-deal' | 'handmade' | 'top-seller';
+export interface CustomField {
+  id: string;
+  label: string;
+  type: "text" | "boolean" | "select";
+  value: string;
+  options?: string[];
+}
+
+export type ProductBadge = 'trending' | 'new' | 'flash-deal' | 'handmade' | 'top-seller' | 'sponsored';
 
 export interface Category {
   id: string;
@@ -188,33 +197,44 @@ export interface Shop {
   policies: Record<string, string>;
   branding: Record<string, string>;
   listingPreferences: Record<string, unknown>;
-  rating: number;
-  reviewCount: number;
   totalListings: number;
   followerCount: number;
   isVerified: boolean;
   isArtisan: boolean;
   responseTime?: string;
-  videoUrl?: string;
-  galleryImages: string[];
+  workshopSections: WorkshopSection[];
   createdAt: string;
   updatedAt: string;
 }
 
 export interface StorySection {
   id: string;
-  type: 'text' | 'image' | 'quote';
+  type: 'text' | 'image' | 'quote' | 'video' | 'heading' | 'divider' | 'callout' | 'gallery';
   title?: string;
   content?: string;
   imageUrl?: string;
+  videoUrl?: string;
   caption?: string;
   author?: string;
+  images?: string[];
+  icon?: string;
 }
 
 export interface Milestone {
   year: string;
   title: string;
   description: string;
+}
+
+export interface WorkshopSection {
+  id: string;
+  type: 'image' | 'video' | 'gallery' | 'text';
+  title?: string;
+  content?: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  caption?: string;
+  images?: string[];
 }
 
 // Seller/Shop Types (legacy, used by Product)
@@ -229,9 +249,7 @@ export interface Seller {
   logo?: string;
   level: number;
   xp: number;
-  rating: number;
   totalListings: number;
-  totalReviews: number;
   badges: Badge[];
   location: string;
   joinDate: string;
@@ -254,7 +272,7 @@ export interface Inquiry {
   xpEarned: number;
 }
 
-export type InquiryStatus = 'new' | 'replied' | 'archived' | 'sold';
+export type InquiryStatus = 'new' | 'replied' | 'archived';
 
 export interface Address {
   id: string;
@@ -267,20 +285,6 @@ export interface Address {
   apartment?: string;
   landmark?: string;
   isDefault: boolean;
-}
-
-// Review Types
-export interface Review {
-  id: string;
-  product: Product;
-  buyer: User;
-  rating: number;
-  text: string;
-  photos: string[];
-  helpfulCount: number;
-  sellerResponse?: string;
-  createdAt: string;
-  xpEarned: number;
 }
 
 // Notification Types

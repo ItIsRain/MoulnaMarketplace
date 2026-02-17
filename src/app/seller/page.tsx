@@ -8,25 +8,68 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DailyChallengePanel } from "@/components/gamification/DailyChallenge";
 import {
-  Package, Inbox, TrendingUp, Star, MessageSquare,
+  Package, Inbox, TrendingUp, MessageSquare,
   Eye, Users, ChevronRight,
-  Sparkles, Clock, Wallet, Plus,
+  Sparkles, Clock, Plus,
   ShieldAlert, ShieldCheck, Loader2
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import type { DailyChallenge } from "@/lib/types";
 
-const SELLER_CHALLENGES: DailyChallenge[] = [
-  { id: "ch_1", task: "Create your first listing", xp: 50, icon: "✨", completed: false },
-  { id: "ch_2", task: "Set up your shop profile", xp: 40, icon: "🏪", completed: false },
-  { id: "ch_3", task: "Complete ID verification", xp: 30, icon: "🛡️", completed: false },
-];
+interface DashStats {
+  totalListings: number;
+  unreadMessages: number;
+  totalViews: number;
+  totalFollowers: number;
+}
 
 export default function SellerDashboard() {
   const { user, fetchProfile } = useAuthStore();
   const [kycLoading, setKycLoading] = React.useState(false);
+  const [dashStats, setDashStats] = React.useState<DashStats>({ totalListings: 0, unreadMessages: 0, totalViews: 0, totalFollowers: 0 });
+  const [challenges, setChallenges] = React.useState<DailyChallenge[]>([]);
 
   const kycStatus = user?.kycStatus || "none";
+
+  // Fetch seller challenges
+  React.useEffect(() => {
+    fetch("/api/challenges?audience=seller")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.challenges) {
+          setChallenges(
+            data.challenges.map((c: { id: string; title: string; description: string; xp: number; icon: string; completed: boolean; progress?: number; target?: number }) => ({
+              id: c.id,
+              task: c.title,
+              description: c.description,
+              xp: c.xp,
+              icon: c.icon,
+              completed: c.completed,
+              progress: c.progress,
+              target: c.target,
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Fetch real dashboard stats
+  React.useEffect(() => {
+    fetch("/api/seller/analytics")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.stats) {
+          setDashStats({
+            totalListings: data.stats.totalListings || 0,
+            unreadMessages: data.stats.unreadMessages || 0,
+            totalViews: data.stats.totalViews || 0,
+            totalFollowers: data.stats.totalFollowers || 0,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Auto-check KYC status from Didit when not yet approved
   React.useEffect(() => {
@@ -154,10 +197,10 @@ export default function SellerDashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Listings", value: 0, icon: Package, color: "text-blue-500" },
-          { label: "Messages", value: 0, icon: MessageSquare, color: "text-emerald-500" },
-          { label: "Shop Views", value: 0, icon: Eye, color: "text-purple-500" },
-          { label: "Followers", value: 0, icon: Users, color: "text-moulna-gold" },
+          { label: "Listings", value: dashStats.totalListings, icon: Package, color: "text-blue-500" },
+          { label: "Messages", value: dashStats.unreadMessages, icon: MessageSquare, color: "text-emerald-500" },
+          { label: "Shop Views", value: dashStats.totalViews, icon: Eye, color: "text-purple-500" },
+          { label: "Followers", value: dashStats.totalFollowers, icon: Users, color: "text-moulna-gold" },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -181,34 +224,6 @@ export default function SellerDashboard() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Sales Revenue */}
-          <Card className="p-6 border-moulna-gold/30">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-moulna-gold/10 text-moulna-gold">
-                <Wallet className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="font-display text-lg font-semibold">Sales Revenue</h2>
-                <p className="text-xs text-muted-foreground">From marked-as-sold listings</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-lg bg-muted/50 text-center">
-                <p className="text-2xl font-bold text-moulna-gold">AED 0</p>
-                <p className="text-xs text-muted-foreground">Total Sales</p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/50 text-center">
-                <p className="text-2xl font-bold">0</p>
-                <p className="text-xs text-muted-foreground">Sales This Month</p>
-              </div>
-            </div>
-            <Button variant="outline" size="sm" className="w-full mt-4" asChild>
-              <Link href="/seller/finances">
-                View All Sales <ChevronRight className="w-4 h-4 ms-1" />
-              </Link>
-            </Button>
-          </Card>
-
           {/* Recent Inquiries — Empty State */}
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
@@ -240,12 +255,7 @@ export default function SellerDashboard() {
           {/* Performance Overview */}
           <Card className="p-6">
             <h2 className="font-display text-lg font-semibold mb-4">Performance Overview</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 rounded-lg bg-muted/50">
-                <Star className="w-6 h-6 mx-auto mb-2 text-yellow-500" />
-                <p className="text-2xl font-bold">-</p>
-                <p className="text-sm text-muted-foreground">Rating</p>
-              </div>
+            <div className="grid grid-cols-3 gap-4">
               <div className="text-center p-4 rounded-lg bg-muted/50">
                 <Clock className="w-6 h-6 mx-auto mb-2 text-blue-500" />
                 <p className="text-2xl font-bold">-</p>
@@ -268,7 +278,7 @@ export default function SellerDashboard() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Daily Challenges */}
-          <DailyChallengePanel challenges={SELLER_CHALLENGES} />
+          <DailyChallengePanel challenges={challenges} maxItems={3} />
 
           {/* Quick Stats */}
           <Card className="p-6 bg-gradient-to-br from-moulna-gold/10 to-transparent">

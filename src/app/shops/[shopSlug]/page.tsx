@@ -13,24 +13,17 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
-import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
+import { ShopAvatar } from "@/components/avatar/ShopAvatar";
 import type { Shop, Product } from "@/lib/types";
 import {
   Star, Share2, MapPin, Calendar, MessageCircle, UserPlus,
   Award, Package, Shield, Clock, Instagram, Facebook, Twitter,
-  Youtube, Globe, Mail, Phone, Loader2, Store, Play, X, Quote,
-  Pencil, FileText, ImageIcon, Video, Milestone,
+  Youtube, Globe, Mail, Phone, Loader2, Store, X, Quote,
+  Pencil, FileText, ImageIcon, Milestone, Info,
 } from "lucide-react";
+import { useTracking } from "@/hooks/useTracking";
 
 // ─── Helpers ───
-
-function getEmbedUrl(url: string): string {
-  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
-  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
-  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
-  return url;
-}
 
 function formatPrice(fils: number): string {
   return `AED ${(fils / 100).toFixed(2)}`;
@@ -94,6 +87,7 @@ export default function ShopPage() {
   const params = useParams();
   const shopSlug = params.shopSlug as string;
 
+  const { trackEvent } = useTracking();
   const [shop, setShop] = React.useState<Shop | null>(null);
   const [products, setProducts] = React.useState<Product[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -122,6 +116,13 @@ export default function ShopPage() {
     if (shopSlug) loadShop();
   }, [shopSlug]);
 
+  // Track shop view for challenge progress
+  React.useEffect(() => {
+    if (shop) {
+      trackEvent("shop_viewed", shop.slug);
+    }
+  }, [shop, trackEvent]);
+
   React.useEffect(() => {
     if (!shop) return;
     fetch(`/api/products?shop=${shop.slug}&limit=8`)
@@ -136,7 +137,7 @@ export default function ShopPage() {
     const hasAbout = !!shop.description || shop.coreValues.length > 0;
     const hasStory = shop.storySections.length > 0;
     const hasMilestones = shop.milestones.length > 0;
-    const hasWorkshop = !!shop.videoUrl || shop.galleryImages.length > 0;
+    const hasWorkshop = shop.workshopSections.length > 0;
 
     const t: TabDef[] = [];
     if (hasAbout || isOwner) t.push({ id: "about", label: "About" });
@@ -144,7 +145,6 @@ export default function ShopPage() {
     if (hasMilestones || isOwner) t.push({ id: "milestones", label: "Journey" });
     if (hasWorkshop || isOwner) t.push({ id: "workshop", label: "Workshop" });
     t.push({ id: "products", label: "Products" });
-    t.push({ id: "reviews", label: "Reviews" });
     t.push({ id: "contact", label: "Contact" });
     return t;
   }, [shop, isOwner]);
@@ -219,7 +219,7 @@ export default function ShopPage() {
   const hasAbout = !!shop.description || shop.coreValues.length > 0;
   const hasStory = shop.storySections.length > 0;
   const hasMilestones = shop.milestones.length > 0;
-  const hasWorkshop = !!shop.videoUrl || shop.galleryImages.length > 0;
+  const hasWorkshop = shop.workshopSections.length > 0;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -227,7 +227,7 @@ export default function ShopPage() {
 
       <main className="flex-1">
         {/* ═══════════ HERO ═══════════ */}
-        <section className="relative h-[70vh] min-h-[480px] flex items-end">
+        <section className="relative h-[70vh] min-h-[320px] md:min-h-[480px] flex items-end">
           {shop.bannerUrl ? (
             <Image src={shop.bannerUrl} alt={shop.name} fill className="object-cover" priority />
           ) : (
@@ -238,16 +238,18 @@ export default function ShopPage() {
           <div className="relative z-10 w-full pb-12 pt-20">
             <div className="container mx-auto px-4 text-center text-white">
               <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
-                <DiceBearAvatar
-                  seed={shop.avatarSeed || shop.slug}
-                  style={shop.avatarStyle || "adventurer"}
+                <ShopAvatar
+                  logoUrl={shop.logoUrl}
+                  avatarSeed={shop.avatarSeed || shop.slug}
+                  avatarStyle={shop.avatarStyle}
+                  name={shop.name}
                   size="3xl"
                   className="mx-auto border-4 border-white/20 shadow-2xl mb-4"
                 />
               </motion.div>
 
               <motion.h1
-                className="font-display text-3xl md:text-5xl font-bold mb-2"
+                className="font-display text-2xl sm:text-3xl md:text-5xl font-bold mb-2"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
@@ -278,9 +280,9 @@ export default function ShopPage() {
                   </Badge>
                 )}
                 {shop.isVerified && (
-                  <Badge variant="gold">
+                  <Badge variant="verified">
                     <Shield className="w-3 h-3 me-1" />
-                    Verified
+                    ID Verified
                   </Badge>
                 )}
                 {shop.isArtisan && (
@@ -297,11 +299,6 @@ export default function ShopPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
               >
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 fill-moulna-gold text-moulna-gold" />
-                  <span className="font-medium">{shop.rating}</span>
-                  <span className="text-white/60">({shop.reviewCount})</span>
-                </div>
                 <div className="flex items-center gap-1 text-white/70">
                   <Package className="w-4 h-4" />
                   <span>{shop.totalListings} products</span>
@@ -451,6 +448,46 @@ export default function ShopPage() {
                             {section.author && <cite className="text-sm text-muted-foreground not-italic">&mdash; {section.author}</cite>}
                           </blockquote>
                         )}
+                        {section.type === "heading" && section.title && (
+                          <div className="max-w-3xl mx-auto text-center">
+                            <h3 className="font-display text-2xl md:text-3xl font-bold">{section.title}</h3>
+                          </div>
+                        )}
+                        {section.type === "divider" && (
+                          <div className="max-w-xl mx-auto">
+                            <Separator className="bg-moulna-gold/20" />
+                          </div>
+                        )}
+                        {section.type === "callout" && (
+                          <div className="max-w-3xl mx-auto">
+                            <Card className="p-6 md:p-8 border-2 border-moulna-gold/20 bg-moulna-gold/5">
+                              <div className="flex items-start gap-4">
+                                <Info className="w-6 h-6 text-moulna-gold flex-shrink-0 mt-0.5" />
+                                <div>
+                                  {section.title && <h4 className="font-semibold text-lg mb-2">{section.title}</h4>}
+                                  {section.content && <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{section.content}</p>}
+                                </div>
+                              </div>
+                            </Card>
+                          </div>
+                        )}
+                        {section.type === "gallery" && (section.images?.length ?? 0) > 0 && (
+                          <div className="max-w-4xl mx-auto">
+                            {section.title && <h3 className="font-display text-xl md:text-2xl font-bold mb-6 text-center">{section.title}</h3>}
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
+                              {section.images!.map((img, imgIdx) => (
+                                <button
+                                  key={imgIdx}
+                                  className="relative aspect-square rounded-xl overflow-hidden group cursor-pointer"
+                                  onClick={() => setLightboxImage(img)}
+                                >
+                                  <Image src={img} alt={section.title || `Gallery ${imgIdx + 1}`} fill className="object-cover transition-transform duration-300 group-hover:scale-110" />
+                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -473,17 +510,98 @@ export default function ShopPage() {
                 <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-12">Our Journey</h2>
 
                 {hasMilestones ? (
-                  <div className="max-w-3xl mx-auto relative">
-                    <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-0.5 bg-moulna-gold/20 -translate-x-1/2" />
-                    {shop.milestones.map((ms, i) => (
-                      <div key={i} className={cn("relative flex items-start gap-6 mb-12", i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse")}>
-                        <div className="flex-shrink-0 w-12 h-12 rounded-full bg-moulna-gold text-white flex items-center justify-center text-sm font-bold z-10 shadow-md md:absolute md:left-1/2 md:-translate-x-1/2">{ms.year}</div>
-                        <Card className={cn("flex-1 p-5 md:w-[calc(50%-3rem)]", i % 2 === 0 ? "md:me-auto md:pe-8" : "md:ms-auto md:ps-8")}>
-                          <h4 className="font-semibold mb-1">{ms.title}</h4>
-                          <p className="text-sm text-muted-foreground">{ms.description}</p>
-                        </Card>
+                  <div className="max-w-3xl mx-auto">
+                    {/* Mobile: single-column timeline */}
+                    <div className="md:hidden relative ps-10">
+                      {/* Vertical line */}
+                      <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-moulna-gold via-moulna-gold/40 to-moulna-gold/10" />
+
+                      {shop.milestones.map((ms, i) => (
+                        <div key={i} className="relative pb-10 last:pb-0">
+                          {/* Dot on the line */}
+                          <div className="absolute -left-10 top-0 w-[30px] flex justify-center">
+                            <div className="w-3 h-3 rounded-full bg-moulna-gold ring-4 ring-moulna-gold/10" />
+                          </div>
+
+                          <div className="bg-card border rounded-xl p-4 shadow-sm">
+                            <span className="inline-block text-xs font-bold text-moulna-gold bg-moulna-gold/10 px-2.5 py-1 rounded-full mb-2">
+                              {ms.year}
+                            </span>
+                            <h4 className="font-semibold mb-1">{ms.title}</h4>
+                            <p className="text-sm text-muted-foreground leading-relaxed">{ms.description}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Desktop: alternating zigzag timeline */}
+                    <div className="hidden md:block relative">
+                      {/* Center vertical line */}
+                      <div className="absolute left-1/2 top-0 bottom-0 w-0.5 -translate-x-1/2 bg-gradient-to-b from-moulna-gold via-moulna-gold/40 to-moulna-gold/10" />
+
+                      {shop.milestones.map((ms, i) => {
+                        const isLeft = i % 2 === 0;
+                        return (
+                          <div key={i} className="relative flex items-center mb-16 last:mb-0">
+                            {/* Left content or spacer */}
+                            <div className={cn("w-[calc(50%-2rem)]", isLeft ? "text-right pr-8" : "")} >
+                              {isLeft && (
+                                <motion.div
+                                  initial={{ opacity: 0, x: -30 }}
+                                  whileInView={{ opacity: 1, x: 0 }}
+                                  viewport={{ once: true, margin: "-50px" }}
+                                  transition={{ duration: 0.4, delay: i * 0.1 }}
+                                >
+                                  <div className="bg-card border rounded-xl p-5 shadow-sm inline-block text-left">
+                                    <span className="inline-block text-xs font-bold text-moulna-gold bg-moulna-gold/10 px-2.5 py-1 rounded-full mb-2">
+                                      {ms.year}
+                                    </span>
+                                    <h4 className="font-semibold mb-1">{ms.title}</h4>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">{ms.description}</p>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </div>
+
+                            {/* Center dot */}
+                            <div className="absolute left-1/2 -translate-x-1/2 z-10">
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                whileInView={{ scale: 1 }}
+                                viewport={{ once: true, margin: "-50px" }}
+                                transition={{ duration: 0.3, delay: i * 0.1 }}
+                                className="w-4 h-4 rounded-full bg-moulna-gold ring-4 ring-background shadow-lg shadow-moulna-gold/20"
+                              />
+                            </div>
+
+                            {/* Right content or spacer */}
+                            <div className={cn("w-[calc(50%-2rem)]", !isLeft ? "pl-8" : "")}>
+                              {!isLeft && (
+                                <motion.div
+                                  initial={{ opacity: 0, x: 30 }}
+                                  whileInView={{ opacity: 1, x: 0 }}
+                                  viewport={{ once: true, margin: "-50px" }}
+                                  transition={{ duration: 0.4, delay: i * 0.1 }}
+                                >
+                                  <div className="bg-card border rounded-xl p-5 shadow-sm">
+                                    <span className="inline-block text-xs font-bold text-moulna-gold bg-moulna-gold/10 px-2.5 py-1 rounded-full mb-2">
+                                      {ms.year}
+                                    </span>
+                                    <h4 className="font-semibold mb-1">{ms.title}</h4>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">{ms.description}</p>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {/* End cap dot */}
+                      <div className="absolute left-1/2 -translate-x-1/2 -bottom-2">
+                        <div className="w-2.5 h-2.5 rounded-full bg-moulna-gold/30" />
                       </div>
-                    ))}
+                    </div>
                   </div>
                 ) : (
                   <OwnerPlaceholder icon={Milestone} title="Highlight key milestones" description="Show visitors the important moments in your shop's history — when you started, major achievements, and growth milestones." editHref="/seller/shop/story" editLabel="Add Milestones" />
@@ -499,38 +617,49 @@ export default function ShopPage() {
                 <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-12">Workshop</h2>
 
                 {hasWorkshop ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-1 md:gap-1.5">
-                    {/* Video tile first */}
-                    {shop.videoUrl && (
-                      <div className="relative aspect-square md:col-span-2 md:row-span-2 rounded-sm overflow-hidden group cursor-pointer bg-neutral-900">
-                        <iframe
-                          src={getEmbedUrl(shop.videoUrl)}
-                          title={`${shop.name} video`}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          className="absolute inset-0 w-full h-full"
-                        />
-                        <div className="absolute top-3 left-3 bg-black/60 rounded-full p-1.5 pointer-events-none">
-                          <Play className="w-4 h-4 text-white fill-white" />
-                        </div>
+                  <div className="space-y-16">
+                    {shop.workshopSections.map((section, i) => (
+                      <div key={section.id || i}>
+                        {section.type === "text" && (
+                          <div className="max-w-3xl mx-auto">
+                            {section.title && <h3 className="font-display text-xl md:text-2xl font-bold mb-4">{section.title}</h3>}
+                            {section.content && <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{section.content}</p>}
+                          </div>
+                        )}
+                        {section.type === "image" && section.imageUrl && (
+                          <div className="max-w-4xl mx-auto">
+                            <div className="relative aspect-video rounded-xl overflow-hidden shadow-lg">
+                              <Image src={section.imageUrl} alt={section.caption || ""} fill className="object-cover" />
+                            </div>
+                            {section.caption && <p className="text-center text-sm text-muted-foreground mt-3">{section.caption}</p>}
+                          </div>
+                        )}
+                        {section.type === "video" && section.videoUrl && (
+                          <div className="max-w-4xl mx-auto">
+                            <div className="relative aspect-video rounded-xl overflow-hidden shadow-lg bg-black">
+                              <video src={section.videoUrl} controls className="w-full h-full" />
+                            </div>
+                            {section.caption && <p className="text-center text-sm text-muted-foreground mt-3">{section.caption}</p>}
+                          </div>
+                        )}
+                        {section.type === "gallery" && (section.images?.length ?? 0) > 0 && (
+                          <div className="max-w-4xl mx-auto">
+                            {section.title && <h3 className="font-display text-xl md:text-2xl font-bold mb-6 text-center">{section.title}</h3>}
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
+                              {section.images!.map((img, imgIdx) => (
+                                <button
+                                  key={imgIdx}
+                                  className="relative aspect-square rounded-xl overflow-hidden group cursor-pointer"
+                                  onClick={() => setLightboxImage(img)}
+                                >
+                                  <Image src={img} alt={section.title || `Workshop ${imgIdx + 1}`} fill className="object-cover transition-transform duration-300 group-hover:scale-110" />
+                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
-
-                    {/* Gallery images */}
-                    {shop.galleryImages.map((img, i) => (
-                      <button
-                        key={i}
-                        className="relative aspect-square rounded-sm overflow-hidden group cursor-pointer"
-                        onClick={() => setLightboxImage(img)}
-                      >
-                        <Image
-                          src={img}
-                          alt={`${shop.name} workshop ${i + 1}`}
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-110"
-                        />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                      </button>
                     ))}
                   </div>
                 ) : (
@@ -539,7 +668,7 @@ export default function ShopPage() {
                     title="Showcase your workshop"
                     description="Upload photos and videos of your products, workspace, materials, or anything that shows the quality and care behind your brand."
                     editHref="/seller/shop/gallery"
-                    editLabel="Upload Media"
+                    editLabel="Set Up Workshop"
                   />
                 )}
               </div>
@@ -566,7 +695,7 @@ export default function ShopPage() {
                               </div>
                             )}
                             {product.badges.length > 0 && (
-                              <div className="absolute top-2 left-2 flex flex-col gap-1">
+                              <div className="absolute top-2 left-2 flex flex-col items-start gap-1">
                                 {product.badges.slice(0, 2).map((badge) => (
                                   <Badge key={badge} variant={badge as "trending" | "new" | "handmade"} className="text-[10px]">
                                     {badge === "trending" ? "Trending" : badge === "new" ? "New" : badge === "handmade" ? "Handmade" : badge}
@@ -577,7 +706,7 @@ export default function ShopPage() {
                           </div>
                           <div className="p-3">
                             <div className="flex items-center gap-1.5 mb-1">
-                              <DiceBearAvatar seed={product.seller.avatarSeed || product.seller.slug} style={product.seller.avatarStyle} size="xs" />
+                              <ShopAvatar avatarSeed={product.seller.avatarSeed || product.seller.slug} avatarStyle={product.seller.avatarStyle} name={product.seller.name} size="xs" />
                               <span className="text-xs text-muted-foreground truncate">{product.seller.name}</span>
                             </div>
                             <h3 className="font-medium text-sm line-clamp-2 mb-1 group-hover:text-moulna-gold transition-colors">{product.title}</h3>
@@ -601,41 +730,6 @@ export default function ShopPage() {
                     <p className="text-sm text-muted-foreground">This shop hasn&apos;t listed any products yet. Check back soon!</p>
                   </Card>
                 )}
-              </div>
-            </motion.section>
-          )}
-
-          {/* ── REVIEWS ── */}
-          {activeTab === "reviews" && (
-            <motion.section key="reviews" variants={fadeIn} initial="hidden" animate="visible" exit="exit" className="py-16 md:py-24 bg-background">
-              <div className="container mx-auto px-4">
-                <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-12">Customer Reviews</h2>
-
-                <div className="max-w-2xl mx-auto">
-                  <Card className="p-6 md:p-8">
-                    <div className="flex items-center gap-8">
-                      <div className="text-center">
-                        <div className="text-5xl font-bold mb-2">{shop.rating}</div>
-                        <div className="flex justify-center mb-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star key={star} className={cn("w-5 h-5", star <= Math.round(shop.rating) ? "fill-moulna-gold text-moulna-gold" : "text-muted")} />
-                          ))}
-                        </div>
-                        <p className="text-sm text-muted-foreground">{shop.reviewCount} reviews</p>
-                      </div>
-                      <Separator orientation="vertical" className="h-24" />
-                      <div className="flex-1 space-y-2">
-                        {[5, 4, 3, 2, 1].map((stars) => (
-                          <div key={stars} className="flex items-center gap-3">
-                            <span className="text-sm w-8">{stars} ★</span>
-                            <Progress value={0} className="flex-1 h-2" />
-                            <span className="text-sm text-muted-foreground w-12">0%</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </Card>
-                </div>
               </div>
             </motion.section>
           )}

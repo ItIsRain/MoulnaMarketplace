@@ -16,16 +16,18 @@ import {
   MapPin,
   Package,
   Trophy,
+  Shield,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
+import { ShopAvatar } from "@/components/avatar/ShopAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
 import { formatAED } from "@/lib/utils";
-import type { Product } from "@/lib/types";
+import { useAuthStore } from "@/store/useAuthStore";
+import type { Product, Shop } from "@/lib/types";
 
 // Animation variants
 const fadeInUp = {
@@ -177,61 +179,6 @@ function getCurrentCampaign(): SeasonalCampaign {
   return DEFAULT_CAMPAIGN;
 }
 
-// Mock data for sellers you follow
-const FOLLOWED_SELLERS = [
-  {
-    id: "shp_1",
-    name: "Scent of Arabia",
-    slug: "scent-of-arabia",
-    avatar: "scent-arabia",
-    level: 7,
-    rating: 4.9,
-    totalProducts: 28,
-    location: "Dubai",
-    category: "Perfumes & Oud",
-    image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400",
-    isVerified: true,
-  },
-  {
-    id: "shp_2",
-    name: "Khatt Studio",
-    slug: "khatt-studio",
-    avatar: "khatt-studio",
-    level: 6,
-    rating: 4.8,
-    totalProducts: 45,
-    location: "Sharjah",
-    category: "Arabic Calligraphy",
-    image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400",
-    isVerified: true,
-  },
-  {
-    id: "shp_3",
-    name: "Luxe Jewels",
-    slug: "luxe-jewels",
-    avatar: "luxe-jewels",
-    level: 8,
-    rating: 5.0,
-    totalProducts: 62,
-    location: "Abu Dhabi",
-    category: "Handmade Jewelry",
-    image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400",
-    isVerified: false,
-  },
-  {
-    id: "shp_4",
-    name: "Heritage Crafts",
-    slug: "heritage-crafts",
-    avatar: "heritage-crafts",
-    level: 5,
-    rating: 4.7,
-    totalProducts: 19,
-    location: "Dubai",
-    category: "Home Décor",
-    image: "https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=400",
-    isVerified: true,
-  },
-];
 
 // ─── Seasonal Banner Component ───
 
@@ -345,7 +292,7 @@ function TrendingSection() {
             whileInView="visible"
             viewport={{ once: true }}
             variants={staggerContainer}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
           >
             {products.map((product) => (
               <motion.div key={product.id} variants={scaleIn}>
@@ -368,7 +315,10 @@ function TrendingSection() {
                       <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center hover:bg-white transition-colors">
                         <Heart className="w-4 h-4" />
                       </button>
-                      <div className="absolute top-3 left-3 flex flex-col gap-1">
+                      <div className="absolute top-3 left-3 flex flex-col items-start gap-1">
+                        {product.isSponsored && (
+                          <Badge variant="sponsored">Sponsored</Badge>
+                        )}
                         {product.isTrending && (
                           <Badge variant="trending">Trending</Badge>
                         )}
@@ -387,9 +337,10 @@ function TrendingSection() {
 
                       {/* Seller */}
                       <div className="flex items-center gap-2 mb-2">
-                        <DiceBearAvatar
-                          seed={product.seller.avatarSeed || product.seller.name}
-                          style={product.seller.avatarStyle}
+                        <ShopAvatar
+                          avatarSeed={product.seller.avatarSeed || product.seller.name}
+                          avatarStyle={product.seller.avatarStyle}
+                          name={product.seller.name}
                           size="xs"
                         />
                         <span className="text-xs text-muted-foreground truncate">
@@ -421,6 +372,374 @@ function TrendingSection() {
   );
 }
 
+function FollowedSellersSection() {
+  const { isAuthenticated } = useAuthStore();
+  const [shops, setShops] = React.useState<Shop[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+    async function fetchFollowed() {
+      try {
+        const res = await fetch("/api/shops/following");
+        if (res.ok) {
+          const data = await res.json();
+          setShops(data.shops || []);
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchFollowed();
+  }, [isAuthenticated]);
+
+  // Don't show section if not logged in or not following anyone
+  if (!isAuthenticated || (!loading && shops.length === 0)) {
+    return null;
+  }
+
+  if (loading) {
+    return (
+      <section className="py-16 lg:py-24 bg-background">
+        <div className="container-app flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-moulna-gold" />
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="py-16 lg:py-24 bg-background">
+      <div className="container-app">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="flex items-end justify-between mb-8"
+        >
+          <div>
+            <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-2">
+              <Store className="w-5 h-5 text-moulna-gold" />
+              <span className="text-sm font-medium text-moulna-gold">Your Favorites</span>
+            </motion.div>
+            <motion.h2 variants={fadeInUp} className="text-3xl lg:text-4xl font-display font-bold">
+              Sellers You Follow
+            </motion.h2>
+          </div>
+          <motion.div variants={fadeInUp}>
+            <Link href="/explore/shops">
+              <Button variant="ghost" className="gap-1">
+                Browse All Sellers <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </motion.div>
+        </motion.div>
+
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
+        >
+          {shops.map((shop) => (
+            <motion.div key={shop.id} variants={scaleIn}>
+              <Link href={`/shops/${shop.slug}`}>
+                <Card hover className="overflow-hidden group">
+                  {/* Cover Image */}
+                  <div className="relative h-32 overflow-hidden">
+                    {shop.bannerUrl ? (
+                      <Image
+                        src={shop.bannerUrl}
+                        alt={shop.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-moulna-gold/20 via-amber-50 to-moulna-gold/10 group-hover:scale-105 transition-transform duration-300" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    {shop.isVerified && (
+                      <Badge variant="verified" className="absolute top-3 end-3 text-xs">
+                        <Shield className="w-3 h-3 me-1" />
+                        ID Verified
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Seller Info */}
+                  <div className="relative px-4 pb-4 pt-7">
+                    <div className="absolute -top-6 left-4">
+                      <ShopAvatar
+                        logoUrl={shop.logoUrl}
+                        avatarSeed={shop.avatarSeed || shop.slug}
+                        avatarStyle={shop.avatarStyle}
+                        name={shop.name}
+                        size="lg"
+                        className="border-2 border-background shadow-md"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex-1 min-w-0 ml-14">
+                        <h3 className="font-semibold truncate">{shop.name}</h3>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                      <span className="flex items-center gap-1">
+                        <Package className="w-3.5 h-3.5" />
+                        {shop.totalListings} listings
+                      </span>
+                      {shop.location && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5" />
+                          {shop.location}
+                        </span>
+                      )}
+                    </div>
+
+                    <Button variant="outline" size="sm" className="w-full gap-1">
+                      <UserPlus className="w-3.5 h-3.5" />
+                      Following
+                    </Button>
+                  </div>
+                </Card>
+              </Link>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Social Proof Bar (live stats) ───
+
+interface PlatformStats {
+  totalProducts: number;
+  totalSellers: number;
+  totalUsers: number;
+}
+
+function SocialProofBar() {
+  const [stats, setStats] = React.useState<PlatformStats | null>(null);
+
+  React.useEffect(() => {
+    fetch("/api/platform/stats")
+      .then((res) => res.json())
+      .then((data: PlatformStats) => setStats(data))
+      .catch(() => {});
+  }, []);
+
+  const fmt = (n: number) => n.toLocaleString() + "+";
+
+  return (
+    <section className="bg-card shadow-sm">
+      <div className="container-app py-6">
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="flex flex-wrap items-center justify-center gap-8 text-center"
+        >
+          <div>
+            <p className="text-2xl font-bold text-moulna-gold">
+              {stats ? fmt(stats.totalProducts) : "\u2026"}
+            </p>
+            <p className="text-sm text-muted-foreground">Products</p>
+          </div>
+          <div className="w-px h-8 bg-border hidden sm:block" />
+          <div>
+            <p className="text-2xl font-bold text-moulna-gold">
+              {stats ? fmt(stats.totalSellers) : "\u2026"}
+            </p>
+            <p className="text-sm text-muted-foreground">Sellers</p>
+          </div>
+          <div className="w-px h-8 bg-border hidden sm:block" />
+          <div>
+            <p className="text-2xl font-bold text-moulna-gold">
+              {stats ? fmt(stats.totalUsers) : "\u2026"}
+            </p>
+            <p className="text-sm text-muted-foreground">Happy Customers</p>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Seller of the Week (dynamic) ───
+
+interface SOTWData {
+  seller: {
+    id: string;
+    headline: string | null;
+    description: string | null;
+    imageUrl: string | null;
+    shop: {
+      id: string;
+      name: string;
+      slug: string;
+      avatar_style: string;
+      avatar_seed: string | null;
+      total_listings: number;
+      location: string | null;
+      is_verified: boolean;
+      category: string | null;
+    };
+  } | null;
+}
+
+function SellerOfTheWeekSection() {
+  const [data, setData] = React.useState<SOTWData | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch("/api/ads/seller-of-week/current")
+      .then((res) => res.json())
+      .then((d: SOTWData) => setData(d))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return null;
+
+  // If no active SOTW, show a CTA for sellers
+  if (!data?.seller) {
+    return (
+      <section className="py-16 lg:py-24 bg-background">
+        <div className="container-app">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+          >
+            <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-2">
+              <Trophy className="w-5 h-5 text-moulna-gold" />
+              <span className="text-sm font-medium text-moulna-gold">Featured Creator</span>
+            </motion.div>
+            <motion.h2 variants={fadeInUp} className="text-3xl lg:text-4xl font-display font-bold mb-8">
+              Seller of the Week
+            </motion.h2>
+            <motion.div variants={fadeInUp}>
+              <Card className="p-8 text-center">
+                <Trophy className="w-12 h-12 text-moulna-gold mx-auto mb-4" />
+                <h3 className="text-xl font-bold mb-2">Want to be featured here?</h3>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  Get your shop featured on the Moulna homepage for an entire week.
+                  Reach thousands of potential customers!
+                </p>
+                <Link href="/seller/promotions/seller-of-week">
+                  <Button variant="gold" className="gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    Become Seller of the Week
+                  </Button>
+                </Link>
+              </Card>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+    );
+  }
+
+  const { seller } = data;
+  const shop = seller.shop;
+
+  return (
+    <section className="py-16 lg:py-24 bg-background">
+      <div className="container-app">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+        >
+          <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-2">
+            <Trophy className="w-5 h-5 text-moulna-gold" />
+            <span className="text-sm font-medium text-moulna-gold">Featured Creator</span>
+          </motion.div>
+          <motion.h2 variants={fadeInUp} className="text-3xl lg:text-4xl font-display font-bold mb-8">
+            Seller of the Week
+          </motion.h2>
+
+          <motion.div variants={fadeInUp}>
+            <Card className="overflow-hidden">
+              <div className="grid lg:grid-cols-2">
+                {/* Seller Image */}
+                <div className="relative h-64 lg:h-auto">
+                  <Image
+                    src={seller.imageUrl || "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800"}
+                    alt="Seller of the Week"
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent lg:bg-gradient-to-t" />
+                  <Badge variant="gold" className="absolute top-4 left-4 text-sm px-3 py-1">
+                    <Trophy className="w-4 h-4 mr-1" />
+                    Seller of the Week
+                  </Badge>
+                </div>
+
+                {/* Seller Details */}
+                <div className="p-6 lg:p-8 flex flex-col justify-center">
+                  <div className="flex items-center gap-4 mb-4">
+                    <ShopAvatar
+                      avatarSeed={shop.avatar_seed || shop.slug}
+                      avatarStyle={shop.avatar_style}
+                      name={shop.name}
+                      size="xl"
+                      className="border-2 border-moulna-gold shadow-md"
+                    />
+                    <div>
+                      <h3 className="text-xl font-bold">{shop.name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {seller.headline || shop.category || "Featured Seller"}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        {shop.is_verified && (
+                          <Badge variant="gold" className="text-xs">Verified</Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-muted-foreground mb-6">
+                    {seller.description || `Discover amazing products from ${shop.name} — this week's featured seller on Moulna.`}
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    <div className="text-center p-3 rounded-lg bg-muted/50">
+                      <p className="text-lg font-bold text-moulna-gold">{shop.total_listings}</p>
+                      <p className="text-xs text-muted-foreground">Products</p>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-muted/50">
+                      <p className="text-lg font-bold text-moulna-gold">{shop.location || "UAE"}</p>
+                      <p className="text-xs text-muted-foreground">Location</p>
+                    </div>
+                  </div>
+
+                  <Link href={`/shops/${shop.slug}`}>
+                    <Button variant="gold" className="w-full sm:w-auto gap-2">
+                      View Page <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
 export default function HomePage() {
   return (
     <>
@@ -447,7 +766,7 @@ export default function HomePage() {
 
                 <motion.h1
                   variants={fadeInUp}
-                  className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold leading-tight mb-6"
+                  className="text-2xl sm:text-4xl lg:text-6xl font-display font-bold leading-tight mb-6"
                 >
                   Discover{" "}
                   <span className="text-gold-gradient">Unique,</span>
@@ -568,230 +887,19 @@ export default function HomePage() {
         </section>
 
         {/* Social Proof Bar */}
-        <section className="bg-card shadow-sm">
-          <div className="container-app py-6">
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="flex flex-wrap items-center justify-center gap-8 text-center"
-            >
-              <div>
-                <p className="text-2xl font-bold text-moulna-gold">12,000+</p>
-                <p className="text-sm text-muted-foreground">Products</p>
-              </div>
-              <div className="w-px h-8 bg-border hidden sm:block" />
-              <div>
-                <p className="text-2xl font-bold text-moulna-gold">3,000+</p>
-                <p className="text-sm text-muted-foreground">Sellers</p>
-              </div>
-              <div className="w-px h-8 bg-border hidden sm:block" />
-              <div>
-                <p className="text-2xl font-bold text-moulna-gold">50,000+</p>
-                <p className="text-sm text-muted-foreground">Happy Customers</p>
-              </div>
-              <div className="w-px h-8 bg-border hidden sm:block" />
-              <div>
-                <p className="text-2xl font-bold text-moulna-gold">4.9</p>
-                <p className="text-sm text-muted-foreground">Average Rating</p>
-              </div>
-            </motion.div>
-          </div>
-        </section>
+        <SocialProofBar />
 
         {/* Seasonal Campaign Banner */}
         <SeasonalBanner />
 
         {/* Seller of the Week */}
-        <section className="py-16 lg:py-24 bg-background">
-          <div className="container-app">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={staggerContainer}
-            >
-              <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-2">
-                <Trophy className="w-5 h-5 text-moulna-gold" />
-                <span className="text-sm font-medium text-moulna-gold">Featured Creator</span>
-              </motion.div>
-              <motion.h2 variants={fadeInUp} className="text-3xl lg:text-4xl font-display font-bold mb-8">
-                Seller of the Week
-              </motion.h2>
-
-              <motion.div variants={fadeInUp}>
-                <Card className="overflow-hidden">
-                  <div className="grid lg:grid-cols-2">
-                    {/* Seller Image */}
-                    <div className="relative h-64 lg:h-auto">
-                      <Image
-                        src="https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800"
-                        alt="Seller of the Week"
-                        fill
-                        className="object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent lg:bg-gradient-to-t" />
-                      <Badge variant="gold" className="absolute top-4 left-4 text-sm px-3 py-1">
-                        <Trophy className="w-4 h-4 mr-1" />
-                        Seller of the Week
-                      </Badge>
-                    </div>
-
-                    {/* Seller Details */}
-                    <div className="p-6 lg:p-8 flex flex-col justify-center">
-                      <div className="flex items-center gap-4 mb-4">
-                        <DiceBearAvatar
-                          seed="khatt-studio"
-                          size="xl"
-                          className="border-2 border-moulna-gold shadow-md"
-                        />
-                        <div>
-                          <h3 className="text-xl font-bold">Khatt Studio</h3>
-                          <p className="text-sm text-muted-foreground">Arabic Calligraphy</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <LevelBadge level={6} size="sm" />
-                            <Badge variant="gold" className="text-xs">Verified</Badge>
-                          </div>
-                        </div>
-                      </div>
-
-                      <p className="text-muted-foreground mb-6">
-                        Master calligrapher bringing traditional Arabic art into modern homes.
-                        Each piece is hand-crafted with premium materials and features authentic
-                        Naskh and Thuluth scripts.
-                      </p>
-
-                      <div className="grid grid-cols-3 gap-4 mb-6">
-                        <div className="text-center p-3 rounded-lg bg-muted/50">
-                          <p className="text-lg font-bold text-moulna-gold">4.8</p>
-                          <p className="text-xs text-muted-foreground">Rating</p>
-                        </div>
-                        <div className="text-center p-3 rounded-lg bg-muted/50">
-                          <p className="text-lg font-bold text-moulna-gold">45</p>
-                          <p className="text-xs text-muted-foreground">Products</p>
-                        </div>
-                        <div className="text-center p-3 rounded-lg bg-muted/50">
-                          <p className="text-lg font-bold text-moulna-gold">Sharjah</p>
-                          <p className="text-xs text-muted-foreground">Location</p>
-                        </div>
-                      </div>
-
-                      <Link href="/shops/khatt-studio">
-                        <Button variant="gold" className="w-full sm:w-auto gap-2">
-                          View Page <ArrowRight className="w-4 h-4" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            </motion.div>
-          </div>
-        </section>
+        <SellerOfTheWeekSection />
 
         {/* Trending Products */}
         <TrendingSection />
 
         {/* Sellers You Follow */}
-        <section className="py-16 lg:py-24 bg-background">
-          <div className="container-app">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={staggerContainer}
-              className="flex items-end justify-between mb-8"
-            >
-              <div>
-                <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-2">
-                  <Store className="w-5 h-5 text-moulna-gold" />
-                  <span className="text-sm font-medium text-moulna-gold">Your Favorites</span>
-                </motion.div>
-                <motion.h2 variants={fadeInUp} className="text-3xl lg:text-4xl font-display font-bold">
-                  Sellers You Follow
-                </motion.h2>
-              </div>
-              <motion.div variants={fadeInUp}>
-                <Link href="/explore/shops">
-                  <Button variant="ghost" className="gap-1">
-                    Browse All Sellers <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
-              </motion.div>
-            </motion.div>
-
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={staggerContainer}
-              className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
-            >
-              {FOLLOWED_SELLERS.map((seller) => (
-                <motion.div key={seller.id} variants={scaleIn}>
-                  <Link href={`/shops/${seller.slug}`}>
-                    <Card hover className="overflow-hidden group">
-                      {/* Cover Image */}
-                      <div className="relative h-32 overflow-hidden">
-                        <Image
-                          src={seller.image}
-                          alt={seller.name}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                        {seller.isVerified && (
-                          <Badge variant="gold" className="absolute top-3 end-3 text-xs">
-                            Verified
-                          </Badge>
-                        )}
-                      </div>
-
-                      {/* Seller Info */}
-                      <div className="relative px-4 pb-4 pt-7">
-                        {/* Avatar overlapping the cover image */}
-                        <div className="absolute -top-6 left-4">
-                          <DiceBearAvatar
-                            seed={seller.avatar}
-                            size="lg"
-                            className="border-2 border-background shadow-md"
-                          />
-                        </div>
-
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex-1 min-w-0 ml-14">
-                            <h3 className="font-semibold truncate">{seller.name}</h3>
-                            <LevelBadge level={seller.level} size="sm" />
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                          <span className="flex items-center gap-1">
-                            <Star className="w-3.5 h-3.5 fill-moulna-gold text-moulna-gold" />
-                            {seller.rating}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Package className="w-3.5 h-3.5" />
-                            {seller.totalProducts} products
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-3.5 h-3.5" />
-                            {seller.location}
-                          </span>
-                        </div>
-
-                        <Button variant="outline" size="sm" className="w-full gap-1">
-                          <UserPlus className="w-3.5 h-3.5" />
-                          Following
-                        </Button>
-                      </div>
-                    </Card>
-                  </Link>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
+        <FollowedSellersSection />
       </main>
 
       <Footer />

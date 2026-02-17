@@ -14,9 +14,10 @@ import {
   Package, ArrowLeft, Upload, X, Sparkles,
   Info, DollarSign, Boxes, Image as ImageIcon,
   FileText, Settings, Eye, Save, Send, Loader2,
-  ShieldCheck
+  ShieldCheck, Plus, Trash2, Check, X as XIcon
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
+import type { CustomField } from "@/lib/types";
 
 const CATEGORIES = [
   "Jewelry", "Home Décor", "Arabic Calligraphy", "Perfumes & Oud",
@@ -50,6 +51,23 @@ export default function NewProductPage() {
   const [step, setStep] = React.useState(1);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState("");
+
+  // Listing limit state
+  const [listingStatus, setListingStatus] = React.useState<{
+    activeListingCount: number;
+    freeListingLimit: number;
+    freeRemaining: number;
+    requiresPayment: boolean;
+  } | null>(null);
+
+  React.useEffect(() => {
+    fetch("/api/seller/listing-status")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.activeListingCount !== undefined) setListingStatus(data);
+      })
+      .catch(() => {});
+  }, []);
 
   const kycStatus = user?.kycStatus || "none";
 
@@ -134,6 +152,53 @@ export default function NewProductPage() {
   const [autoRenew, setAutoRenew] = React.useState(true);
   const [allowOffers, setAllowOffers] = React.useState(true);
 
+  // Custom Fields
+  const [customFields, setCustomFields] = React.useState<CustomField[]>([]);
+
+  const addCustomField = () => {
+    if (customFields.length >= 10) return;
+    setCustomFields([...customFields, {
+      id: crypto.randomUUID().slice(0, 8),
+      label: "",
+      type: "text",
+      value: "",
+    }]);
+  };
+
+  const updateCustomField = (id: string, updates: Partial<CustomField>) => {
+    setCustomFields(customFields.map(f =>
+      f.id === id ? { ...f, ...updates } : f
+    ));
+  };
+
+  const removeCustomField = (id: string) => {
+    setCustomFields(customFields.filter(f => f.id !== id));
+  };
+
+  const addSelectOption = (fieldId: string) => {
+    setCustomFields(customFields.map(f =>
+      f.id === fieldId
+        ? { ...f, options: [...(f.options || []), ""] }
+        : f
+    ));
+  };
+
+  const updateSelectOption = (fieldId: string, index: number, value: string) => {
+    setCustomFields(customFields.map(f =>
+      f.id === fieldId
+        ? { ...f, options: (f.options || []).map((o, i) => i === index ? value : o) }
+        : f
+    ));
+  };
+
+  const removeSelectOption = (fieldId: string, index: number) => {
+    setCustomFields(customFields.map(f =>
+      f.id === fieldId
+        ? { ...f, options: (f.options || []).filter((_, i) => i !== index) }
+        : f
+    ));
+  };
+
   // Settings
   const [processingTime, setProcessingTime] = React.useState("1-2 business days");
   const [meetupPreference, setMeetupPreference] = React.useState("flexible");
@@ -205,6 +270,7 @@ export default function NewProductPage() {
       listingDuration: listingDuration || undefined,
       autoRenew,
       allowOffers,
+      customFields: customFields.filter(f => f.label.trim()),
       processingTime,
       meetupPreference,
     };
@@ -229,6 +295,21 @@ export default function NewProductPage() {
     setIsSubmitting(true);
 
     try {
+      // If trying to publish and payment required, save as draft first then redirect to upsell
+      if (status === "active" && listingStatus?.requiresPayment) {
+        const res = await fetch("/api/seller/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(buildPayload("draft")),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        router.push(`/seller/products/${data.product.id}/activate`);
+        return;
+      }
+
       const res = await fetch("/api/seller/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -236,6 +317,21 @@ export default function NewProductPage() {
       });
 
       const data = await res.json();
+
+      // Handle 402 — free limit reached, save as draft and redirect
+      if (res.status === 402 && data.requiresPayment) {
+        const draftRes = await fetch("/api/seller/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(buildPayload("draft")),
+        });
+        const draftData = await draftRes.json();
+        if (!draftRes.ok) throw new Error(draftData.error);
+
+        router.push(`/seller/products/${draftData.product.id}/activate`);
+        return;
+      }
+
       if (!res.ok) throw new Error(data.error);
 
       router.push("/seller/products");
@@ -341,6 +437,49 @@ export default function NewProductPage() {
           </div>
         </div>
       </Card>
+
+      {/* Listing Limit Banner */}
+      {listingStatus && (
+        <Card className={cn(
+          "p-4",
+          listingStatus.requiresPayment
+            ? "border-amber-300 bg-amber-50/50 dark:bg-amber-900/10"
+            : "border-emerald-300 bg-emerald-50/50 dark:bg-emerald-900/10"
+        )}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Package className={cn(
+                "w-5 h-5",
+                listingStatus.requiresPayment ? "text-amber-600" : "text-emerald-600"
+              )} />
+              <div>
+                <p className="font-medium">
+                  {listingStatus.requiresPayment
+                    ? "Free listings used — this listing requires a small fee to publish"
+                    : `${listingStatus.freeRemaining} of ${listingStatus.freeListingLimit} free listings remaining`
+                  }
+                </p>
+                {!listingStatus.requiresPayment && (
+                  <p className="text-sm text-muted-foreground">
+                    Publish up to {listingStatus.freeListingLimit} listings for free
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  listingStatus.requiresPayment ? "bg-amber-500" : "bg-emerald-500"
+                )}
+                style={{
+                  width: `${Math.min(100, (listingStatus.activeListingCount / listingStatus.freeListingLimit) * 100)}%`,
+                }}
+              />
+            </div>
+          </div>
+        </Card>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Main Form */}
@@ -737,6 +876,190 @@ export default function NewProductPage() {
                     </label>
                   </div>
                 </div>
+              </Card>
+
+              {/* Custom Specification Fields */}
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="font-semibold flex items-center gap-2">
+                      <Boxes className="w-5 h-5" />
+                      Custom Specifications
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Add custom fields buyers can see — e.g. Material, Size, Color
+                    </p>
+                  </div>
+                  {customFields.length < 10 && (
+                    <Button variant="outline" size="sm" onClick={addCustomField}>
+                      <Plus className="w-4 h-4 me-1" />
+                      Add Field
+                    </Button>
+                  )}
+                </div>
+
+                {customFields.length === 0 ? (
+                  <button
+                    onClick={addCustomField}
+                    className="w-full p-6 rounded-lg border-2 border-dashed border-muted-foreground/30 text-muted-foreground hover:border-moulna-gold hover:text-moulna-gold hover:bg-moulna-gold/5 transition-colors text-sm"
+                  >
+                    <Plus className="w-5 h-5 mx-auto mb-2" />
+                    Add a custom specification field
+                  </button>
+                ) : (
+                  <div className="space-y-4">
+                    {customFields.map((field) => (
+                      <div key={field.id} className="p-4 rounded-lg border bg-muted/30 space-y-3">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs font-medium mb-1 block text-muted-foreground">
+                                Field Type
+                              </label>
+                              <select
+                                value={field.type}
+                                onChange={(e) => {
+                                  const type = e.target.value as CustomField["type"];
+                                  const updates: Partial<CustomField> = { type, value: "" };
+                                  if (type === "boolean") updates.value = "false";
+                                  if (type === "select") updates.options = [""];
+                                  if (type !== "select") updates.options = undefined;
+                                  updateCustomField(field.id, updates);
+                                }}
+                                className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-moulna-gold"
+                              >
+                                <option value="text">Text</option>
+                                <option value="boolean">Yes / No</option>
+                                <option value="select">Multiple Choice</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium mb-1 block text-muted-foreground">
+                                Label
+                              </label>
+                              <Input
+                                placeholder="e.g. Material, Size"
+                                value={field.label}
+                                onChange={(e) => updateCustomField(field.id, { label: e.target.value })}
+                              />
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => removeCustomField(field.id)}
+                            className="mt-5 p-1.5 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Value input depends on type */}
+                        {field.type === "text" && (
+                          <div>
+                            <label className="text-xs font-medium mb-1 block text-muted-foreground">
+                              Value
+                            </label>
+                            <Input
+                              placeholder="e.g. 18k Gold, Cotton"
+                              value={field.value}
+                              onChange={(e) => updateCustomField(field.id, { value: e.target.value })}
+                            />
+                          </div>
+                        )}
+
+                        {field.type === "boolean" && (
+                          <div>
+                            <label className="text-xs font-medium mb-1 block text-muted-foreground">
+                              Value
+                            </label>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => updateCustomField(field.id, { value: "true" })}
+                                className={cn(
+                                  "flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors",
+                                  field.value === "true"
+                                    ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+                                    : "border-muted hover:border-emerald-300"
+                                )}
+                              >
+                                <Check className="w-4 h-4" />
+                                Yes
+                              </button>
+                              <button
+                                onClick={() => updateCustomField(field.id, { value: "false" })}
+                                className={cn(
+                                  "flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors",
+                                  field.value === "false"
+                                    ? "border-red-500 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                                    : "border-muted hover:border-red-300"
+                                )}
+                              >
+                                <XIcon className="w-4 h-4" />
+                                No
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {field.type === "select" && (
+                          <div>
+                            <label className="text-xs font-medium mb-1 block text-muted-foreground">
+                              Options
+                            </label>
+                            <div className="space-y-2">
+                              {(field.options || []).map((option, idx) => (
+                                <div key={idx} className="flex items-center gap-2">
+                                  <Input
+                                    placeholder={`Option ${idx + 1}`}
+                                    value={option}
+                                    onChange={(e) => updateSelectOption(field.id, idx, e.target.value)}
+                                  />
+                                  {(field.options || []).length > 1 && (
+                                    <button
+                                      onClick={() => removeSelectOption(field.id, idx)}
+                                      className="p-1.5 rounded text-muted-foreground hover:text-red-500 transition-colors"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => addSelectOption(field.id)}
+                                className="text-moulna-gold"
+                              >
+                                <Plus className="w-3 h-3 me-1" />
+                                Add Option
+                              </Button>
+                            </div>
+
+                            {(field.options || []).filter(o => o.trim()).length > 0 && (
+                              <div className="mt-2">
+                                <label className="text-xs font-medium mb-1 block text-muted-foreground">
+                                  Selected Value
+                                </label>
+                                <select
+                                  value={field.value}
+                                  onChange={(e) => updateCustomField(field.id, { value: e.target.value })}
+                                  className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-moulna-gold"
+                                >
+                                  <option value="">Select an option</option>
+                                  {(field.options || []).filter(o => o.trim()).map((option, idx) => (
+                                    <option key={idx} value={option}>{option}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    <p className="text-xs text-muted-foreground">
+                      {customFields.length}/10 fields used
+                    </p>
+                  </div>
+                )}
               </Card>
 
               <div className="flex justify-between">

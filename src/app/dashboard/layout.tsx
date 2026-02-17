@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn, getLevelFromXP } from "@/lib/utils";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/card";
@@ -13,16 +13,15 @@ import { LevelBadge } from "@/components/gamification/LevelBadge";
 import { StreakCounter } from "@/components/gamification/StreakCounter";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
-  LayoutDashboard, Package, Heart, Star, Trophy, User,
+  LayoutDashboard, Package, Heart, Trophy, User,
   Bell, Settings, LogOut, Sparkles, Gift
 } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 const SIDEBAR_LINKS = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/orders", label: "My Inquiries", icon: Package },
+  { href: "/dashboard/messages", label: "My Inquiries", icon: Package },
   { href: "/dashboard/wishlist", label: "Wishlist", icon: Heart },
-  { href: "/dashboard/reviews", label: "My Reviews", icon: Star },
   { href: "/dashboard/rewards", label: "Rewards Hub", icon: Trophy },
   { href: "/dashboard/profile", label: "Profile", icon: User },
   { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
@@ -54,8 +53,8 @@ export default function DashboardLayout({
 
   const displayUser = user ?? defaultUser;
 
-  const xpToNextLevel = 1500;
-  const xpProgress = (displayUser.xp / xpToNextLevel) * 100;
+  const levelInfo = getLevelFromXP(displayUser.xp);
+  const xpProgress = levelInfo.progress;
 
   return (
     <TooltipProvider>
@@ -96,7 +95,7 @@ export default function DashboardLayout({
                       </div>
                       <Progress value={xpProgress} className="h-2" indicatorClassName="bg-moulna-gold" />
                       <p className="text-xs text-muted-foreground text-end">
-                        {(xpToNextLevel - displayUser.xp).toLocaleString()} XP to Level {displayUser.level + 1}
+                        {levelInfo.xpForNext.toLocaleString()} XP to Level {levelInfo.level + 1}
                       </p>
                     </div>
                   </Card>

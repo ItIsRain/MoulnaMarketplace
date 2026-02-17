@@ -14,132 +14,45 @@ import { LevelBadge } from "@/components/gamification/LevelBadge";
 import { formatAED } from "@/lib/utils";
 import {
   Inbox, Search, Filter, Clock, MessageCircle,
-  CheckCircle, CheckCircle2, ChevronRight, Eye, Sparkles, Phone
+  CheckCircle, CheckCircle2, Eye, Sparkles, Loader2
 } from "lucide-react";
 
-const INQUIRIES = [
-  {
-    id: "inq_1",
-    customer: {
-      name: "Fatima M.",
-      avatar: "fatima-m",
-      level: 4,
-      joinDate: "2023",
-    },
-    listing: {
-      title: "Arabian Oud Perfume - 100ml",
-      image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=100",
-      price: 45000,
-    },
-    message: "Hi, is this still available? Can I get it in 150ml? Also, Can we meet in Abu Dhabi?",
-    status: "new",
-    date: "2024-02-13T10:30:00Z",
-  },
-  {
-    id: "inq_2",
-    customer: {
-      name: "Ahmed K.",
-      avatar: "ahmed-k",
-      level: 7,
-      joinDate: "2022",
-    },
-    listing: {
-      title: "Premium Oud Gift Set",
-      image: "https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=100",
-      price: 85000,
-    },
-    message: "What's the best price for 5 sets? I need them for corporate gifts.",
-    status: "replied",
-    date: "2024-02-13T08:15:00Z",
-  },
-  {
-    id: "inq_3",
-    customer: {
-      name: "Sara A.",
-      avatar: "sara-a",
-      level: 5,
-      joinDate: "2023",
-    },
-    listing: {
-      title: "Amber & Musk Blend",
-      image: "https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?w=100",
-      price: 35000,
-    },
-    message: "Can we meet in Dubai Marina for pickup? I'd like to smell it first before buying.",
-    status: "new",
-    date: "2024-02-12T16:45:00Z",
-  },
-  {
-    id: "inq_4",
-    customer: {
-      name: "Khalid R.",
-      avatar: "khalid-r",
-      level: 3,
-      joinDate: "2024",
-    },
-    listing: {
-      title: "Home Fragrance Diffuser",
-      image: "https://images.unsplash.com/photo-1602928321679-560bb453f190?w=100",
-      price: 22000,
-    },
-    message: "Thank you! I'll take it. When can we arrange the handover?",
-    status: "replied",
-    date: "2024-02-11T14:20:00Z",
-  },
-  {
-    id: "inq_5",
-    customer: {
-      name: "Noura S.",
-      avatar: "noura-s",
-      level: 2,
-      joinDate: "2024",
-    },
-    listing: {
-      title: "Rose Oud Mist",
-      image: "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=100",
-      price: 22000,
-    },
-    message: "Is this available in a smaller size? Looking for something for travel.",
-    status: "archived",
-    date: "2024-02-10T09:00:00Z",
-  },
-  {
-    id: "inq_6",
-    customer: {
-      name: "Layla H.",
-      avatar: "layla-h",
-      level: 6,
-      joinDate: "2023",
-    },
-    listing: {
-      title: "Premium Oud Gift Set",
-      image: "https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=100",
-      price: 85000,
-    },
-    message: "Deal done! Thank you for the beautiful set.",
-    status: "sold",
-    salePrice: 82000,
-    date: "2024-02-09T12:00:00Z",
-  },
-  {
-    id: "inq_7",
-    customer: {
-      name: "Mohammed A.",
-      avatar: "mohammed-a",
-      level: 5,
-      joinDate: "2022",
-    },
-    listing: {
-      title: "Arabian Oud Perfume - 100ml",
-      image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=100",
-      price: 45000,
-    },
-    message: "Picked up today, smells amazing. Thank you!",
-    status: "sold",
-    salePrice: 45000,
-    date: "2024-02-07T15:30:00Z",
-  },
-];
+interface InquiryCustomer {
+  id: string;
+  name: string;
+  username: string;
+  avatarStyle: string;
+  avatarSeed: string;
+  level: number;
+  joinDate: string;
+}
+
+interface InquiryListing {
+  title: string;
+  slug: string;
+  priceFils: number;
+  image: string | null;
+}
+
+interface Inquiry {
+  id: string;
+  status: string;
+  salePriceFils: number | null;
+  customer: InquiryCustomer | null;
+  listing: InquiryListing | null;
+  lastMessage: string | null;
+  lastMessageAt: string;
+  unreadCount: number;
+  createdAt: string;
+}
+
+interface Stats {
+  total: number;
+  new: number;
+  replied: number;
+  archived: number;
+  sold: number;
+}
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
   new: { label: "New", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400", icon: Clock },
@@ -149,24 +62,42 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
 };
 
 export default function SellerInquiriesPage() {
+  const [inquiries, setInquiries] = React.useState<Inquiry[]>([]);
+  const [stats, setStats] = React.useState<Stats>({ total: 0, new: 0, replied: 0, archived: 0, sold: 0 });
+  const [loading, setLoading] = React.useState(true);
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
   const [searchQuery, setSearchQuery] = React.useState("");
 
-  const filteredInquiries = INQUIRIES.filter(inquiry => {
+  React.useEffect(() => {
+    fetch("/api/inquiries")
+      .then((res) => res.ok ? res.json() : { inquiries: [], stats: { total: 0, new: 0, replied: 0, archived: 0, sold: 0 } })
+      .then((data) => {
+        setInquiries(data.inquiries || []);
+        setStats(data.stats || { total: 0, new: 0, replied: 0, archived: 0, sold: 0 });
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filteredInquiries = inquiries.filter(inquiry => {
     const matchesStatus = statusFilter === "all" || inquiry.status === statusFilter;
-    const matchesSearch = inquiry.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         inquiry.listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         inquiry.message.toLowerCase().includes(searchQuery.toLowerCase());
+    const name = inquiry.customer?.name || "";
+    const title = inquiry.listing?.title || "";
+    const msg = inquiry.lastMessage || "";
+    const matchesSearch = !searchQuery ||
+      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      msg.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
-  const stats = {
-    total: INQUIRIES.length,
-    new: INQUIRIES.filter(i => i.status === "new").length,
-    replied: INQUIRIES.filter(i => i.status === "replied").length,
-    archived: INQUIRIES.filter(i => i.status === "archived").length,
-    sold: INQUIRIES.filter(i => i.status === "sold").length,
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -231,7 +162,7 @@ export default function SellerInquiriesPage() {
       {/* Inquiries List */}
       <div className="space-y-4">
         {filteredInquiries.map((inquiry, index) => {
-          const status = statusConfig[inquiry.status];
+          const status = statusConfig[inquiry.status] || statusConfig.new;
           const StatusIcon = status.icon;
 
           return (
@@ -247,14 +178,20 @@ export default function SellerInquiriesPage() {
               )}>
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-4">
-                    <DiceBearAvatar seed={inquiry.customer.avatar} size="lg" />
+                    <DiceBearAvatar
+                      seed={inquiry.customer?.avatarSeed || "user"}
+                      style={inquiry.customer?.avatarStyle || "adventurer"}
+                      size="lg"
+                    />
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold">{inquiry.customer.name}</span>
-                        <LevelBadge level={inquiry.customer.level} size="sm" />
+                        <span className="font-semibold">{inquiry.customer?.name || "Unknown"}</span>
+                        {inquiry.customer && inquiry.customer.level > 1 && (
+                          <LevelBadge level={inquiry.customer.level} size="sm" />
+                        )}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Member since {inquiry.customer.joinDate}
+                        Member since {inquiry.customer?.joinDate || "—"}
                       </p>
                     </div>
                   </div>
@@ -264,36 +201,44 @@ export default function SellerInquiriesPage() {
                       {status.label}
                     </span>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {timeAgo(inquiry.date)}
+                      {timeAgo(inquiry.lastMessageAt || inquiry.createdAt)}
                     </p>
                   </div>
                 </div>
 
                 {/* Listing Reference */}
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 mb-4">
-                  <div className="relative w-12 h-12 rounded overflow-hidden flex-shrink-0">
-                    <Image
-                      src={inquiry.listing.image}
-                      alt={inquiry.listing.title}
-                      fill
-                      className="object-cover"
-                    />
+                {inquiry.listing && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 mb-4">
+                    {inquiry.listing.image ? (
+                      <div className="relative w-12 h-12 rounded overflow-hidden flex-shrink-0">
+                        <Image
+                          src={inquiry.listing.image}
+                          alt={inquiry.listing.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded bg-muted flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium line-clamp-1">{inquiry.listing.title}</p>
+                      <p className="text-xs text-muted-foreground">Listed at {formatAED(inquiry.listing.priceFils)}</p>
+                    </div>
+                    {inquiry.status === "sold" && inquiry.salePriceFils && (
+                      <Badge className="bg-moulna-gold/10 text-moulna-gold border-moulna-gold/30">
+                        Sold {formatAED(inquiry.salePriceFils)}
+                      </Badge>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium line-clamp-1">{inquiry.listing.title}</p>
-                    <p className="text-xs text-muted-foreground">Listed at AED {(inquiry.listing.price / 100).toLocaleString()}</p>
-                  </div>
-                  {inquiry.status === "sold" && "salePrice" in inquiry && (
-                    <Badge className="bg-moulna-gold/10 text-moulna-gold border-moulna-gold/30">
-                      Sold {formatAED((inquiry as { salePrice: number }).salePrice)}
-                    </Badge>
-                  )}
-                </div>
+                )}
 
                 {/* Message Preview */}
-                <p className="text-muted-foreground mb-4">
-                  &ldquo;{inquiry.message}&rdquo;
-                </p>
+                {inquiry.lastMessage && (
+                  <p className="text-muted-foreground mb-4">
+                    &ldquo;{inquiry.lastMessage}&rdquo;
+                  </p>
+                )}
 
                 {/* Actions */}
                 <div className="flex items-center justify-between pt-4 border-t">
@@ -304,11 +249,16 @@ export default function SellerInquiriesPage() {
                         <span>Reply fast for +50 XP</span>
                       </div>
                     )}
+                    {inquiry.unreadCount > 0 && (
+                      <Badge className="bg-moulna-gold text-white text-xs">
+                        {inquiry.unreadCount} new
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {inquiry.status === "new" && (
                       <Button variant="gold" size="sm" asChild>
-                        <Link href={`/seller/messages/${inquiry.id}`}>
+                        <Link href={`/seller/orders/${inquiry.id}`}>
                           <MessageCircle className="w-4 h-4 me-2" />
                           Reply
                         </Link>
@@ -316,14 +266,14 @@ export default function SellerInquiriesPage() {
                     )}
                     {inquiry.status === "replied" && (
                       <Button variant="outline" size="sm" asChild>
-                        <Link href={`/seller/messages/${inquiry.id}`}>
+                        <Link href={`/seller/orders/${inquiry.id}`}>
                           <MessageCircle className="w-4 h-4 me-2" />
                           Continue Chat
                         </Link>
                       </Button>
                     )}
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/seller/messages/${inquiry.id}`}>
+                      <Link href={`/seller/orders/${inquiry.id}`}>
                         <Eye className="w-4 h-4 me-2" />
                         View
                       </Link>

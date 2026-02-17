@@ -79,6 +79,7 @@ export default function SellerOnboardingPage() {
   const [avatarSeed, setAvatarSeed] = React.useState("my-shop");
   const [logoUrl, setLogoUrl] = React.useState("");
   const [bannerUrl, setBannerUrl] = React.useState("");
+  const [uploadingField, setUploadingField] = React.useState<string | null>(null);
   const [listingDuration, setListingDuration] = React.useState("30 days");
   const [autoRenew, setAutoRenew] = React.useState(true);
 
@@ -147,15 +148,25 @@ export default function SellerOnboardingPage() {
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = await handleImageUpload(file, "logos");
-    if (url) setLogoUrl(url);
+    setUploadingField("logo");
+    try {
+      const url = await handleImageUpload(file, "logos");
+      if (url) setLogoUrl(url);
+    } finally {
+      setUploadingField(null);
+    }
   };
 
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = await handleImageUpload(file, "banners");
-    if (url) setBannerUrl(url);
+    setUploadingField("banner");
+    try {
+      const url = await handleImageUpload(file, "banners");
+      if (url) setBannerUrl(url);
+    } finally {
+      setUploadingField(null);
+    }
   };
 
   const handleCompleteSetup = async () => {
@@ -524,8 +535,13 @@ export default function SellerOnboardingPage() {
                     <div>
                       <label className="text-sm font-medium mb-1.5 block">Shop Logo (Optional)</label>
                       <label className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-8 text-center cursor-pointer block hover:border-moulna-gold/50 transition-colors">
-                        <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleLogoUpload} />
-                        {logoUrl ? (
+                        <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleLogoUpload} disabled={!!uploadingField} />
+                        {uploadingField === "logo" ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
+                            <p className="text-sm text-muted-foreground">Uploading logo...</p>
+                          </div>
+                        ) : logoUrl ? (
                           <img src={logoUrl} alt="Logo" className="w-20 h-20 mx-auto rounded-lg object-cover" />
                         ) : (
                           <>
@@ -541,8 +557,13 @@ export default function SellerOnboardingPage() {
                     <div>
                       <label className="text-sm font-medium mb-1.5 block">Shop Banner</label>
                       <label className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-8 text-center cursor-pointer block hover:border-moulna-gold/50 transition-colors">
-                        <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleBannerUpload} />
-                        {bannerUrl ? (
+                        <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleBannerUpload} disabled={!!uploadingField} />
+                        {uploadingField === "banner" ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
+                            <p className="text-sm text-muted-foreground">Uploading banner...</p>
+                          </div>
+                        ) : bannerUrl ? (
                           <img src={bannerUrl} alt="Banner" className="w-full h-24 mx-auto rounded-lg object-cover" />
                         ) : (
                           <>

@@ -2,13 +2,17 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
-// Map Didit status (case-sensitive with spaces) to our DB status
+// Map Didit status (case-sensitive) to our DB status
+// v3 statuses: Approved, Declined, In Review, Pending, Canceled, Not Finished
 function mapDiditStatus(status: string): string {
   const statusMap: Record<string, string> = {
     "Approved": "approved",
     "Declined": "declined",
     "In Progress": "in_progress",
     "In Review": "in_review",
+    "Pending": "pending",
+    "Canceled": "abandoned",
+    "Not Finished": "in_progress",
     "Resubmitted": "in_progress",
     "Not Started": "pending",
     "Expired": "expired",
@@ -50,47 +54,35 @@ export async function GET() {
     return NextResponse.json({ kycStatus: session.status });
   }
 
-  // Poll Didit API for current status
+  // Poll Didit v3 API for current status
   try {
     const diditRes = await fetch(
-      `https://verification.didit.me/v2/session/${session.session_id}/decision/`,
+      `https://verification.didit.me/v3/session/${session.session_id}/decision/`,
       {
         headers: {
           "x-api-key": process.env.DIDIT_API_KEY!,
-          "Content-Type": "application/json",
         },
       }
     );
 
     if (!diditRes.ok) {
-      // If v2 fails, try v1 endpoint as fallback
-      const v1Res = await fetch(
-        `https://verification.didit.me/v1/session/${session.session_id}/decision/`,
-        {
-          headers: {
-            "x-api-key": process.env.DIDIT_API_KEY!,
-            "Content-Type": "application/json",
-          },
-        }
+      console.error(
+        "Didit v3 session fetch failed:",
+        diditRes.status,
+        await diditRes.text().catch(() => "")
       );
-
-      if (!v1Res.ok) {
-        // Return current DB status if API is unreachable
-        return NextResponse.json({ kycStatus: session.status });
-      }
-
-      const v1Data = await v1Res.json();
-      const newStatus = mapDiditStatus(v1Data.status || "");
-
-      if (newStatus !== session.status) {
-        await syncStatus(adminClient, user.id, newStatus);
-      }
-
-      return NextResponse.json({ kycStatus: newStatus });
+      // Return current DB status if API is unreachable
+      return NextResponse.json({ kycStatus: session.status });
     }
 
     const diditData = await diditRes.json();
-    const newStatus = mapDiditStatus(diditData.status || "");
+    const rawStatus = diditData.status || "";
+    const newStatus = mapDiditStatus(rawStatus);
+
+    // Log unmapped statuses for debugging
+    if (rawStatus && !["Approved", "Declined", "In Review", "Pending", "Canceled", "Not Finished"].includes(rawStatus)) {
+      console.warn("Unknown Didit status received:", rawStatus, "→ mapped to:", newStatus);
+    }
 
     // Sync to DB if status changed
     if (newStatus !== session.status) {
@@ -125,4 +117,12 @@ async function syncStatus(
     .from("profiles")
     .update(updateData)
     .eq("id", userId);
+
+  // Also mark the seller's shop as verified
+  if (status === "approved") {
+    await adminClient
+      .from("shops")
+      .update({ is_verified: true })
+      .eq("owner_id", userId);
+  }
 }

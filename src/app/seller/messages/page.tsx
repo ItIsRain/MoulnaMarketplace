@@ -1,289 +1,154 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, timeAgo } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
+import { LevelBadge } from "@/components/gamification/LevelBadge";
 import {
-  MessageSquare, Search, Send, Paperclip, Image,
-  MoreHorizontal, Phone, Video, Star, Archive,
-  Clock, CheckCheck, Filter
+  MessageSquare, Search, Loader2
 } from "lucide-react";
 
-const CONVERSATIONS = [
-  {
-    id: "1",
-    customer: {
-      name: "Fatima Al Zahra",
-      avatar: "fatima-msg",
-      isOnline: true,
-    },
-    lastMessage: "Thank you! Can't wait to pick it up.",
-    timestamp: "10:30 AM",
-    unread: 0,
-    isStarred: true,
-    product: "Royal Oud Collection",
-  },
-  {
-    id: "2",
-    customer: {
-      name: "Ahmed Hassan",
-      avatar: "ahmed-msg",
-      isOnline: false,
-    },
-    lastMessage: "Do you have this in a larger size?",
-    timestamp: "9:15 AM",
-    unread: 2,
-    isStarred: false,
-    product: "Arabian Nights Perfume",
-  },
-  {
-    id: "3",
-    customer: {
-      name: "Sara Abdullah",
-      avatar: "sara-msg",
-      isOnline: true,
-    },
-    lastMessage: "Perfect, let's arrange a meetup",
-    timestamp: "Yesterday",
-    unread: 0,
-    isStarred: false,
-    product: "Musk Al Emarat",
-  },
-  {
-    id: "4",
-    customer: {
-      name: "Omar Nasser",
-      avatar: "omar-msg",
-      isOnline: false,
-    },
-    lastMessage: "Is this item still available?",
-    timestamp: "Yesterday",
-    unread: 1,
-    isStarred: false,
-    product: "Oud Wood Chips",
-  },
-];
+interface Participant {
+  id: string;
+  name: string;
+  username: string;
+  avatarStyle: string;
+  avatarSeed: string;
+  level: number;
+  isShop: boolean;
+  shopName?: string;
+  logoUrl?: string;
+}
 
-const MESSAGES = [
-  {
-    id: "1",
-    sender: "customer",
-    content: "Assalamu alaikum! I'm interested in the Royal Oud Collection. Is it still available?",
-    timestamp: "10:00 AM",
-  },
-  {
-    id: "2",
-    sender: "seller",
-    content: "Wa alaikum assalam! Yes, it's still available. Would you like me to tell you more about it?",
-    timestamp: "10:05 AM",
-  },
-  {
-    id: "3",
-    sender: "customer",
-    content: "Yes please! How long does the fragrance last?",
-    timestamp: "10:10 AM",
-  },
-  {
-    id: "4",
-    sender: "seller",
-    content: "The Royal Oud Collection is our premium line with excellent longevity. Most customers report 8-12 hours of lasting fragrance, with the base notes remaining even longer. It's perfect for special occasions or everyday luxury.",
-    timestamp: "10:15 AM",
-  },
-  {
-    id: "5",
-    sender: "customer",
-    content: "That sounds perfect! Let's arrange a meetup.",
-    timestamp: "10:25 AM",
-  },
-  {
-    id: "6",
-    sender: "customer",
-    content: "Thank you! Can't wait to pick it up.",
-    timestamp: "10:30 AM",
-  },
-];
+interface Conversation {
+  id: string;
+  participant: Participant | null;
+  lastMessage: string | null;
+  lastMessageAt: string;
+  unreadCount: number;
+}
 
 export default function SellerMessagesPage() {
-  const [selectedConversation, setSelectedConversation] = React.useState(CONVERSATIONS[0]);
+  const [conversations, setConversations] = React.useState<Conversation[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [messageInput, setMessageInput] = React.useState("");
 
-  const filteredConversations = CONVERSATIONS.filter(conv =>
-    conv.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    conv.product.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  React.useEffect(() => {
+    fetch("/api/messages")
+      .then((res) => res.ok ? res.json() : { conversations: [] })
+      .then((data) => setConversations(data.conversations || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = conversations.filter((c) => {
+    if (!searchQuery) return true;
+    const name = c.participant?.name || "";
+    return name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
+      </div>
+    );
+  }
 
   return (
-    <div className="h-[calc(100vh-12rem)]">
-        <Card className="h-full flex overflow-hidden">
-          {/* Conversations List */}
-          <div className="w-80 border-e flex flex-col">
-            {/* Search */}
-            <div className="p-4 border-b">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search conversations..."
-                  className="ps-10"
-                />
-              </div>
-            </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="font-display text-2xl font-bold mb-2 flex items-center gap-3">
+          <MessageSquare className="w-6 h-6" />
+          Messages
+        </h1>
+        <p className="text-muted-foreground">
+          Manage conversations with your customers
+        </p>
+      </div>
 
-            {/* Filters */}
-            <div className="flex gap-2 p-4 border-b overflow-x-auto">
-              <Button variant="default" size="sm">All</Button>
-              <Button variant="outline" size="sm">Unread</Button>
-              <Button variant="outline" size="sm">Starred</Button>
-            </div>
-
-            {/* Conversation List */}
-            <div className="flex-1 overflow-y-auto">
-              {filteredConversations.map((conv) => (
-                <button
-                  key={conv.id}
-                  onClick={() => setSelectedConversation(conv)}
-                  className={cn(
-                    "w-full p-4 text-start hover:bg-muted/50 transition-colors border-b",
-                    selectedConversation.id === conv.id && "bg-muted"
-                  )}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="relative">
-                      <DiceBearAvatar seed={conv.customer.avatar} size="md" />
-                      {conv.customer.isOnline && (
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium truncate">{conv.customer.name}</span>
-                        <span className="text-xs text-muted-foreground">{conv.timestamp}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground truncate mb-1">
-                        {conv.lastMessage}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {conv.product}
-                        </Badge>
-                        {conv.isStarred && <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />}
-                      </div>
-                    </div>
-                    {conv.unread > 0 && (
-                      <Badge className="bg-moulna-gold">{conv.unread}</Badge>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
+      {conversations.length > 0 ? (
+        <>
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search customers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="ps-9"
+            />
           </div>
 
-          {/* Chat Area */}
-          <div className="flex-1 flex flex-col">
-            {/* Chat Header */}
-            <div className="p-4 border-b flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <DiceBearAvatar seed={selectedConversation.customer.avatar} size="md" />
-                  {selectedConversation.customer.isOnline && (
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-semibold">{selectedConversation.customer.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedConversation.customer.isOnline ? "Online" : "Offline"}
-                    {" • "}
-                    <span className="text-moulna-gold">{selectedConversation.product}</span>
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon">
-                  <Star className={cn(
-                    "w-5 h-5",
-                    selectedConversation.isStarred && "fill-yellow-400 text-yellow-400"
-                  )} />
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <Archive className="w-5 h-5" />
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <MoreHorizontal className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {MESSAGES.map((message) => (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+          {/* Conversation List */}
+          <Card className="divide-y">
+            {filtered.map((conv, index) => (
+              <motion.div
+                key={conv.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: index * 0.03 }}
+              >
+                <Link
+                  href={`/seller/messages/${conv.id}`}
                   className={cn(
-                    "flex",
-                    message.sender === "seller" ? "justify-end" : "justify-start"
+                    "flex items-start gap-3 p-4 hover:bg-muted/50 transition-colors",
+                    conv.unreadCount > 0 && "bg-moulna-gold/5"
                   )}
                 >
-                  <div
-                    className={cn(
-                      "max-w-[70%] rounded-2xl px-4 py-2",
-                      message.sender === "seller"
-                        ? "bg-moulna-gold text-white rounded-br-sm"
-                        : "bg-muted rounded-bl-sm"
-                    )}
-                  >
-                    <p>{message.content}</p>
-                    <div className={cn(
-                      "flex items-center justify-end gap-1 mt-1",
-                      message.sender === "seller" ? "text-white/70" : "text-muted-foreground"
+                  <DiceBearAvatar
+                    seed={conv.participant?.avatarSeed || "user"}
+                    style={conv.participant?.avatarStyle || "adventurer"}
+                    size="md"
+                  />
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={cn("font-medium truncate", conv.unreadCount > 0 && "font-semibold")}>
+                        {conv.participant?.name || "Unknown"}
+                      </span>
+                      {conv.participant && conv.participant.level > 1 && (
+                        <LevelBadge level={conv.participant.level} size="xs" />
+                      )}
+                    </div>
+                    <p className={cn(
+                      "text-sm truncate",
+                      conv.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground"
                     )}>
-                      <span className="text-xs">{message.timestamp}</span>
-                      {message.sender === "seller" && (
-                        <CheckCheck className="w-4 h-4" />
-                      )}
-                    </div>
+                      {conv.lastMessage || "No messages yet"}
+                    </p>
                   </div>
-                </motion.div>
-              ))}
-            </div>
 
-            {/* Input */}
-            <div className="p-4 border-t">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon">
-                  <Paperclip className="w-5 h-5" />
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <Image className="w-5 h-5" />
-                </Button>
-                <Input
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  placeholder="Type a message..."
-                  className="flex-1"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && messageInput.trim()) {
-                      // Handle send
-                      setMessageInput("");
-                    }
-                  }}
-                />
-                <Button size="icon" className="bg-moulna-gold hover:bg-moulna-gold-dark">
-                  <Send className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
-          </div>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <span className="text-xs text-muted-foreground">
+                      {timeAgo(conv.lastMessageAt)}
+                    </span>
+                    {conv.unreadCount > 0 && (
+                      <Badge className="bg-moulna-gold text-white text-xs h-5 min-w-[20px] flex items-center justify-center">
+                        {conv.unreadCount}
+                      </Badge>
+                    )}
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </Card>
+        </>
+      ) : (
+        <Card className="p-12 text-center">
+          <MessageSquare className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+          <h3 className="font-semibold text-lg mb-2">No messages yet</h3>
+          <p className="text-muted-foreground mb-6">
+            When customers contact you about your listings, conversations will appear here
+          </p>
         </Card>
+      )}
     </div>
   );
 }

@@ -2,13 +2,17 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 
-// Map Didit status (case-sensitive with spaces) to our DB status
+// Map Didit status (case-sensitive) to our DB status
+// v3 statuses: Approved, Declined, In Review, Pending, Canceled, Not Finished
 function mapDiditStatus(status: string): string {
   const statusMap: Record<string, string> = {
     "Approved": "approved",
     "Declined": "declined",
     "In Progress": "in_progress",
     "In Review": "in_review",
+    "Pending": "pending",
+    "Canceled": "abandoned",
+    "Not Finished": "in_progress",
     "Resubmitted": "in_progress",
     "Not Started": "pending",
     "Expired": "expired",
@@ -74,6 +78,14 @@ export async function GET(request: NextRequest) {
           .from("profiles")
           .update(updateData)
           .eq("id", user.id);
+
+        // Also mark the seller's shop as verified
+        if (dbStatus === "approved") {
+          await adminClient
+            .from("shops")
+            .update({ is_verified: true })
+            .eq("owner_id", user.id);
+        }
       }
     } catch (err) {
       console.error("Failed to sync KYC status on redirect:", err);
@@ -140,12 +152,17 @@ export async function POST(request: NextRequest) {
     console.error("Failed to update profile KYC status:", profileError);
   }
 
-  // If approved, mark user as verified
+  // If approved, mark user and their shop as verified
   if (dbStatus === "approved") {
     await adminClient
       .from("profiles")
       .update({ is_verified: true })
       .eq("id", userId);
+
+    await adminClient
+      .from("shops")
+      .update({ is_verified: true })
+      .eq("owner_id", userId);
   }
 
   return NextResponse.json({ received: true });

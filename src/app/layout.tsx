@@ -3,6 +3,7 @@ import { Playfair_Display, DM_Sans, Noto_Sans_Arabic } from "next/font/google";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { CookieConsent } from "@/components/CookieConsent";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -63,6 +64,7 @@ export default function RootLayout({
               },
             }}
           />
+          <CookieConsent />
         </TooltipProvider>
         </AuthProvider>
       </body>

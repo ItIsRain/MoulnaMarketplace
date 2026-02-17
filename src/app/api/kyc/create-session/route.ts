@@ -14,9 +14,9 @@ export async function POST() {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  // Call Didit to create verification session
+  // Call Didit v3 to create verification session
   const diditResponse = await fetch(
-    "https://verification.didit.me/v2/session/",
+    "https://verification.didit.me/v3/session/",
     {
       method: "POST",
       headers: {
@@ -33,7 +33,7 @@ export async function POST() {
 
   if (!diditResponse.ok) {
     const errorText = await diditResponse.text();
-    console.error("Didit session creation failed:", errorText);
+    console.error("Didit session creation failed:", diditResponse.status, errorText);
     return NextResponse.json(
       { error: "Failed to create verification session" },
       { status: 500 }
@@ -41,6 +41,9 @@ export async function POST() {
   }
 
   const diditData = await diditResponse.json();
+
+  // v3 returns verification_url (v2 used url)
+  const verificationUrl = diditData.verification_url || diditData.url;
 
   // Store session in DB using admin client (bypasses RLS)
   const adminClient = createAdminClient();
@@ -51,7 +54,7 @@ export async function POST() {
       user_id: user.id,
       session_id: diditData.session_id,
       status: "pending",
-      verification_url: diditData.url,
+      verification_url: verificationUrl,
       vendor_data: user.id,
     });
 
@@ -73,5 +76,5 @@ export async function POST() {
     console.error("Failed to update profile KYC status:", updateError);
   }
 
-  return NextResponse.json({ verificationUrl: diditData.url });
+  return NextResponse.json({ verificationUrl });
 }

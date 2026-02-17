@@ -14,7 +14,7 @@ import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
   Store, Camera, Save, Globe, MapPin, Phone, Mail,
   Clock, Instagram, Facebook, Twitter, Youtube, ChevronRight,
-  Palette, FileText, Image, ExternalLink, Video
+  Palette, FileText, Image, ExternalLink
 } from "lucide-react";
 
 const EMIRATES = [
@@ -42,7 +42,6 @@ export default function EditShopPage() {
     facebook: "arabianscentsUAE",
     twitter: "@arabian_scents",
     youtube: "",
-    videoUrl: "",
     operatingHours: "9:00 AM - 9:00 PM",
     operatingDays: "Sunday - Thursday",
   });
@@ -372,26 +371,6 @@ export default function EditShopPage() {
 
           {/* Media */}
           <Card className="p-6">
-            <h2 className="font-semibold mb-4">Media</h2>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="videoUrl">Shop Intro Video</Label>
-                <div className="relative mt-1">
-                  <Video className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="videoUrl"
-                    type="url"
-                    value={formData.videoUrl}
-                    onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                    className="ps-10"
-                    placeholder="https://youtube.com/watch?v=..."
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  YouTube or Vimeo URL for your shop intro video
-                </p>
-              </div>
-            </div>
           </Card>
 
           {/* Mobile Save Button */}
