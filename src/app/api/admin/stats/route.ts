@@ -52,6 +52,11 @@ export async function GET(req: NextRequest) {
       .select("id", { count: "exact", head: true })
       .eq("status", "active");
 
+    const { count: pendingProducts } = await admin
+      .from("products")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending");
+
     // Total conversations (inquiries)
     const { count: totalConversations } = await admin
       .from("conversations")
@@ -150,6 +155,7 @@ export async function GET(req: NextRequest) {
         totalSellers: totalSellers || 0,
         totalProducts: totalProducts || 0,
         activeProducts: activeProducts || 0,
+        pendingProducts: pendingProducts || 0,
         totalConversations: totalConversations || 0,
         monthlyConversations: monthlyConversations || 0,
         totalRevenue,
@@ -186,6 +192,8 @@ export async function GET(req: NextRequest) {
     if (status && status !== "all") {
       query = query.eq("status", status);
     }
+
+    // Note: search filtering is done client-side for inquiries since it involves joined data
 
     const { data: convos, count } = await query;
 

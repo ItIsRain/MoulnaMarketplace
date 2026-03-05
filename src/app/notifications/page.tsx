@@ -28,9 +28,9 @@ const NOTIFICATIONS = [
   },
   {
     id: "2",
-    type: "reward",
-    title: "You earned 100 XP!",
-    message: "Congratulations! You've completed the 'First Review' challenge.",
+    type: "achievement",
+    title: "Challenge Complete!",
+    message: "Congratulations! You've completed the 'First Review' challenge and leveled up.",
     time: "1 hour ago",
     read: false,
     icon: Gift,
@@ -104,7 +104,7 @@ const FILTER_OPTIONS = [
   { id: "all", label: "All" },
   { id: "unread", label: "Unread" },
   { id: "listings", label: "Listings" },
-  { id: "rewards", label: "Rewards" },
+  { id: "achievement", label: "Achievements" },
   { id: "messages", label: "Messages" },
 ];
 

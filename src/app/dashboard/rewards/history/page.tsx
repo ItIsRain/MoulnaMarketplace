@@ -115,7 +115,7 @@ export default function RewardsHistoryPage() {
             XP History
           </h1>
           <p className="text-muted-foreground">
-            Track your experience points and achievements
+            Track your XP progression and level-up history
           </p>
         </div>
       </div>
@@ -235,7 +235,7 @@ export default function RewardsHistoryPage() {
           <History className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="font-semibold mb-2">No XP history found</h3>
           <p className="text-sm text-muted-foreground">
-            Start earning XP by contacting sellers, saving listings, and completing challenges!
+            Start leveling up by contacting sellers, saving listings, and completing challenges!
           </p>
         </Card>
       )}

@@ -107,7 +107,7 @@ export default function ReferralsPage() {
           Refer Friends
         </h1>
         <p className="text-muted-foreground">
-          Invite friends and earn rewards together
+          Invite friends and level up together
         </p>
       </div>
 
@@ -286,7 +286,7 @@ export default function ReferralsPage() {
             </p>
             <Badge className="bg-moulna-gold text-white">
               <Sparkles className="w-3 h-3 me-1" />
-              +{nextTier.reward} XP Reward
+              +{nextTier.reward} XP
             </Badge>
           </div>
 

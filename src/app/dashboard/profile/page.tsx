@@ -445,9 +445,6 @@ export default function ProfilePage() {
                       <span className="text-xl">{displayIcon}</span>
                       <div>
                         <span className="text-sm font-medium">{displayName}</span>
-                        {badge.xpRewarded > 0 && (
-                          <span className="text-xs text-moulna-gold ms-1">+{badge.xpRewarded} XP</span>
-                        )}
                       </div>
                     </div>
                   );

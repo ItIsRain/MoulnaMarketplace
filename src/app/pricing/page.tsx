@@ -28,7 +28,7 @@ const SELLER_PLANS = [
       { text: "3 active listings", included: true, highlight: false },
       { text: "Basic shop profile & avatar", included: true, highlight: false },
       { text: "Views & inquiry analytics", included: true, highlight: false },
-      { text: "XP rewards & badge system", included: true, highlight: false },
+      { text: "XP leveling & badge system", included: true, highlight: false },
       { text: "Standard search placement", included: true, highlight: false },
       { text: "Email support", included: true, highlight: false },
       { text: "AED 5 per listing after limit", included: true, highlight: false },
@@ -462,10 +462,10 @@ export default function PricingPage() {
             <div className="text-center mb-12">
               <div className="flex items-center justify-center gap-2 mb-4">
                 <Sparkles className="w-6 h-6 text-moulna-gold" />
-                <h2 className="font-display text-2xl font-bold">Buyer Rewards</h2>
+                <h2 className="font-display text-2xl font-bold">Buyer Perks</h2>
               </div>
               <p className="text-muted-foreground">
-                Browsing on Moulna is always free — plus you earn rewards just for being active!
+                Browsing on Moulna is always free — plus you level up just for being active!
               </p>
             </div>
 
@@ -520,7 +520,7 @@ export default function PricingPage() {
           <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
             {[
               { icon: Zap, title: "Lower Fees", description: "Pay-per-listing from AED 5 — no recurring costs until you're ready to scale" },
-              { icon: Sparkles, title: "Gamification", description: "Earn XP, badges, and rewards while you sell — keep buyers coming back" },
+              { icon: Sparkles, title: "Gamification", description: "Earn XP, badges, and level up while you sell — keep buyers coming back" },
               { icon: BarChart3, title: "Deep Analytics", description: "Understand your customers with traffic sources, demographics, and trends" },
               { icon: Headphones, title: "Local Support", description: "UAE-based team available 7 days a week with dedicated Pro support" },
             ].map((feature, index) => (

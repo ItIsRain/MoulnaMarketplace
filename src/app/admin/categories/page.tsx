@@ -7,8 +7,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
 import {
-  Tag, Search, Edit, Eye, Package, Loader2, Info
+  Tag, Search, Eye, Package, Loader2, Info, ExternalLink
 } from "lucide-react";
 
 interface Category {
@@ -51,20 +52,21 @@ export default function AdminCategoriesPage() {
 
   if (loading) {
     return (
-      <div className="p-8 flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
-        <p className="mt-4 text-muted-foreground">Loading categories...</p>
+      <div className="p-6 lg:p-8 flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-5 h-5 animate-spin text-moulna-gold" />
+        <p className="mt-3 text-sm text-muted-foreground">Loading categories...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-8 flex flex-col items-center justify-center min-h-[60vh]">
-        <p className="text-red-500">{error}</p>
+      <div className="p-6 lg:p-8 flex flex-col items-center justify-center min-h-[60vh]">
+        <p className="text-sm text-red-500">{error}</p>
         <Button
           variant="outline"
-          className="mt-4"
+          size="sm"
+          className="mt-3"
           onClick={() => window.location.reload()}
         >
           Retry
@@ -74,42 +76,40 @@ export default function AdminCategoriesPage() {
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-6 lg:p-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <Tag className="w-8 h-8 text-moulna-gold" />
-            <h1 className="text-2xl font-bold">Category Management</h1>
+          <div className="flex items-center gap-2">
+            <Tag className="w-5 h-5 text-moulna-gold" />
+            <h1 className="text-xl font-display font-semibold text-foreground">Category Management</h1>
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground mt-0.5">
             Organize and manage product categories
           </p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-4 py-2 rounded-lg">
-          <Info className="w-4 h-4" />
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-md">
+          <Info className="w-3.5 h-3.5" />
           <span>Categories are derived from products</span>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid md:grid-cols-3 gap-4">
-        <Card className="p-4 text-center">
-          <p className="text-2xl font-bold">{totalCategories}</p>
-          <p className="text-sm text-muted-foreground">Total Categories</p>
-        </Card>
-        <Card className="p-4 text-center">
-          <p className="text-2xl font-bold">{totalCategories}</p>
-          <p className="text-sm text-muted-foreground">Active</p>
-        </Card>
-        <Card className="p-4 text-center">
-          <p className="text-2xl font-bold">{totalProducts.toLocaleString()}</p>
-          <p className="text-sm text-muted-foreground">Total Products</p>
-        </Card>
+      <div className="grid grid-cols-3 gap-4">
+        {[
+          { label: "Total Categories", value: totalCategories },
+          { label: "Avg Products / Category", value: totalCategories > 0 ? (totalProducts / totalCategories).toFixed(1) : "0" },
+          { label: "Total Products", value: totalProducts.toLocaleString() },
+        ].map((stat) => (
+          <Card key={stat.label} className="border-border/60 shadow-sm px-5 py-4">
+            <p className="text-lg font-semibold tabular-nums">{stat.value}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
+          </Card>
+        ))}
       </div>
 
       {/* Search */}
-      <Card className="p-4">
+      <Card className="border-border/60 shadow-sm px-5 py-4">
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -122,70 +122,83 @@ export default function AdminCategoriesPage() {
       </Card>
 
       {/* Categories List */}
-      <Card>
-        <div className="p-4 border-b bg-muted/50">
-          <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground">
-            <div className="col-span-5">Category</div>
-            <div className="col-span-2">Slug</div>
-            <div className="col-span-2">Products</div>
-            <div className="col-span-1">Status</div>
-            <div className="col-span-2 text-end">Actions</div>
-          </div>
+      <Card className="border-border/60 shadow-sm">
+        <div className="px-5 pt-5 pb-4 border-b border-border/60">
+          <h2 className="text-sm font-semibold text-foreground">Categories</h2>
         </div>
-        <div className="divide-y">
-          {filteredCategories.length === 0 ? (
-            <div className="p-12 text-center">
-              <Package className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
-              <p className="text-muted-foreground font-medium">
-                {searchQuery
-                  ? "No categories match your search"
-                  : "No categories yet"}
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {searchQuery
-                  ? "Try a different search term"
-                  : "Categories will appear here once products are added"}
-              </p>
-            </div>
-          ) : (
-            filteredCategories.map((category, index) => (
-              <motion.div
-                key={category.slug}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <div className="p-4 hover:bg-muted/30">
-                  <div className="grid grid-cols-12 gap-4 items-center">
-                    <div className="col-span-5 flex items-center gap-3">
-                      <Tag className="w-4 h-4 text-moulna-gold/60" />
-                      <span className="font-medium">{category.name}</span>
-                    </div>
-                    <div className="col-span-2 text-sm text-muted-foreground">
+        <div className="overflow-x-auto">
+          <table className="w-full text-[13px]">
+            <thead>
+              <tr className="border-b border-border/60">
+                <th className="text-start px-5 py-3 font-medium text-muted-foreground">Category</th>
+                <th className="text-start px-5 py-3 font-medium text-muted-foreground">Slug</th>
+                <th className="text-start px-5 py-3 font-medium text-muted-foreground">Products</th>
+                <th className="text-start px-5 py-3 font-medium text-muted-foreground">Status</th>
+                <th className="text-end px-5 py-3 font-medium text-muted-foreground">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredCategories.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-16 text-center">
+                    <Package className="w-5 h-5 mx-auto text-muted-foreground/40 mb-2" />
+                    <p className="text-sm text-muted-foreground font-medium">
+                      {searchQuery
+                        ? "No categories match your search"
+                        : "No categories yet"}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {searchQuery
+                        ? "Try a different search term"
+                        : "Categories will appear here once products are added"}
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                filteredCategories.map((category, index) => (
+                  <motion.tr
+                    key={category.slug}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="border-b border-border/40 last:border-0 hover:bg-muted/40"
+                  >
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-2">
+                        <Tag className="w-4 h-4 text-moulna-gold/60" />
+                        <span className="font-medium">{category.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3 text-muted-foreground">
                       {category.slug}
-                    </div>
-                    <div className="col-span-2">
-                      <Badge variant="secondary">
+                    </td>
+                    <td className="px-5 py-3">
+                      <Badge variant="secondary" className="text-xs">
                         <Package className="w-3 h-3 me-1" />
-                        {category.productCount}
+                        <span className="tabular-nums">{category.productCount}</span>
                       </Badge>
-                    </div>
-                    <div className="col-span-1">
-                      <Badge className="bg-green-100 text-green-700">
+                    </td>
+                    <td className="px-5 py-3">
+                      <Badge className="bg-green-100 text-green-700 text-xs">
                         <Eye className="w-3 h-3 me-1" />
                         active
                       </Badge>
-                    </div>
-                    <div className="col-span-2 flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))
-          )}
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>
+                          <Link href={`/explore/categories/${category.slug}`}>
+                            <ExternalLink className="w-3.5 h-3.5 me-1" />
+                            View
+                          </Link>
+                        </Button>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </Card>
     </div>

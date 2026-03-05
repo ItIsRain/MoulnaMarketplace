@@ -31,7 +31,7 @@ const notoSansArabic = Noto_Sans_Arabic({
 
 export const metadata: Metadata = {
   title: "Moulna | UAE's Premier Handmade & Artisan Marketplace",
-  description: "Discover unique handmade products from UAE's finest artisans and local brands. Shop, earn rewards, and support local creators.",
+  description: "Discover unique handmade products from UAE's finest artisans and local brands. Shop, level up, and support local creators.",
   keywords: ["handmade", "artisan", "UAE", "marketplace", "local brands", "handcrafted", "Dubai", "Abu Dhabi"],
   openGraph: {
     title: "Moulna | UAE's Premier Handmade & Artisan Marketplace",

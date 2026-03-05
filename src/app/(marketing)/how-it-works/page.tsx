@@ -38,7 +38,7 @@ const BUYER_STEPS = [
   {
     step: 4,
     title: "Review",
-    description: "Leave a review, earn XP points, unlock badges, and level up your Moulna profile.",
+    description: "Leave a review, earn XP, unlock badges, and level up your Moulna profile.",
     icon: Star,
     color: "from-moulna-gold to-amber-500",
   },
@@ -80,7 +80,7 @@ const FEATURES = [
   {
     icon: Sparkles,
     title: "Gamified Experience",
-    description: "Earn XP, badges, and rewards as you shop and engage.",
+    description: "Earn XP, unlock badges, and level up as you shop and engage.",
   },
   {
     icon: Heart,

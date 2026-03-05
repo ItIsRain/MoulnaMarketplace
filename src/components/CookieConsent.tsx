@@ -52,7 +52,7 @@ export function CookieConsent() {
                     </h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       We use cookies and similar technologies to track your activity, personalize your experience,
-                      and improve our services. This includes tracking your browsing for challenges and rewards.
+                      and improve our services. This includes tracking your browsing for challenges and leveling.
                       By accepting, you consent to our use of cookies as described in our{" "}
                       <Link href="/privacy" className="text-moulna-gold hover:underline">
                         Privacy Policy

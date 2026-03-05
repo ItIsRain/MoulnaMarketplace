@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   BarChart3, TrendingUp, Users, MessageSquare,
-  DollarSign, Store, Calendar, Download,
+  DollarSign, Store, Download,
   ArrowUpRight, Package, Loader2
 } from "lucide-react";
 
@@ -50,7 +50,7 @@ export default function AdminAnalyticsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
+        <Loader2 className="w-5 h-5 animate-spin text-moulna-gold" />
       </div>
     );
   }
@@ -68,51 +68,70 @@ export default function AdminAnalyticsPage() {
       label: "Total Revenue",
       value: formatAED(data.totalRevenue),
       icon: DollarSign,
+      gradient: "from-green-500/10 to-green-600/5",
       color: "text-green-600",
-      bg: "bg-green-100",
     },
     {
       label: "Total Inquiries",
       value: data.totalConversations.toLocaleString(),
       icon: MessageSquare,
+      gradient: "from-blue-500/10 to-blue-600/5",
       color: "text-blue-600",
-      bg: "bg-blue-100",
     },
     {
       label: "Total Users",
       value: data.totalUsers.toLocaleString(),
       icon: Users,
+      gradient: "from-purple-500/10 to-purple-600/5",
       color: "text-purple-600",
-      bg: "bg-purple-100",
     },
     {
       label: "Total Products",
       value: data.totalProducts.toLocaleString(),
       icon: Package,
+      gradient: "from-orange-500/10 to-orange-600/5",
       color: "text-orange-600",
-      bg: "bg-orange-100",
     },
   ];
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-6 lg:p-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <BarChart3 className="w-8 h-8 text-moulna-gold" />
-            <h1 className="text-2xl font-bold">Platform Analytics</h1>
-          </div>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl font-display font-semibold text-foreground flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-moulna-gold" />
+            Platform Analytics
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Comprehensive overview of marketplace performance
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline">
-            <Calendar className="w-4 h-4 me-2" />
-            Last 30 Days
-          </Button>
-          <Button variant="outline">
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (!data) return;
+              const rows = [
+                ["Metric", "Value"],
+                ["Total Revenue", `AED ${(data.totalRevenue / 100).toFixed(2)}`],
+                ["Total Users", String(data.totalUsers)],
+                ["Total Shops", String(data.totalShops)],
+                ["Total Products", String(data.totalProducts)],
+                ["Total Inquiries", String(data.totalConversations)],
+                ...data.byCategory.map((c) => [`Category: ${c.category}`, `${c.listings} listings (${c.percentage}%)`]),
+              ];
+              const csv = rows.map((r) => r.map((v) => `"${v.replace(/"/g, '""')}"`).join(",")).join("\n");
+              const blob = new Blob([csv], { type: "text/csv" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "analytics-export.csv";
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+          >
             <Download className="w-4 h-4 me-2" />
             Export
           </Button>
@@ -128,14 +147,12 @@ export default function AdminAnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className={cn("p-3 rounded-lg", stat.bg)}>
-                  <stat.icon className={cn("w-6 h-6", stat.color)} />
-                </div>
+            <Card className={cn("border-border/60 shadow-sm p-5 bg-gradient-to-br", stat.gradient)}>
+              <div className="flex items-center gap-3 mb-3">
+                <stat.icon className={cn("w-4 h-4", stat.color)} />
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{stat.label}</span>
               </div>
-              <p className="text-2xl font-bold">{stat.value}</p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
+              <p className="text-2xl font-semibold tabular-nums">{stat.value}</p>
             </Card>
           </motion.div>
         ))}
@@ -143,47 +160,47 @@ export default function AdminAnalyticsPage() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Revenue & Shops Summary */}
-        <Card className="lg:col-span-2 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="font-semibold flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-moulna-gold" />
+        <Card className="lg:col-span-2 border-border/60 shadow-sm">
+          <div className="px-5 pt-5 pb-4 border-b border-border/60">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-moulna-gold" />
               Revenue &amp; Shops Summary
             </h2>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-6">
+          <div className="p-5 grid sm:grid-cols-2 gap-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1, duration: 0.4 }}
-              className="text-center p-8 bg-muted/50 rounded-lg"
+              className="text-center p-6 bg-gradient-to-br from-green-500/10 to-green-600/5 rounded-lg"
             >
-              <DollarSign className="w-10 h-10 text-green-600 mx-auto mb-3" />
-              <p className="text-3xl font-bold mb-1">{formatAED(data.totalRevenue)}</p>
-              <p className="text-sm text-muted-foreground">Total Revenue</p>
+              <DollarSign className="w-5 h-5 text-green-600 mx-auto mb-2" />
+              <p className="text-2xl font-semibold tabular-nums mb-0.5">{formatAED(data.totalRevenue)}</p>
+              <p className="text-xs text-muted-foreground">Total Revenue</p>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, duration: 0.4 }}
-              className="text-center p-8 bg-muted/50 rounded-lg"
+              className="text-center p-6 bg-gradient-to-br from-purple-500/10 to-purple-600/5 rounded-lg"
             >
-              <Store className="w-10 h-10 text-purple-600 mx-auto mb-3" />
-              <p className="text-3xl font-bold mb-1">{data.totalShops.toLocaleString()}</p>
-              <p className="text-sm text-muted-foreground">Total Shops</p>
+              <Store className="w-5 h-5 text-purple-600 mx-auto mb-2" />
+              <p className="text-2xl font-semibold tabular-nums mb-0.5">{data.totalShops.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">Total Shops</p>
             </motion.div>
           </div>
         </Card>
 
         {/* Top Categories */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="font-semibold flex items-center gap-2">
-              <Package className="w-5 h-5 text-moulna-gold" />
+        <Card className="border-border/60 shadow-sm">
+          <div className="px-5 pt-5 pb-4 border-b border-border/60">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+              <Package className="w-4 h-4 text-moulna-gold" />
               Top Categories
             </h2>
           </div>
-          <div className="space-y-4">
+          <div className="p-5 space-y-4">
             {data.byCategory.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
                 No category data available yet.
@@ -197,8 +214,8 @@ export default function AdminAnalyticsPage() {
                   transition={{ delay: index * 0.1 }}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium">{category.category}</span>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-[13px] font-medium">{category.category}</span>
+                    <span className="text-[13px] text-muted-foreground tabular-nums">
                       {category.percentage}%
                     </span>
                   </div>
@@ -221,36 +238,36 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {/* Quick Insights */}
-      <Card className="p-6 bg-gradient-to-br from-moulna-gold/10 to-amber-50 border-moulna-gold/20">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-lg bg-moulna-gold/20 flex items-center justify-center">
-            <TrendingUp className="w-6 h-6 text-moulna-gold" />
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2">Key Insights</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <ArrowUpRight className="w-4 h-4 text-green-600 mt-0.5" />
-                <span>
-                  The marketplace currently has {data.totalUsers.toLocaleString()} registered user{data.totalUsers !== 1 ? "s" : ""} across {data.totalShops.toLocaleString()} shop{data.totalShops !== 1 ? "s" : ""}.
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Store className="w-4 h-4 text-purple-600 mt-0.5" />
-                <span>
-                  {data.totalProducts.toLocaleString()} product{data.totalProducts !== 1 ? "s" : ""} are listed on the platform with {data.totalConversations.toLocaleString()} inquiry conversation{data.totalConversations !== 1 ? "s" : ""}.
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Package className="w-4 h-4 text-orange-600 mt-0.5" />
-                <span>
-                  {data.byCategory.length > 0
-                    ? `Top category is ${data.byCategory[0].category} with ${data.byCategory[0].listings} listing${data.byCategory[0].listings !== 1 ? "s" : ""} (${data.byCategory[0].percentage}% of all products).`
-                    : "No category breakdown available yet. Listings will appear here as products are added."}
-                </span>
-              </li>
-            </ul>
-          </div>
+      <Card className="border-border/60 shadow-sm bg-gradient-to-br from-moulna-gold/10 to-amber-50 border-moulna-gold/20">
+        <div className="px-5 pt-5 pb-4 border-b border-moulna-gold/15">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-moulna-gold" />
+            Key Insights
+          </h3>
+        </div>
+        <div className="p-5">
+          <ul className="space-y-2.5 text-[13px] text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <ArrowUpRight className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
+              <span>
+                The marketplace currently has {data.totalUsers.toLocaleString()} registered user{data.totalUsers !== 1 ? "s" : ""} across {data.totalShops.toLocaleString()} shop{data.totalShops !== 1 ? "s" : ""}.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Store className="w-4 h-4 text-purple-600 mt-0.5 shrink-0" />
+              <span>
+                {data.totalProducts.toLocaleString()} product{data.totalProducts !== 1 ? "s" : ""} are listed on the platform with {data.totalConversations.toLocaleString()} inquiry conversation{data.totalConversations !== 1 ? "s" : ""}.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Package className="w-4 h-4 text-orange-600 mt-0.5 shrink-0" />
+              <span>
+                {data.byCategory.length > 0
+                  ? `Top category is ${data.byCategory[0].category} with ${data.byCategory[0].listings} listing${data.byCategory[0].listings !== 1 ? "s" : ""} (${data.byCategory[0].percentage}% of all products).`
+                  : "No category breakdown available yet. Listings will appear here as products are added."}
+              </span>
+            </li>
+          </ul>
         </div>
       </Card>
     </div>

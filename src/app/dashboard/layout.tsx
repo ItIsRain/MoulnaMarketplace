@@ -22,7 +22,7 @@ const SIDEBAR_LINKS = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/messages", label: "My Inquiries", icon: Package },
   { href: "/dashboard/wishlist", label: "Wishlist", icon: Heart },
-  { href: "/dashboard/rewards", label: "Rewards Hub", icon: Trophy },
+  { href: "/dashboard/rewards", label: "Level Progress", icon: Trophy },
   { href: "/dashboard/profile", label: "Profile", icon: User },
   { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },

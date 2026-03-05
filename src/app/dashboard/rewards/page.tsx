@@ -13,13 +13,13 @@ import { BadgeWithName } from "@/components/gamification/BadgeCard";
 import { DailyChallengePanel } from "@/components/gamification/DailyChallenge";
 import type { DailyChallenge } from "@/lib/types";
 import {
-  Sparkles, Trophy, Star, Crown, Flame, Gift, Target,
+  Sparkles, Trophy, Star, Crown, Flame, Target,
   ChevronRight, Lock, Check, TrendingUp, Zap, Loader2
 } from "lucide-react";
 
 const LEVELS = [
   { level: 1, title: "Newcomer", xpRequired: 0, color: "#94a3b8", unlocks: ["Basic avatar styles"] },
-  { level: 2, title: "Explorer", xpRequired: 500, color: "#60a5fa", unlocks: ["Profile badge", "Exclusive coupons"] },
+  { level: 2, title: "Explorer", xpRequired: 500, color: "#60a5fa", unlocks: ["Profile badge", "New avatar styles"] },
   { level: 3, title: "Regular", xpRequired: 1500, color: "#34d399", unlocks: ["Priority support", "New avatar styles"] },
   { level: 4, title: "Enthusiast", xpRequired: 3500, color: "#a78bfa", unlocks: ["Featured profile", "Early access"] },
   { level: 5, title: "Connoisseur", xpRequired: 7000, color: "#d4b86a", unlocks: ["Verified badge", "Premium avatars"] },
@@ -27,7 +27,7 @@ const LEVELS = [
   { level: 7, title: "Tastemaker", xpRequired: 20000, color: "#a8863d", unlocks: ["Exclusive listings", "All avatars"] },
   { level: 8, title: "Elite", xpRequired: 35000, color: "#363e42", unlocks: ["Trusted member badge", "Personal curator"] },
   { level: 9, title: "Legend", xpRequired: 60000, color: "#e11d48", unlocks: ["Top of search results", "Invite-only events"] },
-  { level: 10, title: "Patron", xpRequired: 100000, color: "#fbbf24", unlocks: ["Lifetime perks", "All rewards"] },
+  { level: 10, title: "Patron", xpRequired: 100000, color: "#fbbf24", unlocks: ["Lifetime perks", "All features unlocked"] },
 ];
 
 // Badge definitions (config — always the same)
@@ -121,10 +121,10 @@ export default function RewardsPage() {
         <div>
           <h1 className="font-display text-2xl font-bold mb-2 flex items-center gap-3">
             <Trophy className="w-7 h-7 text-moulna-gold" />
-            Rewards Hub
+            Level Progress
           </h1>
           <p className="text-muted-foreground">
-            Track your progress, earn badges, and unlock exclusive rewards
+            Track your progress, earn badges, and unlock exclusive perks
           </p>
         </div>
         <div className="text-end">
@@ -249,11 +249,11 @@ export default function RewardsPage() {
           <div className="space-y-6">
             <DailyChallengePanel challenges={dailyChallenges} maxItems={3} />
 
-            {/* Next Rewards */}
+            {/* Next Level Perks */}
             <Card className="p-6">
               <h3 className="font-semibold mb-4 flex items-center gap-2">
-                <Gift className="w-5 h-5 text-moulna-gold" />
-                Next Rewards
+                <Crown className="w-5 h-5 text-moulna-gold" />
+                Next Level Perks
               </h3>
               <div className="space-y-4">
                 {LEVELS.slice(stats.level, stats.level + 2).map((level) => (
@@ -327,10 +327,6 @@ export default function RewardsPage() {
                     <div className="flex-1">
                       <p className="font-medium">{badge.name}</p>
                       <p className="text-sm text-muted-foreground mb-2">{badge.description}</p>
-                      <div className="flex items-center gap-1 text-xs text-moulna-gold mt-2">
-                        <Sparkles className="w-3 h-3" />
-                        +{badge.xpReward} XP reward
-                      </div>
                     </div>
                   </div>
                 </Card>

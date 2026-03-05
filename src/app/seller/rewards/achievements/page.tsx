@@ -247,7 +247,7 @@ export default function SellerAchievementsPage() {
       <div>
         <h1 className="text-2xl font-bold">Achievements</h1>
         <p className="text-muted-foreground">
-          Unlock achievements to earn XP and showcase your success
+          Unlock achievements and showcase your success
         </p>
       </div>
 
@@ -265,8 +265,8 @@ export default function SellerAchievementsPage() {
         </Card>
         <Card className="p-4 text-center">
           <Sparkles className="w-8 h-8 mx-auto text-purple-500 mb-2" />
-          <p className="text-2xl font-bold">{totalXP}</p>
-          <p className="text-sm text-muted-foreground">XP Earned</p>
+          <p className="text-2xl font-bold">{unlockedCount + (achievements.length - unlockedCount)}</p>
+          <p className="text-sm text-muted-foreground">Total</p>
         </Card>
         <Card className="p-4 text-center">
           <Target className="w-8 h-8 mx-auto text-green-500 mb-2" />
@@ -369,7 +369,7 @@ export default function SellerAchievementsPage() {
                       <CheckCircle className="w-4 h-4" />
                       <span>Unlocked</span>
                     </div>
-                    <Badge variant="secondary">+{achievement.xpReward} XP</Badge>
+                    <Badge variant="secondary" className="bg-green-100 text-green-700">Unlocked</Badge>
                   </div>
                 ) : achievement.locked ? (
                   <div className="text-sm text-muted-foreground">
@@ -381,7 +381,7 @@ export default function SellerAchievementsPage() {
                       <span className="text-muted-foreground">
                         {achievement.progressText}
                       </span>
-                      <Badge variant="outline">+{achievement.xpReward} XP</Badge>
+                      <Badge variant="outline">{achievement.progressText}</Badge>
                     </div>
                     <Progress value={achievement.progress} className="h-2" />
                   </div>

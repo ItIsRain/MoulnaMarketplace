@@ -179,7 +179,7 @@ export default function LoginPage() {
             </div>
 
             <h2 className="font-display text-4xl font-bold mb-4">
-              Every login brings you closer to rewards
+              Every login brings you closer to leveling up
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
               Earn XP, unlock badges, and climb the leaderboard while discovering unique handmade treasures from UAE artisans.

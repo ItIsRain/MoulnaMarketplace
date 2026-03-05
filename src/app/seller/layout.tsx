@@ -46,13 +46,14 @@ export default function SellerLayout({
   const { user, shop, isAuthenticated, isLoading } = useAuthStore();
 
   const isOnboardingPage = pathname === "/seller/onboarding";
+  const isAdmin = user?.role === "admin";
 
-  // Redirect to onboarding if authenticated seller has no shop
+  // Redirect to onboarding if authenticated seller has no shop (admins bypass this)
   React.useEffect(() => {
-    if (!isLoading && isAuthenticated && !shop && !isOnboardingPage) {
+    if (!isLoading && isAuthenticated && !shop && !isOnboardingPage && !isAdmin) {
       router.replace("/seller/onboarding");
     }
-  }, [isLoading, isAuthenticated, shop, isOnboardingPage, router]);
+  }, [isLoading, isAuthenticated, shop, isOnboardingPage, isAdmin, router]);
 
   // Show loading while auth initializes
   if (isLoading) {
@@ -82,8 +83,8 @@ export default function SellerLayout({
     );
   }
 
-  // If no shop and not on onboarding, don't render (redirect in progress)
-  if (!shop) {
+  // If no shop and not on onboarding, don't render (redirect in progress) — admins can view without a shop
+  if (!shop && !isAdmin) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />

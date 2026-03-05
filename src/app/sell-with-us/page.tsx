@@ -177,7 +177,7 @@ export default function SellWithUsPage() {
               </h1>
               <p className="text-xl text-white/80 mb-8">
                 Join UAE&apos;s fastest-growing marketplace for handmade and artisan products.
-                Reach thousands of customers, earn rewards, and grow your business.
+                Reach thousands of customers, level up, and grow your business.
               </p>
               <div className="flex items-center justify-center gap-4">
                 <Button size="lg" className="bg-moulna-gold hover:bg-moulna-gold-dark text-white" asChild>

@@ -43,7 +43,7 @@ const SECTIONS = [
       • Comply with legal obligations
 
       Your gamification data (XP, badges, achievements) is used to enhance your experience and provide
-      personalized rewards.
+      personalized experience.
     `,
   },
   {

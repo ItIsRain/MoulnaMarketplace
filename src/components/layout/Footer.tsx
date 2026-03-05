@@ -67,7 +67,7 @@ export function Footer() {
             </Link>
             <p className="text-sm text-gray-400 mb-4 max-w-xs">
               Discover unique handmade products from UAE's finest artisans and local brands.
-              Shop, earn rewards, and support local creators.
+              Shop, level up, and support local creators.
             </p>
 
             {/* Contact Info */}

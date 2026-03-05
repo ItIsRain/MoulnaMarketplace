@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -21,7 +22,7 @@ const CATEGORIES = [
     description: "Unique rings, necklaces, bracelets and earrings crafted by local artisans",
     image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600",
     icon: Gem,
-    productCount: 1250,
+    productCount: 0,
     trending: true,
     subcategories: ["Rings", "Necklaces", "Bracelets", "Earrings", "Sets"],
   },
@@ -31,7 +32,7 @@ const CATEGORIES = [
     description: "Beautiful home accessories, vases, candles and decorative items",
     image: "https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=600",
     icon: Home,
-    productCount: 890,
+    productCount: 0,
     subcategories: ["Vases", "Candles", "Wall Art", "Cushions", "Rugs"],
   },
   {
@@ -40,7 +41,7 @@ const CATEGORIES = [
     description: "Traditional and modern Arabic calligraphy art pieces and prints",
     image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600",
     icon: Palette,
-    productCount: 456,
+    productCount: 0,
     subcategories: ["Wall Art", "Prints", "Custom Names", "Quran Art"],
   },
   {
@@ -49,7 +50,7 @@ const CATEGORIES = [
     description: "Authentic Arabian fragrances, oud oils and bakhoor",
     image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=600",
     icon: Sparkles,
-    productCount: 678,
+    productCount: 0,
     trending: true,
     subcategories: ["Oud Oil", "Perfumes", "Bakhoor", "Diffusers", "Gift Sets"],
   },
@@ -59,7 +60,7 @@ const CATEGORIES = [
     description: "Abayas, kaftans, modest fashion and traditional wear",
     image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600",
     icon: Shirt,
-    productCount: 1560,
+    productCount: 0,
     subcategories: ["Abayas", "Kaftans", "Hijabs", "Accessories"],
   },
   {
@@ -68,7 +69,7 @@ const CATEGORIES = [
     description: "Artisanal chocolates, dates, honey and homemade treats",
     image: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=600",
     icon: Cookie,
-    productCount: 345,
+    productCount: 0,
     subcategories: ["Dates", "Chocolate", "Honey", "Baked Goods", "Gift Boxes"],
   },
   {
@@ -77,7 +78,7 @@ const CATEGORIES = [
     description: "Handmade toys, clothing and accessories for children",
     image: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=600",
     icon: Baby,
-    productCount: 567,
+    productCount: 0,
     subcategories: ["Toys", "Clothing", "Nursery", "Party Supplies"],
   },
   {
@@ -86,7 +87,7 @@ const CATEGORIES = [
     description: "Natural skincare, soaps and beauty products",
     image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600",
     icon: Heart,
-    productCount: 423,
+    productCount: 0,
     subcategories: ["Skincare", "Soaps", "Hair Care", "Bath & Body"],
   },
   {
@@ -95,7 +96,7 @@ const CATEGORIES = [
     description: "Phone cases, laptop sleeves and tech gadgets",
     image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=600",
     icon: Laptop,
-    productCount: 234,
+    productCount: 0,
     subcategories: ["Phone Cases", "Laptop Sleeves", "Cables", "Stands"],
   },
   {
@@ -104,7 +105,7 @@ const CATEGORIES = [
     description: "Perfect gifts for Eid, weddings, birthdays and special moments",
     image: "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=600",
     icon: Gift,
-    productCount: 789,
+    productCount: 0,
     trending: true,
     subcategories: ["Eid Gifts", "Wedding", "Birthday", "Corporate"],
   },
@@ -114,7 +115,7 @@ const CATEGORIES = [
     description: "Unique handcrafted items from local artisans",
     image: "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=600",
     icon: Scissors,
-    productCount: 345,
+    productCount: 0,
     subcategories: ["Pottery", "Woodwork", "Textiles", "Paper Crafts"],
   },
   {
@@ -123,12 +124,41 @@ const CATEGORIES = [
     description: "Indoor plants, succulents and dried flower arrangements",
     image: "https://images.unsplash.com/photo-1463320726281-696a485928c7?w=600",
     icon: Flower2,
-    productCount: 189,
+    productCount: 0,
     subcategories: ["Indoor Plants", "Succulents", "Dried Flowers", "Planters"],
   },
 ];
 
+function normalizeSlug(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
 export default function CategoriesPage() {
+  const [categories, setCategories] = useState(CATEGORIES);
+
+  useEffect(() => {
+    async function fetchCounts() {
+      try {
+        const res = await fetch("/api/categories");
+        if (!res.ok) return;
+        const data = await res.json();
+        const apiCategories: { slug: string; productCount: number }[] = data.categories || [];
+
+        const countMap = new Map<string, number>();
+        apiCategories.forEach((c) => countMap.set(normalizeSlug(c.slug), c.productCount));
+
+        setCategories(
+          CATEGORIES.map((cat) => ({
+            ...cat,
+            productCount: countMap.get(normalizeSlug(cat.slug)) ?? 0,
+          }))
+        );
+      } catch {
+        // Keep defaults (0) on error
+      }
+    }
+    fetchCounts();
+  }, []);
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -151,7 +181,7 @@ export default function CategoriesPage() {
         {/* Categories Grid */}
         <section className="container mx-auto px-4 py-12">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {CATEGORIES.map((category, index) => {
+            {categories.map((category, index) => {
               const Icon = category.icon;
 
               return (

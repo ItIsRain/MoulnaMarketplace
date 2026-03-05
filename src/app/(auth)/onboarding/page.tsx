@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
   User, MapPin, Heart, Sparkles, ChevronRight, ChevronLeft,
-  Check, Palette, Search, Crown, Star, Gift, Flame
+  Check, Palette, Search, Crown, Star, Trophy, Flame
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -292,17 +292,17 @@ export default function OnboardingPage() {
                   Welcome to Moulna, {formData.firstName || "Explorer"}! Your journey begins now.
                 </p>
 
-                {/* Rewards */}
+                {/* Level Start */}
                 <div className="grid grid-cols-3 gap-4 mb-8">
                   <div className="p-4 bg-muted rounded-lg">
                     <Sparkles className="w-6 h-6 text-moulna-gold mx-auto mb-2" />
-                    <p className="font-bold text-lg">+200 XP</p>
-                    <p className="text-xs text-muted-foreground">Welcome Bonus</p>
+                    <p className="font-bold text-lg">Level 1</p>
+                    <p className="text-xs text-muted-foreground">Newcomer</p>
                   </div>
                   <div className="p-4 bg-muted rounded-lg">
-                    <Gift className="w-6 h-6 text-purple-500 mx-auto mb-2" />
-                    <p className="font-bold text-lg">1 Badge</p>
-                    <p className="text-xs text-muted-foreground">Early Bird</p>
+                    <Trophy className="w-6 h-6 text-purple-500 mx-auto mb-2" />
+                    <p className="font-bold text-lg">0 Badges</p>
+                    <p className="text-xs text-muted-foreground">Start Earning</p>
                   </div>
                   <div className="p-4 bg-muted rounded-lg">
                     <Flame className="w-6 h-6 text-orange-500 mx-auto mb-2" />

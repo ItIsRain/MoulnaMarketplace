@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
-  Users, MessageSquare, Store, DollarSign, TrendingUp, TrendingDown,
-  AlertCircle, CheckCircle, Clock, Package, Flag, ArrowUpRight,
+  Users, MessageSquare, Store, DollarSign, TrendingUp,
+  CheckCircle, Clock, Package, Flag, ArrowUpRight,
   Activity, Eye, Shield, Loader2
 } from "lucide-react";
 
@@ -20,6 +20,7 @@ interface AdminStats {
   totalSellers: number;
   totalProducts: number;
   activeProducts: number;
+  pendingProducts: number;
   totalConversations: number;
   monthlyConversations: number;
   totalRevenue: number;
@@ -54,10 +55,10 @@ interface AdminData {
 }
 
 const STATUS_COLOR_MAP: Record<string, string> = {
-  new: "bg-blue-500",
-  replied: "bg-green-500",
-  sold: "bg-purple-500",
-  archived: "bg-gray-400",
+  new: "bg-blue-400",
+  replied: "bg-emerald-400",
+  sold: "bg-purple-400",
+  archived: "bg-gray-300",
 };
 
 export default function AdminDashboardPage() {
@@ -82,8 +83,9 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-7 h-7 animate-spin text-moulna-gold" />
+        <p className="text-sm text-muted-foreground">Loading dashboard...</p>
       </div>
     );
   }
@@ -95,30 +97,41 @@ export default function AdminDashboardPage() {
       label: "Total Users",
       value: stats?.totalUsers?.toLocaleString() ?? "0",
       icon: Users,
-      color: "text-blue-600",
-      bg: "bg-blue-100",
+      gradient: "from-blue-500/10 to-blue-600/5",
+      iconColor: "text-blue-500",
+      iconBg: "bg-blue-500/10",
     },
     {
       label: "Active Sellers",
       value: stats?.totalSellers?.toLocaleString() ?? "0",
       icon: Store,
-      color: "text-green-600",
-      bg: "bg-green-100",
+      gradient: "from-emerald-500/10 to-emerald-600/5",
+      iconColor: "text-emerald-500",
+      iconBg: "bg-emerald-500/10",
     },
     {
       label: "Total Inquiries",
       value: stats?.totalConversations?.toLocaleString() ?? "0",
       icon: MessageSquare,
-      color: "text-purple-600",
-      bg: "bg-purple-100",
+      gradient: "from-violet-500/10 to-violet-600/5",
+      iconColor: "text-violet-500",
+      iconBg: "bg-violet-500/10",
     },
     {
       label: "Revenue (MTD)",
       value: stats ? formatAED(stats.monthlyRevenue) : "AED 0.00",
       icon: DollarSign,
-      color: "text-moulna-gold",
-      bg: "bg-moulna-gold/10",
+      gradient: "from-moulna-gold/10 to-amber-500/5",
+      iconColor: "text-moulna-gold",
+      iconBg: "bg-moulna-gold/10",
     },
+  ];
+
+  const secondaryStats = [
+    { label: "Total Products", value: stats?.totalProducts?.toLocaleString() ?? "0", icon: Package, color: "text-orange-500" },
+    { label: "Active Products", value: stats?.activeProducts?.toLocaleString() ?? "0", icon: CheckCircle, color: "text-emerald-500" },
+    { label: "Monthly Inquiries", value: stats?.monthlyConversations?.toLocaleString() ?? "0", icon: TrendingUp, color: "text-indigo-500" },
+    { label: "Pending KYC", value: stats?.pendingKyc?.toLocaleString() ?? "0", icon: Shield, color: "text-amber-500" },
   ];
 
   const pendingActions = [
@@ -127,32 +140,16 @@ export default function AdminDashboardPage() {
       title: "KYC Applications Pending",
       count: stats?.pendingKyc ?? 0,
       icon: Store,
-      color: "text-blue-600",
+      color: "text-blue-500",
       link: "/admin/sellers?status=pending",
     },
     {
       type: "product",
       title: "Products Pending Review",
-      count: 0,
+      count: stats?.pendingProducts ?? 0,
       icon: Package,
-      color: "text-orange-600",
+      color: "text-orange-500",
       link: "/admin/products?status=pending",
-    },
-    {
-      type: "report",
-      title: "Reported Items",
-      count: 0,
-      icon: Flag,
-      color: "text-red-600",
-      link: "/admin/reports",
-    },
-    {
-      type: "dispute",
-      title: "Open Disputes",
-      count: 0,
-      icon: AlertCircle,
-      color: "text-yellow-600",
-      link: "/admin/disputes",
     },
   ];
 
@@ -160,68 +157,93 @@ export default function AdminDashboardPage() {
   const recentActivity = data?.recentActivity ?? [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background p-8">
+    <div className="p-6 lg:p-8 space-y-6">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <Shield className="w-8 h-8 text-moulna-gold" />
-          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        </div>
-        <p className="text-muted-foreground">
-          Welcome back! Here's what's happening on Moulna today.
+      <div>
+        <h1 className="text-xl font-display font-semibold text-foreground">Dashboard</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          Welcome back! Here&apos;s what&apos;s happening on Moulna today.
         </p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {/* Primary Stats Grid */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat, index) => (
           <motion.div
             key={stat.label}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
+            transition={{ delay: index * 0.06 }}
           >
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className={cn("p-3 rounded-lg", stat.bg)}>
-                  <stat.icon className={cn("w-6 h-6", stat.color)} />
+            <Card className={cn("relative overflow-hidden border-border/60 shadow-sm hover:shadow-md transition-shadow")}>
+              <div className={cn("absolute inset-0 bg-gradient-to-br opacity-60", stat.gradient)} />
+              <div className="relative p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", stat.iconBg)}>
+                    <stat.icon className={cn("w-[18px] h-[18px]", stat.iconColor)} />
+                  </div>
                 </div>
+                <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
               </div>
-              <p className="text-2xl font-bold">{stat.value}</p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
             </Card>
           </motion.div>
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6 mb-8">
+      {/* Secondary Stats */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {secondaryStats.map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 + index * 0.05 }}
+          >
+            <Card className="px-4 py-3 border-border/60 shadow-sm">
+              <div className="flex items-center gap-3">
+                <stat.icon className={cn("w-4 h-4", stat.color)} />
+                <div className="flex items-baseline gap-2 flex-1">
+                  <span className="text-lg font-bold">{stat.value}</span>
+                  <span className="text-xs text-muted-foreground truncate">{stat.label}</span>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-5">
         {/* Pending Actions */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="font-semibold flex items-center gap-2">
-              <Clock className="w-5 h-5 text-moulna-gold" />
+        <Card className="border-border/60 shadow-sm">
+          <div className="px-5 pt-5 pb-4 border-b border-border/60">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+              <Clock className="w-4 h-4 text-moulna-gold" />
               Pending Actions
             </h2>
           </div>
-          <div className="space-y-4">
+          <div className="p-3">
             {pendingActions.map((action, index) => (
               <motion.div
                 key={action.type}
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: 0.4 + index * 0.08 }}
               >
                 <Link
                   href={action.link}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted/60 transition-colors group"
                 >
-                  <div className="flex items-center gap-3">
-                    <action.icon className={cn("w-5 h-5", action.color)} />
-                    <span className="text-sm">{action.title}</span>
+                  <div className="flex items-center gap-2.5">
+                    <action.icon className={cn("w-4 h-4", action.color)} />
+                    <span className="text-[13px]">{action.title}</span>
                   </div>
-                  <Badge variant="secondary" className="font-bold">
-                    {action.count}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="font-bold text-xs tabular-nums">
+                      {action.count}
+                    </Badge>
+                    <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
                 </Link>
               </motion.div>
             ))}
@@ -229,46 +251,49 @@ export default function AdminDashboardPage() {
         </Card>
 
         {/* Recent Activity */}
-        <Card className="p-6 lg:col-span-2">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="font-semibold flex items-center gap-2">
-              <Activity className="w-5 h-5 text-moulna-gold" />
+        <Card className="lg:col-span-2 border-border/60 shadow-sm">
+          <div className="px-5 pt-5 pb-4 border-b border-border/60 flex items-center justify-between">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+              <Activity className="w-4 h-4 text-moulna-gold" />
               Recent Activity
             </h2>
-            <Button variant="ghost" size="sm">
-              View All
+            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-7" asChild>
+              <Link href="/admin/orders">
+                View All
+                <ArrowUpRight className="w-3 h-3 ms-1" />
+              </Link>
             </Button>
           </div>
-          <div className="space-y-4">
+          <div className="p-3">
             {recentActivity.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No recent activity yet.
-              </p>
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <Activity className="w-8 h-8 text-muted-foreground/30 mb-2" />
+                <p className="text-sm text-muted-foreground">No recent activity yet.</p>
+              </div>
             )}
             {recentActivity.map((activity, index) => (
               <motion.div
                 key={activity.id}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50"
+                transition={{ delay: 0.4 + index * 0.04 }}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/40 transition-colors"
               >
                 <div
                   className={cn(
-                    "w-2 h-2 rounded-full",
-                    STATUS_COLOR_MAP[activity.status] ?? "bg-gray-400"
+                    "w-1.5 h-1.5 rounded-full flex-shrink-0",
+                    STATUS_COLOR_MAP[activity.status] ?? "bg-gray-300"
                   )}
                 />
-                <div className="flex-1">
-                  <p className="text-sm">
-                    <span className="font-medium">Inquiry about {activity.product}</span>
-                    {" - "}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] truncate">
+                    <span className="font-medium">{activity.product}</span>
                     <span className="text-muted-foreground">
-                      {activity.buyer} &rarr; {activity.seller}
+                      {" "}&mdash; {activity.buyer} &rarr; {activity.seller}
                     </span>
                   </p>
                 </div>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-[11px] text-muted-foreground flex-shrink-0">
                   {formatDate(activity.createdAt)}
                 </span>
               </motion.div>
@@ -277,51 +302,50 @@ export default function AdminDashboardPage() {
         </Card>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-5">
         {/* Top Sellers */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="font-semibold flex items-center gap-2">
-              <Store className="w-5 h-5 text-moulna-gold" />
-              Top Sellers (This Month)
+        <Card className="border-border/60 shadow-sm">
+          <div className="px-5 pt-5 pb-4 border-b border-border/60 flex items-center justify-between">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+              <Store className="w-4 h-4 text-moulna-gold" />
+              Top Sellers
             </h2>
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-7" asChild>
               <Link href="/admin/sellers">
                 View All
-                <ArrowUpRight className="w-4 h-4 ms-1" />
+                <ArrowUpRight className="w-3 h-3 ms-1" />
               </Link>
             </Button>
           </div>
-          <div className="space-y-4">
+          <div className="p-3">
             {topSellers.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No sellers yet.
-              </p>
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <Store className="w-8 h-8 text-muted-foreground/30 mb-2" />
+                <p className="text-sm text-muted-foreground">No sellers yet.</p>
+              </div>
             )}
             {topSellers.map((seller, index) => (
               <motion.div
                 key={seller.id}
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="flex items-center justify-between"
+                transition={{ delay: 0.4 + index * 0.08 }}
+                className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted/40 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-6 text-sm font-bold text-muted-foreground">
-                    #{index + 1}
+                  <span className="w-5 text-xs font-bold text-muted-foreground tabular-nums">
+                    {index + 1}
                   </span>
                   <DiceBearAvatar
                     seed={seller.avatarSeed}
                     style={seller.avatarStyle}
                     size="sm"
                   />
-                  <span className="font-medium">{seller.name}</span>
+                  <span className="text-[13px] font-medium">{seller.name}</span>
                 </div>
                 <div className="text-end">
-                  <p className="font-bold">{seller.totalListings} listings</p>
-                  <p className="text-xs text-muted-foreground">
-                    {seller.followerCount} followers
-                  </p>
+                  <p className="text-[13px] font-bold tabular-nums">{seller.totalListings}</p>
+                  <p className="text-[11px] text-muted-foreground">{seller.followerCount} followers</p>
                 </div>
               </motion.div>
             ))}
@@ -329,36 +353,33 @@ export default function AdminDashboardPage() {
         </Card>
 
         {/* Quick Actions */}
-        <Card className="p-6">
-          <h2 className="font-semibold flex items-center gap-2 mb-6">
-            <Eye className="w-5 h-5 text-moulna-gold" />
-            Quick Actions
-          </h2>
-          <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" className="h-auto py-4 flex-col" asChild>
-              <Link href="/admin/users">
-                <Users className="w-6 h-6 mb-2" />
-                Manage Users
+        <Card className="border-border/60 shadow-sm">
+          <div className="px-5 pt-5 pb-4 border-b border-border/60">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+              <Eye className="w-4 h-4 text-moulna-gold" />
+              Quick Actions
+            </h2>
+          </div>
+          <div className="p-5 grid grid-cols-2 gap-3">
+            {[
+              { href: "/admin/users", icon: Users, label: "Manage Users", color: "text-blue-500" },
+              { href: "/admin/sellers", icon: Store, label: "Manage Sellers", color: "text-emerald-500" },
+              { href: "/admin/products", icon: Package, label: "Review Products", color: "text-orange-500" },
+              { href: "/admin/reports", icon: Flag, label: "View Reports", color: "text-red-500" },
+            ].map((action) => (
+              <Link
+                key={action.href}
+                href={action.href}
+                className="flex flex-col items-center gap-2.5 p-5 rounded-xl border border-border/60 hover:border-moulna-gold/30 hover:bg-moulna-gold/[0.03] transition-all group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-muted/80 group-hover:bg-moulna-gold/10 flex items-center justify-center transition-colors">
+                  <action.icon className={cn("w-5 h-5", action.color, "group-hover:text-moulna-gold transition-colors")} />
+                </div>
+                <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                  {action.label}
+                </span>
               </Link>
-            </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col" asChild>
-              <Link href="/admin/sellers">
-                <Store className="w-6 h-6 mb-2" />
-                Manage Sellers
-              </Link>
-            </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col" asChild>
-              <Link href="/admin/products">
-                <Package className="w-6 h-6 mb-2" />
-                Review Products
-              </Link>
-            </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col" asChild>
-              <Link href="/admin/reports">
-                <Flag className="w-6 h-6 mb-2" />
-                View Reports
-              </Link>
-            </Button>
+            ))}
           </div>
         </Card>
       </div>

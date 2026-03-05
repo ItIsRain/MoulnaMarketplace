@@ -32,6 +32,7 @@ export async function GET(req: NextRequest) {
   const limit = 20;
   const offset = (page - 1) * limit;
   const status = searchParams.get("status");
+  const search = searchParams.get("search")?.trim();
 
   // Build query for shops with owner info
   let query = admin
@@ -39,6 +40,10 @@ export async function GET(req: NextRequest) {
     .select("id, name, slug, owner_id, avatar_style, avatar_seed, logo_url, total_listings, follower_count, rating, review_count, created_at, status", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
+
+  if (search) {
+    query = query.or(`name.ilike.%${search}%,slug.ilike.%${search}%`);
+  }
 
   if (status && status !== "all") {
     query = query.eq("status", status);
@@ -111,4 +116,76 @@ export async function GET(req: NextRequest) {
       suspended: suspendedCount || 0,
     },
   });
+}
+
+// PATCH /api/admin/sellers — approve, reject, suspend, or reactivate a seller shop
+export async function PATCH(req: NextRequest) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Verify admin role
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || profile.role !== "admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  let body: { shopId?: string; action?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const { shopId, action } = body;
+
+  if (!shopId || !action) {
+    return NextResponse.json(
+      { error: "Missing shopId or action" },
+      { status: 400 }
+    );
+  }
+
+  const validActions = ["approve", "reject", "suspend", "reactivate"] as const;
+  if (!validActions.includes(action as (typeof validActions)[number])) {
+    return NextResponse.json(
+      { error: "Invalid action. Must be one of: approve, reject, suspend, reactivate" },
+      { status: 400 }
+    );
+  }
+
+  const statusMap: Record<string, string> = {
+    approve: "active",
+    reject: "suspended",
+    suspend: "suspended",
+    reactivate: "active",
+  };
+
+  const admin = createAdminClient();
+
+  const { error: updateError } = await admin
+    .from("shops")
+    .update({ status: statusMap[action] })
+    .eq("id", shopId);
+
+  if (updateError) {
+    return NextResponse.json(
+      { error: updateError.message },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ success: true });
 }

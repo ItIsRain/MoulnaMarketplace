@@ -20,8 +20,12 @@ import {
   Star, Heart, Share2, Shield,
   ChevronRight, MessageCircle,
   Sparkles, Clock, MapPin, ChevronLeft, Phone, Loader2, Pencil,
-  Check, X
+  Check, X, Copy, Link2,
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
+import { QRCodeSVG } from "qrcode.react";
 import { useTracking } from "@/hooks/useTracking";
 
 export default function ProductPage() {
@@ -35,6 +39,8 @@ export default function ProductPage() {
   const [selectedImage, setSelectedImage] = React.useState(0);
   const [isWishlisted, setIsWishlisted] = React.useState(false);
   const [wishlistLoading, setWishlistLoading] = React.useState(false);
+  const [shareOpen, setShareOpen] = React.useState(false);
+  const [linkCopied, setLinkCopied] = React.useState(false);
 
   React.useEffect(() => {
     async function load() {
@@ -252,10 +258,6 @@ export default function ProductPage() {
                     {formatAED(product.compareAtPriceFils)}
                   </span>
                 )}
-                <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-moulna-gold text-white text-sm font-medium">
-                  <Sparkles className="w-4 h-4" />
-                  <span>+{product.xpReward} XP</span>
-                </div>
               </div>
 
               {product.shortDescription && (
@@ -362,7 +364,7 @@ export default function ProductPage() {
                       {isWishlisted ? "Saved" : "Save"}
                     </Button>
                   )}
-                  <Button variant="outline" size="lg" className="flex-1">
+                  <Button variant="outline" size="lg" className="flex-1" onClick={() => setShareOpen(true)}>
                     <Share2 className="w-5 h-5 me-2" />
                     Share
                   </Button>
@@ -463,6 +465,63 @@ export default function ProductPage() {
       </main>
 
       <Footer />
+
+      {/* ═══════════ SHARE DIALOG ═══════════ */}
+      {product && (
+        <Dialog open={shareOpen} onOpenChange={(open) => { setShareOpen(open); if (!open) setLinkCopied(false); }}>
+          <DialogContent className="max-w-sm overflow-hidden">
+            <div className="flex flex-col items-center overflow-hidden">
+              <DialogHeader className="w-full text-center items-center mb-4">
+                <DialogTitle>Share this product</DialogTitle>
+                <DialogDescription className="text-xs">Scan the QR code or copy the link</DialogDescription>
+              </DialogHeader>
+
+              {/* QR Code */}
+              <div className="bg-white p-3 rounded-xl mb-3">
+                <QRCodeSVG
+                  value={typeof window !== "undefined" ? `${window.location.origin}/products/${product.slug}` : `/products/${product.slug}`}
+                  size={150}
+                  level="M"
+                  includeMargin={false}
+                  bgColor="#ffffff"
+                  fgColor="#1a1a1a"
+                />
+              </div>
+
+              {/* Product name */}
+              <p className="text-xs text-muted-foreground text-center line-clamp-2 mb-4 w-full overflow-hidden">
+                {product.title}
+              </p>
+
+              {/* Link + Copy */}
+              <div className="w-full min-w-0 flex items-center gap-2 rounded-lg border bg-muted/50 px-2.5 py-2 mb-3 overflow-hidden">
+                <Link2 className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                <span className="text-xs truncate text-muted-foreground">
+                  moulna.ae/products/{product.slug}
+                </span>
+              </div>
+              <Button
+                className="w-full"
+                size="sm"
+                variant={linkCopied ? "outline" : "gold"}
+                onClick={() => {
+                  const url = `${window.location.origin}/products/${product.slug}`;
+                  navigator.clipboard.writeText(url).then(() => {
+                    setLinkCopied(true);
+                    setTimeout(() => setLinkCopied(false), 2500);
+                  });
+                }}
+              >
+                {linkCopied ? (
+                  <><Check className="w-4 h-4 me-2" />Copied!</>
+                ) : (
+                  <><Copy className="w-4 h-4 me-2" />Copy Link</>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

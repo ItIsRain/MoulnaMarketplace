@@ -124,7 +124,7 @@ export default function SellerRewardsPage() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Trophy className="w-7 h-7 text-moulna-gold" />
-            Seller Rewards
+            Seller Progress
           </h1>
           <p className="text-muted-foreground">
             Level up your shop and unlock exclusive perks
@@ -226,10 +226,6 @@ export default function SellerRewardsPage() {
                   <div className="flex-1">
                     <h3 className="font-medium">{badge.name}</h3>
                     <p className="text-sm text-muted-foreground">{badge.description}</p>
-                    <div className="flex items-center gap-1 text-xs text-moulna-gold mt-1">
-                      <Sparkles className="w-3 h-3" />
-                      +{badge.xp} XP
-                    </div>
                   </div>
                 </div>
               ))}

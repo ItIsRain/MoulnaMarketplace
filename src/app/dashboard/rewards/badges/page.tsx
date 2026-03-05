@@ -357,12 +357,6 @@ export default function BadgesPage() {
                           <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
                             {badge.description}
                           </p>
-                          <div className="flex items-center gap-2">
-                            <Sparkles className="w-3 h-3 text-moulna-gold" />
-                            <span className="text-xs font-medium text-moulna-gold">
-                              +{badge.xp} XP
-                            </span>
-                          </div>
                         </div>
                       </div>
 

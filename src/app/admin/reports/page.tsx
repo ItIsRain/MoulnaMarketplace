@@ -2,80 +2,46 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
-  Flag, Search, Filter, Eye, CheckCircle, XCircle, Clock,
-  AlertTriangle, MessageSquare, Package, Store, User, Ban,
-  Calendar, Trash2
+  Flag, Search, CheckCircle, Clock, AlertTriangle,
+  Package, Loader2, Eye, Store, Users, MessageSquare,
+  XCircle, ShieldCheck
 } from "lucide-react";
 
-const REPORTS = [
-  {
-    id: "RPT-001",
-    type: "product",
-    subject: "Counterfeit Perfume",
-    targetName: "Designer Fragrance 100ml",
-    targetAvatar: "product-1",
-    reportedBy: "Sarah Ahmed",
-    reporterAvatar: "sarah-ahmed",
-    reason: "Suspected counterfeit item",
-    description: "This product appears to be a fake designer perfume. The packaging and branding don't match the authentic product.",
-    status: "pending",
-    priority: "high",
-    date: "Mar 13, 2024",
-    seller: "Unknown Seller",
-  },
-  {
-    id: "RPT-002",
-    type: "seller",
-    subject: "Misleading Product Photos",
-    targetName: "Quick Deals Store",
-    targetAvatar: "quick-deals",
-    reportedBy: "Mohammed Ali",
-    reporterAvatar: "mohammed-ali",
-    reason: "Misleading photos/description",
-    description: "Seller uses stock photos that don't represent the actual products. Multiple customers have complained.",
-    status: "investigating",
-    priority: "medium",
-    date: "Mar 12, 2024",
-    seller: "Quick Deals Store",
-  },
-  {
-    id: "RPT-003",
-    type: "user",
-    subject: "Harassment in Messages",
-    targetName: "John Doe",
-    targetAvatar: "john-doe",
-    reportedBy: "Fatima Hassan",
-    reporterAvatar: "fatima-hassan",
-    reason: "Harassment/Abusive behavior",
-    description: "User sent multiple abusive messages after I declined to lower the price.",
-    status: "resolved",
-    priority: "high",
-    date: "Mar 11, 2024",
-    seller: null,
-  },
-  {
-    id: "RPT-004",
-    type: "review",
-    subject: "Fake Review",
-    targetName: "5-star review on Oud Set",
-    targetAvatar: "review-1",
-    reportedBy: "Ahmed Khalid",
-    reporterAvatar: "ahmed-khalid",
-    reason: "Fake/Paid review",
-    description: "This review appears to be fake. The reviewer account was created the same day and has no transaction history.",
-    status: "pending",
-    priority: "low",
-    date: "Mar 10, 2024",
-    seller: "Arabian Scents Boutique",
-  },
-];
+interface ReportReporter {
+  name: string;
+  avatarSeed: string | null;
+  avatarStyle: string | null;
+}
+
+interface Report {
+  id: string;
+  reporter: ReportReporter;
+  targetType: "product" | "shop" | "user" | "message";
+  targetId: string;
+  targetName: string;
+  reason: string;
+  description: string | null;
+  status: "pending" | "investigating" | "resolved" | "dismissed";
+  priority: "low" | "normal" | "high" | "urgent";
+  adminNotes: string | null;
+  createdAt: string;
+}
+
+interface StatusCounts {
+  pending: number;
+  investigating: number;
+  resolved: number;
+  dismissed: number;
+  highPriority: number;
+  resolvedThisMonth: number;
+}
 
 const STATUS_OPTIONS = [
   { id: "all", label: "All Reports" },
@@ -85,75 +51,138 @@ const STATUS_OPTIONS = [
   { id: "dismissed", label: "Dismissed" },
 ];
 
-const TYPE_ICONS = {
-  product: Package,
-  seller: Store,
-  user: User,
-  review: MessageSquare,
+const STATUS_STYLES: Record<string, { bg: string; text: string; icon: typeof Clock }> = {
+  pending: { bg: "bg-amber-100", text: "text-amber-700", icon: Clock },
+  investigating: { bg: "bg-blue-100", text: "text-blue-700", icon: Eye },
+  resolved: { bg: "bg-green-100", text: "text-green-700", icon: CheckCircle },
+  dismissed: { bg: "bg-gray-100", text: "text-gray-700", icon: XCircle },
 };
+
+const TARGET_ICONS: Record<string, typeof Package> = {
+  product: Package,
+  shop: Store,
+  user: Users,
+  message: MessageSquare,
+};
+
+const PAGE_SIZE = 20;
 
 export default function AdminReportsPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedStatus, setSelectedStatus] = React.useState("all");
+  const [loading, setLoading] = React.useState(true);
+  const [reports, setReports] = React.useState<Report[]>([]);
+  const [totalCount, setTotalCount] = React.useState(0);
+  const [statusCounts, setStatusCounts] = React.useState<StatusCounts>({
+    pending: 0,
+    investigating: 0,
+    resolved: 0,
+    dismissed: 0,
+    highPriority: 0,
+    resolvedThisMonth: 0,
+  });
+  const [page, setPage] = React.useState(1);
+  const [updatingId, setUpdatingId] = React.useState<string | null>(null);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  // Client-side search filter
+  const filteredReports = React.useMemo(() => {
+    if (!searchQuery.trim()) return reports;
+    const q = searchQuery.toLowerCase();
+    return reports.filter(
+      (r) =>
+        r.reporter.name.toLowerCase().includes(q) ||
+        r.targetName.toLowerCase().includes(q) ||
+        r.reason.toLowerCase().includes(q) ||
+        r.id.toLowerCase().includes(q)
+    );
+  }, [reports, searchQuery]);
+
+  const fetchReports = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `/api/admin/reports?page=${page}&status=${selectedStatus}`
+      );
+      if (!res.ok) throw new Error("Failed to fetch reports");
+      const data = await res.json();
+      setReports(data.reports ?? []);
+      setTotalCount(data.totalCount ?? 0);
+      setStatusCounts(data.statusCounts ?? {
+        pending: 0, investigating: 0, resolved: 0, dismissed: 0,
+        highPriority: 0, resolvedThisMonth: 0,
+      });
+    } catch (err) {
+      console.error("Error fetching reports:", err);
+      setReports([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, selectedStatus]);
+
+  React.useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [selectedStatus]);
+
+  const handleStatusUpdate = async (reportId: string, newStatus: string) => {
+    setUpdatingId(reportId);
+    try {
+      const res = await fetch("/api/admin/reports", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportId, status: newStatus }),
+      });
+      if (res.ok) {
+        fetchReports();
+      }
+    } catch (err) {
+      console.error("Failed to update report:", err);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background p-8">
+    <div className="p-6 lg:p-8 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <Flag className="w-8 h-8 text-moulna-gold" />
-            <h1 className="text-2xl font-bold">Reports & Moderation</h1>
-          </div>
-          <p className="text-muted-foreground">
-            Review and handle reported content
-          </p>
+      <div>
+        <div className="flex items-center gap-2">
+          <Flag className="w-5 h-5 text-moulna-gold" />
+          <h1 className="text-xl font-display font-semibold text-foreground">Reports & Moderation</h1>
         </div>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          Review and handle reported content
+        </p>
       </div>
 
       {/* Stats */}
-      <div className="grid md:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <Flag className="w-8 h-8 text-red-600" />
-            <div>
-              <p className="text-2xl font-bold">24</p>
-              <p className="text-sm text-muted-foreground">Open Reports</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: "Open Reports", value: statusCounts.pending + statusCounts.investigating, icon: Flag, color: "text-red-500" },
+          { label: "High Priority", value: statusCounts.highPriority, icon: AlertTriangle, color: "text-amber-500" },
+          { label: "Investigating", value: statusCounts.investigating, icon: Clock, color: "text-blue-500" },
+          { label: "Resolved (Month)", value: statusCounts.resolvedThisMonth, icon: CheckCircle, color: "text-emerald-500" },
+        ].map((stat) => (
+          <Card key={stat.label} className="border-border/60 shadow-sm px-4 py-3">
+            <div className="flex items-center gap-3">
+              <stat.icon className={cn("w-4 h-4", stat.color)} />
+              <div>
+                <p className="text-lg font-bold tabular-nums">{stat.value}</p>
+                <p className="text-xs text-muted-foreground">{stat.label}</p>
+              </div>
             </div>
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="w-8 h-8 text-yellow-600" />
-            <div>
-              <p className="text-2xl font-bold">8</p>
-              <p className="text-sm text-muted-foreground">High Priority</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <Clock className="w-8 h-8 text-blue-600" />
-            <div>
-              <p className="text-2xl font-bold">12</p>
-              <p className="text-sm text-muted-foreground">Investigating</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="w-8 h-8 text-green-600" />
-            <div>
-              <p className="text-2xl font-bold">156</p>
-              <p className="text-sm text-muted-foreground">Resolved (Month)</p>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        ))}
       </div>
 
       {/* Filters */}
-      <Card className="p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+      <Card className="border-border/60 shadow-sm px-4 py-3">
+        <div className="flex flex-col md:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -163,7 +192,7 @@ export default function AdminReportsPage() {
               className="ps-10"
             />
           </div>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-1.5 flex-wrap">
             {STATUS_OPTIONS.map((option) => (
               <Button
                 key={option.id}
@@ -171,6 +200,7 @@ export default function AdminReportsPage() {
                 size="sm"
                 onClick={() => setSelectedStatus(option.id)}
                 className={cn(
+                  "text-xs",
                   selectedStatus === option.id &&
                     "bg-moulna-gold hover:bg-moulna-gold-dark"
                 )}
@@ -182,136 +212,187 @@ export default function AdminReportsPage() {
         </div>
       </Card>
 
-      {/* Reports List */}
-      <div className="space-y-4">
-        {REPORTS.map((report, index) => {
-          const TypeIcon = TYPE_ICONS[report.type as keyof typeof TYPE_ICONS] || Flag;
+      {/* Reports Table */}
+      <Card className="border-border/60 shadow-sm">
+        <div className="px-5 pt-5 pb-4 border-b border-border/60 flex items-center justify-between">
+          <h2 className="text-sm font-semibold flex items-center gap-2">
+            <Flag className="w-4 h-4 text-moulna-gold" />
+            Reports
+          </h2>
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {totalCount} total
+          </span>
+        </div>
 
-          return (
-            <motion.div
-              key={report.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card
-                className={cn(
-                  "p-6",
-                  report.priority === "high" && "border-red-200 bg-red-50/30"
-                )}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-4 flex-1">
-                    <div
-                      className={cn(
-                        "w-12 h-12 rounded-lg flex items-center justify-center",
-                        report.type === "product" && "bg-blue-100",
-                        report.type === "seller" && "bg-purple-100",
-                        report.type === "user" && "bg-orange-100",
-                        report.type === "review" && "bg-green-100"
-                      )}
-                    >
-                      <TypeIcon
-                        className={cn(
-                          "w-6 h-6",
-                          report.type === "product" && "text-blue-600",
-                          report.type === "seller" && "text-purple-600",
-                          report.type === "user" && "text-orange-600",
-                          report.type === "review" && "text-green-600"
-                        )}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-sm text-muted-foreground">
-                          {report.id}
-                        </span>
-                        <Badge variant="secondary" className="capitalize">
-                          {report.type}
-                        </Badge>
-                        {report.priority === "high" && (
-                          <Badge className="bg-red-100 text-red-700">
-                            <AlertTriangle className="w-3 h-3 me-1" />
-                            High Priority
+        {loading ? (
+          <div className="py-16 flex flex-col items-center justify-center gap-2">
+            <Loader2 className="w-5 h-5 animate-spin text-moulna-gold" />
+            <p className="text-xs text-muted-foreground">Loading reports...</p>
+          </div>
+        ) : filteredReports.length === 0 ? (
+          <div className="py-16 flex flex-col items-center justify-center text-center">
+            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-3">
+              <ShieldCheck className="w-5 h-5 text-muted-foreground/50" />
+            </div>
+            <h3 className="text-sm font-semibold mb-1">No reports</h3>
+            <p className="text-xs text-muted-foreground max-w-sm">
+              {selectedStatus !== "all"
+                ? `No ${selectedStatus} reports at the moment.`
+                : "When users report products, sellers, or content, those reports will appear here."}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border/40">
+                    <th className="text-start px-5 py-3 text-xs font-medium text-muted-foreground">Reporter</th>
+                    <th className="text-start px-5 py-3 text-xs font-medium text-muted-foreground">Target</th>
+                    <th className="text-start px-5 py-3 text-xs font-medium text-muted-foreground">Reason</th>
+                    <th className="text-start px-5 py-3 text-xs font-medium text-muted-foreground">Priority</th>
+                    <th className="text-start px-5 py-3 text-xs font-medium text-muted-foreground">Status</th>
+                    <th className="text-start px-5 py-3 text-xs font-medium text-muted-foreground">Date</th>
+                    <th className="text-end px-5 py-3 text-xs font-medium text-muted-foreground">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredReports.map((report, index) => {
+                    const statusStyle = STATUS_STYLES[report.status];
+                    const StatusIcon = statusStyle?.icon || Clock;
+                    const TargetIcon = TARGET_ICONS[report.targetType] || Package;
+
+                    return (
+                      <motion.tr
+                        key={report.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: index * 0.03 }}
+                        className="border-b border-border/40 last:border-0 hover:bg-muted/40 transition-colors"
+                      >
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-2">
+                            <DiceBearAvatar
+                              seed={report.reporter.avatarSeed || "user"}
+                              style={report.reporter.avatarStyle || "adventurer"}
+                              size="sm"
+                            />
+                            <span className="text-[13px] font-medium">{report.reporter.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-2">
+                            <TargetIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                            <div>
+                              <p className="text-[13px] font-medium truncate max-w-[180px]">{report.targetName}</p>
+                              <p className="text-[11px] text-muted-foreground capitalize">{report.targetType}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3">
+                          <span className="text-[13px] capitalize">{report.reason.replace("_", " ")}</span>
+                        </td>
+                        <td className="px-5 py-3">
+                          <Badge
+                            variant="secondary"
+                            className={cn(
+                              "text-[11px] capitalize",
+                              report.priority === "urgent" && "bg-red-100 text-red-700",
+                              report.priority === "high" && "bg-amber-100 text-amber-700",
+                              report.priority === "normal" && "bg-gray-100 text-gray-600",
+                              report.priority === "low" && "bg-gray-50 text-gray-500",
+                            )}
+                          >
+                            {report.priority}
                           </Badge>
-                        )}
-                        {report.priority === "medium" && (
-                          <Badge className="bg-yellow-100 text-yellow-700">
-                            Medium
+                        </td>
+                        <td className="px-5 py-3">
+                          <Badge className={cn(statusStyle?.bg, statusStyle?.text, "text-[11px]")}>
+                            <StatusIcon className="w-3 h-3 me-1" />
+                            {report.status}
                           </Badge>
-                        )}
-                      </div>
-                      <h3 className="font-semibold text-lg mb-1">{report.subject}</h3>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        <span className="font-medium">Target:</span> {report.targetName}
-                        {report.seller && (
-                          <span> · Seller: {report.seller}</span>
-                        )}
-                      </p>
-                      <p className="text-sm mb-3">{report.description}</p>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                          <DiceBearAvatar seed={report.reporterAvatar} size="xs" />
-                          <span>Reported by {report.reportedBy}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          {report.date}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-3">
-                    <Badge
-                      className={cn(
-                        report.status === "pending" && "bg-yellow-100 text-yellow-700",
-                        report.status === "investigating" && "bg-blue-100 text-blue-700",
-                        report.status === "resolved" && "bg-green-100 text-green-700",
-                        report.status === "dismissed" && "bg-gray-100 text-gray-700"
-                      )}
-                    >
-                      {report.status === "pending" && <Clock className="w-3 h-3 me-1" />}
-                      {report.status === "investigating" && <Eye className="w-3 h-3 me-1" />}
-                      {report.status === "resolved" && <CheckCircle className="w-3 h-3 me-1" />}
-                      {report.status === "dismissed" && <XCircle className="w-3 h-3 me-1" />}
-                      {report.status}
-                    </Badge>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <Eye className="w-4 h-4 me-1" />
-                        View
-                      </Button>
-                      {report.status === "pending" && (
-                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                          Investigate
-                        </Button>
-                      )}
-                      {report.status === "investigating" && (
-                        <>
-                          <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                            <CheckCircle className="w-4 h-4 me-1" />
-                            Resolve
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            Dismiss
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                    {(report.type === "seller" || report.type === "user") &&
-                      report.status !== "resolved" && (
-                        <Button variant="destructive" size="sm">
-                          <Ban className="w-4 h-4 me-1" />
-                          Ban {report.type}
-                        </Button>
-                      )}
-                  </div>
+                        </td>
+                        <td className="px-5 py-3">
+                          <span className="text-xs text-muted-foreground">{formatDate(report.createdAt)}</span>
+                        </td>
+                        <td className="px-5 py-3">
+                          <div className="flex items-center justify-end gap-1">
+                            {report.status === "pending" && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                disabled={updatingId === report.id}
+                                onClick={() => handleStatusUpdate(report.id, "investigating")}
+                              >
+                                <Eye className="w-3.5 h-3.5 me-1" />
+                                Investigate
+                              </Button>
+                            )}
+                            {(report.status === "pending" || report.status === "investigating") && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 text-xs text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  disabled={updatingId === report.id}
+                                  onClick={() => handleStatusUpdate(report.id, "resolved")}
+                                >
+                                  <CheckCircle className="w-3.5 h-3.5 me-1" />
+                                  Resolve
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 text-xs text-gray-500 hover:text-gray-600 hover:bg-gray-50"
+                                  disabled={updatingId === report.id}
+                                  onClick={() => handleStatusUpdate(report.id, "dismissed")}
+                                >
+                                  <XCircle className="w-3.5 h-3.5 me-1" />
+                                  Dismiss
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-5 py-3 border-t border-border/60">
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  Page {page} of {totalPages}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    Next
+                  </Button>
                 </div>
-              </Card>
-            </motion.div>
-          );
-        })}
-      </div>
+              </div>
+            )}
+          </>
+        )}
+      </Card>
     </div>
   );
 }

@@ -32,6 +32,7 @@ export async function GET(req: NextRequest) {
   const limit = 20;
   const offset = (page - 1) * limit;
   const filter = searchParams.get("filter");
+  const search = searchParams.get("search")?.trim();
 
   // Build query
   let query = admin
@@ -39,6 +40,10 @@ export async function GET(req: NextRequest) {
     .select("id, full_name, username, email, avatar_style, avatar_seed, level, role, location, created_at, status", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
+
+  if (search) {
+    query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,username.ilike.%${search}%`);
+  }
 
   if (filter === "active") {
     query = query.or("status.eq.active,status.is.null");
@@ -99,4 +104,59 @@ export async function GET(req: NextRequest) {
       newThisWeek: newThisWeek || 0,
     },
   });
+}
+
+// PATCH /api/admin/users — suspend or reactivate a user
+export async function PATCH(req: NextRequest) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Verify admin role
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || profile.role !== "admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const body = await req.json();
+  const { userId, action } = body as {
+    userId: string;
+    action: "suspend" | "reactivate";
+  };
+
+  if (!userId || !["suspend", "reactivate"].includes(action)) {
+    return NextResponse.json(
+      { error: "Invalid request. Provide userId and action ('suspend' | 'reactivate')." },
+      { status: 400 }
+    );
+  }
+
+  const admin = createAdminClient();
+  const newStatus = action === "suspend" ? "suspended" : "active";
+
+  const { error: updateError } = await admin
+    .from("profiles")
+    .update({ status: newStatus })
+    .eq("id", userId);
+
+  if (updateError) {
+    return NextResponse.json(
+      { error: updateError.message },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ success: true });
 }

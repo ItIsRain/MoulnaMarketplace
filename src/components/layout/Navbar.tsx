@@ -271,7 +271,7 @@ export function Navbar() {
                               onClick={() => setIsUserMenuOpen(false)}
                             >
                               <Trophy className="w-4 h-4" />
-                              <span className="text-sm font-medium">Rewards & Badges</span>
+                              <span className="text-sm font-medium">Level Progress</span>
                             </Link>
 
                             {(user.role === "seller" || user.role === "both") && (

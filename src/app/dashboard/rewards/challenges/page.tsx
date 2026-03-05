@@ -7,9 +7,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  Target, Flame, Clock, Gift,
+  Target, Flame, Clock,
   Sparkles, Trophy, Zap,
-  Calendar, CheckCircle, ChevronRight, Timer
+  Calendar, CheckCircle, Timer
 } from "lucide-react";
 
 interface Challenge {
@@ -81,7 +81,7 @@ export default function ChallengesPage() {
               Daily Challenges
             </h1>
             <p className="text-muted-foreground">
-              Complete challenges to earn XP and rewards
+              Complete challenges to earn XP and level up
             </p>
           </div>
           <Card className="px-4 py-2 flex items-center gap-3 bg-gradient-to-r from-orange-500/10 to-transparent">
@@ -296,15 +296,6 @@ export default function ChallengesPage() {
                     <span className="text-purple-600 font-medium">+{challenge.xp} XP</span>
                   </div>
 
-                  {challenge.bonusReward && (
-                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <Gift className="w-4 h-4 text-purple-500" />
-                        <span className="text-sm font-medium">Bonus: {challenge.bonusReward}</span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                  )}
                 </Card>
               </motion.div>
             ))}

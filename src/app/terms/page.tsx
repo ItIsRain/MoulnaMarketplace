@@ -71,18 +71,18 @@ const SECTIONS = [
   {
     id: "gamification",
     icon: Shield,
-    title: "Gamification & Rewards",
+    title: "Gamification & Leveling",
     content: `
-      Moulna offers a gamification system including XP, levels, badges, and rewards. By participating,
+      Moulna offers a gamification system including XP, levels, and badges. By participating,
       you agree to the following:
 
-      • XP and rewards have no cash value and cannot be transferred or sold
-      • We reserve the right to modify, suspend, or terminate the rewards program
+      • XP and level perks have no cash value and cannot be transferred or sold
+      • We reserve the right to modify, suspend, or terminate the leveling system
       • Abuse of the system (fake reviews, multiple accounts, etc.) will result in account termination
-      • Rewards and discounts are subject to availability and may expire
-      • We may adjust XP values and requirements at any time
+      • Level perks are subject to availability and may change
+      • We may adjust XP values and level requirements at any time
 
-      All rewards are subject to verification and may be revoked if obtained through fraudulent means.
+      All achievements are subject to verification and may be revoked if obtained through fraudulent means.
     `,
   },
   {

@@ -446,20 +446,6 @@ export default function RegisterPage() {
                         </p>
                       </div>
 
-                      {/* XP Rewards Preview */}
-                      <Card className="p-4 bg-gradient-to-r from-moulna-gold/10 to-transparent">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-moulna-gold/20 flex items-center justify-center">
-                            <Sparkles className="w-5 h-5 text-moulna-gold" />
-                          </div>
-                          <div>
-                            <p className="font-medium">Welcome Bonus</p>
-                            <p className="text-sm text-muted-foreground">
-                              You&apos;ll earn <span className="text-moulna-gold font-bold">100 XP</span> just for signing up!
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
                     </div>
                   </>
                 )}
@@ -530,9 +516,9 @@ export default function RegisterPage() {
 
             <div className="space-y-4">
               {[
-                { icon: "🎮", title: "Gamified Experience", desc: "Earn XP, badges, and rewards for every action" },
+                { icon: "🎮", title: "Gamified Experience", desc: "Earn XP, badges, and level up with every action" },
                 { icon: "🎨", title: "Support Local Artisans", desc: "Discover unique handmade products from UAE creators" },
-                { icon: "⚡", title: "Level Up", desc: "Unlock exclusive perks, discounts, and avatar styles" },
+                { icon: "⚡", title: "Level Up", desc: "Unlock exclusive perks and avatar styles as you progress" },
               ].map((item, i) => (
                 <Card key={i} className="p-4 flex items-start gap-4">
                   <span className="text-2xl">{item.icon}</span>

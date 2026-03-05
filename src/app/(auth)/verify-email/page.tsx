@@ -269,7 +269,7 @@ export default function VerifyEmailPage() {
             Almost there!
           </h2>
           <p className="text-white/70">
-            Verify your email to unlock the full Moulna experience including rewards, deals, and exclusive offers.
+            Verify your email to unlock the full Moulna experience including perks, deals, and exclusive offers.
           </p>
         </div>
       </div>

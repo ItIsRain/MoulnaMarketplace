@@ -12,6 +12,9 @@ import {
   MessageSquare, Search, Eye, Download, Calendar,
   CheckCircle, Clock, AlertCircle, Archive, Loader2, ShoppingBag
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 
 interface InquiryBuyer {
   name: string;
@@ -75,8 +78,43 @@ export default function AdminInquiriesPage() {
     archived: 0,
   });
   const [page, setPage] = React.useState(1);
+  const [selectedInquiry, setSelectedInquiry] = React.useState<Inquiry | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  const filteredInquiries = React.useMemo(() => {
+    if (!searchQuery.trim()) return inquiries;
+    const q = searchQuery.toLowerCase();
+    return inquiries.filter(
+      (inq) =>
+        inq.id.toLowerCase().includes(q) ||
+        inq.buyer.name.toLowerCase().includes(q) ||
+        inq.seller.name.toLowerCase().includes(q) ||
+        inq.product.toLowerCase().includes(q)
+    );
+  }, [inquiries, searchQuery]);
+
+  const handleExport = React.useCallback(() => {
+    const header = "ID,Buyer,Seller,Product,Status,Date";
+    const rows = inquiries.map((inq) =>
+      [
+        inq.id,
+        `"${inq.buyer.name.replace(/"/g, '""')}"`,
+        `"${inq.seller.name.replace(/"/g, '""')}"`,
+        `"${inq.product.replace(/"/g, '""')}"`,
+        inq.status,
+        inq.createdAt,
+      ].join(",")
+    );
+    const csv = [header, ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "inquiries.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [inquiries]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -114,61 +152,45 @@ export default function AdminInquiriesPage() {
   }, [page, selectedStatus]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background p-8">
+    <div className="p-6 lg:p-8 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <MessageSquare className="w-8 h-8 text-moulna-gold" />
-            <h1 className="text-2xl font-bold">Inquiry Management</h1>
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-moulna-gold" />
+            <h1 className="text-xl font-display font-semibold text-foreground">Inquiry Management</h1>
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground mt-0.5">
             Monitor and moderate marketplace inquiries
           </p>
         </div>
-        <Button variant="outline">
+        <Button variant="outline" size="sm" onClick={handleExport}>
           <Download className="w-4 h-4 me-2" />
           Export
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid md:grid-cols-5 gap-4 mb-6">
-        <Card className="p-4 text-center">
-          <p className="text-2xl font-bold">
-            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : statusCounts.all.toLocaleString()}
-          </p>
-          <p className="text-sm text-muted-foreground">Total Inquiries</p>
-        </Card>
-        <Card className="p-4 text-center">
-          <p className="text-2xl font-bold text-blue-600">
-            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : statusCounts.new.toLocaleString()}
-          </p>
-          <p className="text-sm text-muted-foreground">New</p>
-        </Card>
-        <Card className="p-4 text-center">
-          <p className="text-2xl font-bold text-green-600">
-            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : statusCounts.replied.toLocaleString()}
-          </p>
-          <p className="text-sm text-muted-foreground">Replied</p>
-        </Card>
-        <Card className="p-4 text-center">
-          <p className="text-2xl font-bold text-purple-600">
-            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : statusCounts.sold.toLocaleString()}
-          </p>
-          <p className="text-sm text-muted-foreground">Sold</p>
-        </Card>
-        <Card className="p-4 text-center">
-          <p className="text-2xl font-bold text-gray-600">
-            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : statusCounts.archived.toLocaleString()}
-          </p>
-          <p className="text-sm text-muted-foreground">Archived</p>
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        {[
+          { label: "Total Inquiries", value: statusCounts.all, color: "" },
+          { label: "New", value: statusCounts.new, color: "text-blue-600" },
+          { label: "Replied", value: statusCounts.replied, color: "text-green-600" },
+          { label: "Sold", value: statusCounts.sold, color: "text-purple-600" },
+          { label: "Archived", value: statusCounts.archived, color: "text-gray-500" },
+        ].map((stat) => (
+          <Card key={stat.label} className="border-border/60 shadow-sm px-5 py-4">
+            <p className={cn("text-lg font-semibold tabular-nums", stat.color)}>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : stat.value.toLocaleString()}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
+          </Card>
+        ))}
       </div>
 
       {/* Filters */}
-      <Card className="p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+      <Card className="border-border/60 shadow-sm px-5 py-4">
+        <div className="flex flex-col md:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -178,7 +200,7 @@ export default function AdminInquiriesPage() {
               className="ps-10"
             />
           </div>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-1.5 flex-wrap">
             {STATUS_OPTIONS.map((option) => (
               <Button
                 key={option.id}
@@ -186,6 +208,7 @@ export default function AdminInquiriesPage() {
                 size="sm"
                 onClick={() => { setSelectedStatus(option.id); setPage(1); }}
                 className={cn(
+                  "text-xs",
                   selectedStatus === option.id &&
                     "bg-moulna-gold hover:bg-moulna-gold-dark"
                 )}
@@ -198,40 +221,43 @@ export default function AdminInquiriesPage() {
       </Card>
 
       {/* Inquiries Table */}
-      <Card>
+      <Card className="border-border/60 shadow-sm">
+        <div className="px-5 pt-5 pb-4 border-b border-border/60">
+          <h2 className="text-sm font-semibold text-foreground">Inquiries</h2>
+        </div>
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full text-[13px]">
             <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="text-start p-4 font-medium">Inquiry ID</th>
-                <th className="text-start p-4 font-medium">Buyer</th>
-                <th className="text-start p-4 font-medium">Seller</th>
-                <th className="text-start p-4 font-medium">Product</th>
-                <th className="text-start p-4 font-medium">Status</th>
-                <th className="text-end p-4 font-medium">Actions</th>
+              <tr className="border-b border-border/60">
+                <th className="text-start px-5 py-3 font-medium text-muted-foreground">Inquiry ID</th>
+                <th className="text-start px-5 py-3 font-medium text-muted-foreground">Buyer</th>
+                <th className="text-start px-5 py-3 font-medium text-muted-foreground">Seller</th>
+                <th className="text-start px-5 py-3 font-medium text-muted-foreground">Product</th>
+                <th className="text-start px-5 py-3 font-medium text-muted-foreground">Status</th>
+                <th className="text-end px-5 py-3 font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="p-12 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
-                      <p className="text-muted-foreground">Loading inquiries...</p>
+                  <td colSpan={6} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin text-moulna-gold" />
+                      <p className="text-sm text-muted-foreground">Loading inquiries...</p>
                     </div>
                   </td>
                 </tr>
-              ) : inquiries.length === 0 ? (
+              ) : filteredInquiries.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-12 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <AlertCircle className="w-8 h-8 text-muted-foreground" />
-                      <p className="text-muted-foreground">No inquiries found</p>
+                  <td colSpan={6} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <AlertCircle className="w-5 h-5 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">No inquiries found</p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                inquiries.map((inquiry, index) => {
+                filteredInquiries.map((inquiry, index) => {
                   const statusStyle = STATUS_STYLES[inquiry.status];
                   const StatusIcon = statusStyle?.icon || Clock;
 
@@ -241,51 +267,49 @@ export default function AdminInquiriesPage() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: index * 0.05 }}
-                      className="border-b last:border-0 hover:bg-muted/30"
+                      className="border-b border-border/40 last:border-0 hover:bg-muted/40"
                     >
-                      <td className="p-4">
-                        <div>
-                          <p className="font-mono font-medium">
-                            {inquiry.id.slice(0, 8).toUpperCase()}
-                          </p>
-                          <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {formatDate(inquiry.createdAt)}
-                          </p>
-                        </div>
+                      <td className="px-5 py-3">
+                        <p className="font-mono font-medium tabular-nums">
+                          {inquiry.id.slice(0, 8).toUpperCase()}
+                        </p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <Calendar className="w-3 h-3" />
+                          {formatDate(inquiry.createdAt)}
+                        </p>
                       </td>
-                      <td className="p-4">
+                      <td className="px-5 py-3">
                         <div className="flex items-center gap-2">
                           <DiceBearAvatar
                             seed={inquiry.buyer.avatarSeed}
                             style={inquiry.buyer.avatarStyle}
                             size="sm"
                           />
-                          <span className="text-sm font-medium">{inquiry.buyer.name}</span>
+                          <span className="font-medium">{inquiry.buyer.name}</span>
                         </div>
                       </td>
-                      <td className="p-4">
+                      <td className="px-5 py-3">
                         <div className="flex items-center gap-2">
                           <DiceBearAvatar
                             seed={inquiry.seller.avatarSeed}
                             style={inquiry.seller.avatarStyle}
                             size="sm"
                           />
-                          <span className="text-sm">{inquiry.seller.name}</span>
+                          <span>{inquiry.seller.name}</span>
                         </div>
                       </td>
-                      <td className="p-4">
-                        <span className="text-sm">{inquiry.product}</span>
+                      <td className="px-5 py-3">
+                        <span>{inquiry.product}</span>
                       </td>
-                      <td className="p-4">
-                        <Badge className={cn(statusStyle?.bg, statusStyle?.text)}>
+                      <td className="px-5 py-3">
+                        <Badge className={cn("text-xs", statusStyle?.bg, statusStyle?.text)}>
                           <StatusIcon className="w-3 h-3 me-1" />
                           {inquiry.status}
                         </Badge>
                       </td>
-                      <td className="p-4">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="icon">
+                      <td className="px-5 py-3">
+                        <div className="flex items-center justify-end">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedInquiry(inquiry)}>
                             <Eye className="w-4 h-4" />
                           </Button>
                         </div>
@@ -299,8 +323,8 @@ export default function AdminInquiriesPage() {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between p-4 border-t">
-          <p className="text-sm text-muted-foreground">
+        <div className="flex items-center justify-between px-5 py-3 border-t border-border/60">
+          <p className="text-xs text-muted-foreground tabular-nums">
             Page {page} of {totalPages}
           </p>
           <div className="flex gap-2">
@@ -309,6 +333,7 @@ export default function AdminInquiriesPage() {
               size="sm"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="text-xs"
             >
               Previous
             </Button>
@@ -317,12 +342,80 @@ export default function AdminInquiriesPage() {
               size="sm"
               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
+              className="text-xs"
             >
               Next
             </Button>
           </div>
         </div>
       </Card>
+
+      {/* Inquiry Detail Dialog */}
+      <Dialog open={!!selectedInquiry} onOpenChange={(open) => { if (!open) setSelectedInquiry(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Inquiry Details</DialogTitle>
+          </DialogHeader>
+          {selectedInquiry && (() => {
+            const statusStyle = STATUS_STYLES[selectedInquiry.status];
+            const StatusIcon = statusStyle?.icon || Clock;
+            return (
+              <div className="space-y-4 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">ID</span>
+                  <span className="font-mono font-medium">{selectedInquiry.id.slice(0, 8).toUpperCase()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Buyer</span>
+                  <div className="flex items-center gap-2">
+                    <DiceBearAvatar seed={selectedInquiry.buyer.avatarSeed} style={selectedInquiry.buyer.avatarStyle} size="sm" />
+                    <span className="font-medium">{selectedInquiry.buyer.name}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Seller</span>
+                  <div className="flex items-center gap-2">
+                    <DiceBearAvatar seed={selectedInquiry.seller.avatarSeed} style={selectedInquiry.seller.avatarStyle} size="sm" />
+                    <span className="font-medium">{selectedInquiry.seller.name}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Product</span>
+                  <span>{selectedInquiry.product}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Status</span>
+                  <Badge className={cn("text-xs", statusStyle?.bg, statusStyle?.text)}>
+                    <StatusIcon className="w-3 h-3 me-1" />
+                    {selectedInquiry.status}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Date</span>
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {formatDate(selectedInquiry.createdAt)}
+                  </span>
+                </div>
+                {selectedInquiry.lastMessage && (
+                  <div>
+                    <span className="text-muted-foreground block mb-1">Last Message</span>
+                    <p className="bg-muted/50 rounded-md px-3 py-2 text-foreground">{selectedInquiry.lastMessage}</p>
+                  </div>
+                )}
+                {selectedInquiry.status === "sold" && selectedInquiry.salePriceFils > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Sale Price</span>
+                    <span className="font-semibold text-purple-600">
+                      {(selectedInquiry.salePriceFils / 1000).toFixed(3)} KWD
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

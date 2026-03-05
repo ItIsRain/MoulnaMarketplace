@@ -110,8 +110,8 @@ const FAQS = [
     answer: "Moulna is a classifieds platform that connects buyers and sellers. All transactions happen directly between you and the seller - you arrange payment and delivery together. We recommend meeting in public places for in-person exchanges.",
   },
   {
-    question: "How does the XP and rewards system work?",
-    answer: "You earn XP (experience points) for various activities like contacting sellers, writing reviews, and referring friends. As you accumulate XP, you level up and unlock rewards, badges, and exclusive perks.",
+    question: "How does the XP leveling system work?",
+    answer: "You earn XP for various activities like contacting sellers, writing reviews, and referring friends. As you accumulate XP, you level up and unlock badges, exclusive perks, and new features.",
   },
   {
     question: "How do I stay safe when meeting a seller?",

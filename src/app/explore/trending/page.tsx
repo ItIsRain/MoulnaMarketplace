@@ -224,12 +224,6 @@ export default function TrendingPage() {
                               fill
                               className="object-cover group-hover:scale-105 transition-transform"
                             />
-                            {product.xpReward && (
-                              <div className="absolute bottom-1 right-1 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-moulna-gold text-white text-xs">
-                                <Sparkles className="w-3 h-3" />
-                                +{product.xpReward}
-                              </div>
-                            )}
                           </div>
 
                           {/* Info */}

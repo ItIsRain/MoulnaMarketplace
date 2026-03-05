@@ -52,7 +52,7 @@ export async function GET() {
 
   // If seller, include their shop
   let shop = null;
-  if (["seller", "both"].includes(profile.role)) {
+  if (["seller", "both", "admin"].includes(profile.role)) {
     const { data: shopRow } = await supabase
       .from("shops")
       .select("*")

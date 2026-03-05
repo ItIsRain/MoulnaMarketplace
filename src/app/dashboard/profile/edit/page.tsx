@@ -232,14 +232,14 @@ export default function EditProfilePage() {
           </div>
         </Card>
 
-        {/* XP Reward */}
+        {/* Profile Completion */}
         <Card className="p-4 bg-gradient-to-r from-moulna-gold/10 to-transparent border-moulna-gold/20">
           <div className="flex items-center gap-3">
             <Sparkles className="w-6 h-6 text-moulna-gold" />
             <div>
               <p className="font-medium">Complete Your Profile</p>
               <p className="text-sm text-muted-foreground">
-                Fill out all fields to earn +50 XP and unlock profile completion badge!
+                Fill out all fields to unlock the profile completion badge!
               </p>
             </div>
             <div className="ms-auto">

@@ -11,7 +11,7 @@ import {
   Store, Save, RefreshCw, Loader2, CheckCircle
 } from "lucide-react";
 
-// DB key → display config. "fils" keys are stored in fils, displayed as AED.
+// DB key -> display config. "fils" keys are stored in fils, displayed as AED.
 const LISTING_SETTING_FIELDS = [
   { dbKey: "free_listing_limit", label: "Free Listing Limit", type: "number", isFils: false },
   { dbKey: "listing_fee_fils", label: "Listing Fee (AED)", type: "number", isFils: true },
@@ -149,8 +149,8 @@ export default function AdminSettingsPage() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-[40vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      <div className="p-6 lg:p-8 flex items-center justify-center min-h-[40vh]">
+        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -195,7 +195,7 @@ export default function AdminSettingsPage() {
   ];
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-6 lg:p-8 space-y-6">
       {/* Toast */}
       {toast && (
         <div
@@ -213,20 +213,21 @@ export default function AdminSettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <Settings className="w-8 h-8 text-moulna-gold" />
-            <h1 className="text-2xl font-bold">Platform Settings</h1>
-          </div>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl font-display font-semibold text-foreground flex items-center gap-2">
+            <Settings className="w-5 h-5 text-moulna-gold" />
+            Platform Settings
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Configure marketplace settings and preferences
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={handleReset} disabled={saving}>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleReset} disabled={saving}>
             <RefreshCw className="w-4 h-4 me-2" />
             Reset
           </Button>
           <Button
+            size="sm"
             className="bg-moulna-gold hover:bg-moulna-gold-dark"
             onClick={handleSave}
             disabled={saving}
@@ -238,7 +239,7 @@ export default function AdminSettingsPage() {
       </div>
 
       {/* Settings Sections */}
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-5">
         {sections.map((section, sectionIndex) => (
           <motion.div
             key={section.id}
@@ -246,73 +247,82 @@ export default function AdminSettingsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: sectionIndex * 0.1 }}
           >
-            <Card className="p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-lg bg-moulna-gold/10 flex items-center justify-center">
-                  <section.icon className="w-5 h-5 text-moulna-gold" />
+            <Card className="border-border/60 shadow-sm">
+              <div className="px-5 pt-5 pb-4 border-b border-border/60 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-moulna-gold/10 flex items-center justify-center">
+                  <section.icon className="w-4 h-4 text-moulna-gold" />
                 </div>
-                <h2 className="font-semibold">{section.title}</h2>
+                <h2 className="text-sm font-semibold">{section.title}</h2>
               </div>
 
-              {section.fields && (
-                <div className="space-y-4">
-                  {section.fields.map((field) => (
-                    <div key={field.dbKey}>
-                      <label className="text-sm font-medium mb-1 block">
-                        {field.label}
-                      </label>
-                      <Input
-                        type={field.type}
-                        value={formValues[field.dbKey] || ""}
-                        onChange={(e) => handleChange(field.dbKey, e.target.value)}
-                        className="max-w-md"
-                        step={field.type === "number" ? "any" : undefined}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="p-5">
+                {section.fields && (
+                  <div className="space-y-4">
+                    {section.fields.map((field) => (
+                      <div key={field.dbKey}>
+                        <label className="text-[13px] font-medium mb-1.5 block text-muted-foreground">
+                          {field.label}
+                        </label>
+                        <Input
+                          type={field.type}
+                          value={formValues[field.dbKey] || ""}
+                          onChange={(e) => handleChange(field.dbKey, e.target.value)}
+                          className="max-w-md"
+                          step={field.type === "number" ? "any" : undefined}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-              {section.toggles && (
-                <div className="space-y-4">
-                  {section.toggles.map((toggle) => (
-                    <div
-                      key={toggle.dbKey}
-                      className="flex items-center justify-between py-2"
-                    >
-                      <span className="text-sm">{toggle.label}</span>
-                      <Switch
-                        checked={formValues[toggle.dbKey] === "true"}
-                        onCheckedChange={(checked) => handleToggle(toggle.dbKey, checked)}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
+                {section.toggles && (
+                  <div className="space-y-1">
+                    {section.toggles.map((toggle) => (
+                      <div
+                        key={toggle.dbKey}
+                        className="flex items-center justify-between py-2.5 px-1 rounded-md hover:bg-muted/40 transition-colors"
+                      >
+                        <span className="text-[13px]">{toggle.label}</span>
+                        <Switch
+                          checked={formValues[toggle.dbKey] === "true"}
+                          onCheckedChange={(checked) => handleToggle(toggle.dbKey, checked)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </Card>
           </motion.div>
         ))}
       </div>
 
       {/* Danger Zone */}
-      <Card className="p-6 border-red-200 bg-red-50/30">
-        <div className="flex items-center gap-3 mb-4">
-          <Shield className="w-6 h-6 text-red-600" />
-          <h2 className="font-semibold text-red-600">Danger Zone</h2>
+      <Card className="border-red-200/60 shadow-sm bg-red-50/20">
+        <div className="px-5 pt-5 pb-4 border-b border-red-200/60 flex items-center gap-3">
+          <Shield className="w-4 h-4 text-red-600" />
+          <h2 className="text-sm font-semibold text-red-600">Danger Zone</h2>
         </div>
-        <p className="text-sm text-muted-foreground mb-4">
-          These actions are irreversible. Please proceed with caution.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <Button variant="outline" className="border-red-300 text-red-600 hover:bg-red-50">
-            Clear All Cache
-          </Button>
-          <Button variant="outline" className="border-red-300 text-red-600 hover:bg-red-50">
-            Reset Analytics
-          </Button>
-          <Button variant="destructive">
-            Maintenance Mode
-          </Button>
+        <div className="p-5">
+          <p className="text-[13px] text-muted-foreground mb-4">
+            These actions are irreversible. Please proceed with caution.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-red-300 text-red-600 hover:bg-red-50"
+              onClick={() => {
+                if (window.confirm("Are you sure you want to toggle maintenance mode?")) {
+                  const current = formValues["maintenance_mode"] === "true";
+                  handleToggle("maintenance_mode", !current);
+                  handleSave();
+                }
+              }}
+            >
+              {formValues["maintenance_mode"] === "true" ? "Disable Maintenance Mode" : "Enable Maintenance Mode"}
+            </Button>
+          </div>
         </div>
       </Card>
     </div>

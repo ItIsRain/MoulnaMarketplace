@@ -41,7 +41,7 @@ const SIDEBAR_ITEMS = [
     icon: MapPin,
   },
   {
-    label: "Rewards",
+    label: "Progress",
     href: "/dashboard/rewards",
     icon: Gift,
     children: [
@@ -69,7 +69,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { logout } = useAuthStore();
-  const [expandedItem, setExpandedItem] = React.useState<string | null>("Rewards");
+  const [expandedItem, setExpandedItem] = React.useState<string | null>("Progress");
 
   // Mock user data
   const user = {

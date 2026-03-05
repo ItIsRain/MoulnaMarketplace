@@ -19,8 +19,12 @@ import {
   Star, Share2, MapPin, Calendar, MessageCircle, UserPlus,
   Award, Package, Shield, Clock, Instagram, Facebook, Twitter,
   Youtube, Globe, Mail, Phone, Loader2, Store, X, Quote,
-  Pencil, FileText, ImageIcon, Milestone, Info,
+  Pencil, FileText, ImageIcon, Milestone, Info, Copy, Check, Link2,
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
+import { QRCodeSVG } from "qrcode.react";
 import { useTracking } from "@/hooks/useTracking";
 
 // ─── Helpers ───
@@ -96,6 +100,8 @@ export default function ShopPage() {
   const [followLoading, setFollowLoading] = React.useState(false);
   const [lightboxImage, setLightboxImage] = React.useState<string | null>(null);
   const [activeTab, setActiveTab] = React.useState("");
+  const [shareOpen, setShareOpen] = React.useState(false);
+  const [linkCopied, setLinkCopied] = React.useState(false);
 
   const tabBarRef = React.useRef<HTMLDivElement>(null);
 
@@ -338,7 +344,7 @@ export default function ShopPage() {
                     <MessageCircle className="w-4 h-4 me-2" />
                     Contact
                   </Button>
-                  <Button variant="outline" size="icon" className="border-white/30 text-white hover:bg-white/10">
+                  <Button variant="outline" size="icon" className="border-white/30 text-white hover:bg-white/10" onClick={() => setShareOpen(true)}>
                     <Share2 className="w-4 h-4" />
                   </Button>
                 </motion.div>
@@ -354,6 +360,9 @@ export default function ShopPage() {
                       <Pencil className="w-4 h-4 me-2" />
                       Edit Shop
                     </Link>
+                  </Button>
+                  <Button variant="outline" size="icon" className="border-white/30 text-white hover:bg-white/10" onClick={() => setShareOpen(true)}>
+                    <Share2 className="w-4 h-4" />
                   </Button>
                 </motion.div>
               )}
@@ -706,7 +715,7 @@ export default function ShopPage() {
                           </div>
                           <div className="p-3">
                             <div className="flex items-center gap-1.5 mb-1">
-                              <ShopAvatar avatarSeed={product.seller.avatarSeed || product.seller.slug} avatarStyle={product.seller.avatarStyle} name={product.seller.name} size="xs" />
+                              <ShopAvatar logoUrl={product.seller.logoUrl} avatarSeed={product.seller.avatarSeed || product.seller.slug} avatarStyle={product.seller.avatarStyle} name={product.seller.name} size="xs" />
                               <span className="text-xs text-muted-foreground truncate">{product.seller.name}</span>
                             </div>
                             <h3 className="font-medium text-sm line-clamp-2 mb-1 group-hover:text-moulna-gold transition-colors">{product.title}</h3>
@@ -821,6 +830,126 @@ export default function ShopPage() {
             <Image src={lightboxImage} alt="Gallery image" fill className="object-contain" onClick={(e) => e.stopPropagation()} />
           </div>
         </div>
+      )}
+
+      {/* ═══════════ SHARE STICKER ═══════════ */}
+      {shop && (
+        <Dialog open={shareOpen} onOpenChange={(open) => { setShareOpen(open); if (!open) setLinkCopied(false); }}>
+          <DialogContent className="max-w-[360px] p-0 overflow-hidden border-0 bg-transparent shadow-none [&>button]:hidden">
+            <DialogHeader className="sr-only">
+              <DialogTitle>Share {shop.name}</DialogTitle>
+              <DialogDescription>Scan to visit this shop</DialogDescription>
+            </DialogHeader>
+
+            {/* ─── The Sticker Card ─── */}
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl">
+              {/* Gold gradient top band */}
+              <div className="bg-gradient-to-br from-amber-500 via-moulna-gold to-amber-600 px-6 pt-8 pb-14 text-center text-white relative">
+                {/* Decorative pattern overlay */}
+                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='2' cy='2' r='1' fill='white'/%3E%3C/svg%3E\")", backgroundSize: "20px 20px" }} />
+
+                <div className="relative z-10">
+                  {/* Shop avatar */}
+                  <div className="inline-block rounded-full border-[3px] border-white/40 shadow-lg mb-3">
+                    <ShopAvatar
+                      logoUrl={shop.logoUrl}
+                      avatarSeed={shop.avatarSeed || shop.slug}
+                      avatarStyle={shop.avatarStyle}
+                      name={shop.name}
+                      size="xl"
+                    />
+                  </div>
+
+                  <h3 className="font-display font-bold text-lg leading-tight drop-shadow-sm">
+                    {shop.name}
+                  </h3>
+                  {shop.tagline && (
+                    <p className="text-white/80 text-xs mt-1 line-clamp-1">{shop.tagline}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* White body with QR */}
+              <div className="bg-white px-6 pt-4 pb-6 -mt-8 relative">
+                {/* QR code card */}
+                <div className="relative bg-white rounded-2xl shadow-md border border-gray-100 p-4 flex justify-center mx-auto max-w-[220px]">
+                  <QRCodeSVG
+                    value={typeof window !== "undefined" ? `${window.location.origin}/shops/${shop.slug}` : `/shops/${shop.slug}`}
+                    size={170}
+                    level="H"
+                    includeMargin={false}
+                    bgColor="#ffffff"
+                    fgColor="#1a1a1a"
+                    imageSettings={shop.logoUrl ? {
+                      src: shop.logoUrl,
+                      height: 36,
+                      width: 36,
+                      excavate: true,
+                    } : undefined}
+                  />
+                </div>
+
+                {/* Scan hint */}
+                <p className="text-[11px] text-gray-400 text-center mt-3 tracking-wide uppercase font-medium">
+                  Scan to visit shop
+                </p>
+
+                {/* Shop URL */}
+                <div className="flex items-center justify-center gap-1.5 mt-2 mb-4">
+                  <Globe className="w-3 h-3 text-gray-400" />
+                  <span className="text-xs text-gray-500 font-medium">
+                    moulna.ae/shops/{shop.slug}
+                  </span>
+                </div>
+
+                {/* Badges row */}
+                <div className="flex items-center justify-center gap-2 mb-5">
+                  {shop.isVerified && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
+                      <Shield className="w-3 h-3" /> Verified
+                    </span>
+                  )}
+                  {shop.category && (
+                    <span className="inline-flex items-center text-[10px] font-medium bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                      {shop.category}
+                    </span>
+                  )}
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex gap-2">
+                  <Button
+                    className="flex-1"
+                    size="sm"
+                    variant={linkCopied ? "outline" : "gold"}
+                    onClick={() => {
+                      const url = `${window.location.origin}/shops/${shop.slug}`;
+                      navigator.clipboard.writeText(url).then(() => {
+                        setLinkCopied(true);
+                        setTimeout(() => setLinkCopied(false), 2500);
+                      });
+                    }}
+                  >
+                    {linkCopied ? (
+                      <><Check className="w-3.5 h-3.5 me-1.5" />Copied!</>
+                    ) : (
+                      <><Copy className="w-3.5 h-3.5 me-1.5" />Copy Link</>
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setShareOpen(false)}
+                  >
+                    <X className="w-3.5 h-3.5 me-1.5" />
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

@@ -284,13 +284,6 @@ function SearchContent() {
                               <Heart className="w-4 h-4" />
                             </button>
 
-                            {/* XP Reward */}
-                            {product.xpReward > 0 && (
-                              <div className="absolute bottom-3 end-3 flex items-center gap-1 px-2 py-1 rounded-full bg-moulna-gold text-white text-xs font-medium">
-                                <Sparkles className="w-3 h-3" />
-                                +{product.xpReward} XP
-                              </div>
-                            )}
                           </div>
 
                           <div className="p-4">

@@ -169,7 +169,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-display text-lg font-semibold">Your Progress</h2>
               <Link href="/dashboard/rewards" className="text-sm text-moulna-gold hover:underline flex items-center gap-1">
-                View Rewards <ChevronRight className="w-4 h-4" />
+                View Progress <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
             <XPBar

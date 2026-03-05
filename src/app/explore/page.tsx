@@ -254,16 +254,6 @@ export default function ExplorePage() {
                   </div>
                 </Card>
 
-                {/* XP Rewards Info */}
-                <Card className="p-4 bg-gradient-to-br from-moulna-gold/10 to-transparent">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="w-5 h-5 text-moulna-gold" />
-                    <h3 className="font-semibold">Earn XP</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Earn XP by browsing, saving items, and engaging with sellers!
-                  </p>
-                </Card>
               </div>
             </aside>
 
@@ -509,11 +499,6 @@ export default function ExplorePage() {
                                   )}
                                 </div>
 
-                                {/* XP Preview */}
-                                <div className="flex items-center gap-1 text-sm text-moulna-gold">
-                                  <Sparkles className="w-3.5 h-3.5" />
-                                  <span>+{product.xpReward} XP</span>
-                                </div>
                               </div>
                             </div>
                           </Card>

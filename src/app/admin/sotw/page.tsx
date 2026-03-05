@@ -210,14 +210,14 @@ export default function AdminSotwPage() {
   };
 
   const statCards = [
-    { label: "Active Auctions", value: String(stats?.activeAuctions || 0), icon: Gavel, color: "text-blue-500" },
-    { label: "Pending Approvals", value: String(stats?.pendingApprovals || 0), icon: Clock, color: "text-amber-500" },
-    { label: "Total SOTW Revenue", value: formatAED(stats?.totalRevenue || 0), icon: DollarSign, color: "text-green-500" },
-    { label: "Avg Winning Bid", value: formatAED(stats?.avgWinningBid || 0), icon: TrendingUp, color: "text-moulna-gold" },
+    { label: "Active Auctions", value: String(stats?.activeAuctions || 0), icon: Gavel, gradient: "from-blue-500/10 to-blue-600/5", color: "text-blue-500" },
+    { label: "Pending Approvals", value: String(stats?.pendingApprovals || 0), icon: Clock, gradient: "from-amber-500/10 to-amber-600/5", color: "text-amber-500" },
+    { label: "Total SOTW Revenue", value: formatAED(stats?.totalRevenue || 0), icon: DollarSign, gradient: "from-green-500/10 to-green-600/5", color: "text-green-500" },
+    { label: "Avg Winning Bid", value: formatAED(stats?.avgWinningBid || 0), icon: TrendingUp, gradient: "from-yellow-500/10 to-yellow-600/5", color: "text-moulna-gold" },
   ];
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-6 lg:p-8 space-y-6">
       {/* Toast */}
       {toast && (
         <div
@@ -234,11 +234,11 @@ export default function AdminSotwPage() {
 
       {/* Header */}
       <div>
-        <div className="flex items-center gap-3 mb-2">
-          <Trophy className="w-8 h-8 text-moulna-gold" />
-          <h1 className="text-2xl font-bold">SOTW Auctions</h1>
-        </div>
-        <p className="text-muted-foreground">
+        <h1 className="text-xl font-display font-semibold text-foreground flex items-center gap-2">
+          <Trophy className="w-5 h-5 text-moulna-gold" />
+          SOTW Auctions
+        </h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
           Manage Seller of the Week auctions, approve winners, and review bids.
         </p>
       </div>
@@ -252,30 +252,29 @@ export default function AdminSotwPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
           >
-            <Card className="p-4">
-              <div className="flex items-center gap-3">
-                <div className={cn("p-2 rounded-lg bg-muted", stat.color)}>
-                  <stat.icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stat.value}</p>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
-                </div>
+            <Card className={cn("border-border/60 shadow-sm p-4 bg-gradient-to-br", stat.gradient)}>
+              <div className="flex items-center gap-2.5 mb-2">
+                <stat.icon className={cn("w-4 h-4", stat.color)} />
+                <span className="text-xs text-muted-foreground">{stat.label}</span>
               </div>
+              <p className="text-xl font-semibold tabular-nums">{stat.value}</p>
             </Card>
           </motion.div>
         ))}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-1.5 flex-wrap">
         {STATUS_TABS.map((tab) => (
           <Button
             key={tab.value}
             variant={filter === tab.value ? "default" : "ghost"}
             size="sm"
             onClick={() => setFilter(tab.value)}
-            className={cn(filter === tab.value && "bg-moulna-gold hover:bg-moulna-gold-dark")}
+            className={cn(
+              "text-[13px]",
+              filter === tab.value && "bg-moulna-gold hover:bg-moulna-gold-dark"
+            )}
           >
             {tab.label}
             {statusCounts[tab.value] !== undefined && (
@@ -288,29 +287,29 @@ export default function AdminSotwPage() {
       {/* Auctions Table */}
       {loading ? (
         <div className="p-12 text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
+          <Loader2 className="w-5 h-5 animate-spin mx-auto text-muted-foreground" />
         </div>
       ) : auctions.length === 0 ? (
-        <Card className="p-12 text-center">
-          <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No auctions found</h3>
-          <p className="text-muted-foreground">
+        <Card className="border-border/60 shadow-sm p-12 text-center">
+          <Trophy className="w-8 h-8 mx-auto text-muted-foreground mb-3" />
+          <h3 className="text-sm font-semibold mb-1">No auctions found</h3>
+          <p className="text-[13px] text-muted-foreground">
             Auctions are created automatically for upcoming weeks.
           </p>
         </Card>
       ) : (
-        <Card>
+        <Card className="border-border/60 shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-[13px]">
               <thead>
-                <tr className="border-b">
-                  <th className="text-start p-4 font-medium">Week</th>
-                  <th className="text-start p-4 font-medium">Status</th>
-                  <th className="text-start p-4 font-medium">Highest Bid</th>
-                  <th className="text-start p-4 font-medium">Bids</th>
-                  <th className="text-start p-4 font-medium">Winner</th>
-                  <th className="text-start p-4 font-medium">Actions</th>
-                  <th className="p-4"></th>
+                <tr className="border-b border-border/60">
+                  <th className="text-start px-4 py-3 font-medium text-muted-foreground">Week</th>
+                  <th className="text-start px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  <th className="text-start px-4 py-3 font-medium text-muted-foreground">Highest Bid</th>
+                  <th className="text-start px-4 py-3 font-medium text-muted-foreground">Bids</th>
+                  <th className="text-start px-4 py-3 font-medium text-muted-foreground">Winner</th>
+                  <th className="text-start px-4 py-3 font-medium text-muted-foreground">Actions</th>
+                  <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody>
@@ -326,41 +325,41 @@ export default function AdminSotwPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.03 }}
                         className={cn(
-                          "border-b last:border-0 hover:bg-muted/50",
+                          "border-b border-border/40 last:border-0 hover:bg-muted/40 transition-colors",
                           isPendingRow && "bg-amber-50/50"
                         )}
                       >
-                        <td className="p-4">
+                        <td className="px-4 py-3">
                           <p className="font-medium">{auction.week_start}</p>
                           <p className="text-xs text-muted-foreground">
                             to {auction.week_end}
                           </p>
                         </td>
-                        <td className="p-4">{statusBadge(auction.status)}</td>
-                        <td className="p-4 font-medium">
+                        <td className="px-4 py-3">{statusBadge(auction.status)}</td>
+                        <td className="px-4 py-3 font-medium tabular-nums">
                           {auction.current_highest_bid_fils > 0
                             ? formatAED(auction.current_highest_bid_fils)
                             : "—"}
                         </td>
-                        <td className="p-4">{auction.total_bids}</td>
-                        <td className="p-4">
+                        <td className="px-4 py-3 tabular-nums">{auction.total_bids}</td>
+                        <td className="px-4 py-3">
                           {auction.winnerShopName ? (
                             <div>
-                              <p className="font-medium text-sm">{auction.winnerShopName}</p>
+                              <p className="font-medium">{auction.winnerShopName}</p>
                               {auction.winnerAmountFils && (
-                                <p className="text-xs text-moulna-gold">{formatAED(auction.winnerAmountFils)}</p>
+                                <p className="text-xs text-moulna-gold tabular-nums">{formatAED(auction.winnerAmountFils)}</p>
                               )}
                             </div>
                           ) : (
                             <span className="text-muted-foreground">—</span>
                           )}
                         </td>
-                        <td className="p-4">
+                        <td className="px-4 py-3">
                           {pendingBid && (
-                            <div className="flex gap-2">
+                            <div className="flex gap-1.5">
                               <Button
                                 size="sm"
-                                className="bg-green-600 hover:bg-green-700 text-white"
+                                className="bg-green-600 hover:bg-green-700 text-white h-7 text-xs"
                                 onClick={() => setApproveDialog(pendingBid)}
                               >
                                 <CheckCircle className="w-3.5 h-3.5 me-1" />
@@ -369,7 +368,7 @@ export default function AdminSotwPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="border-red-300 text-red-600 hover:bg-red-50"
+                                className="border-red-300 text-red-600 hover:bg-red-50 h-7 text-xs"
                                 onClick={() => setRejectDialog(pendingBid)}
                               >
                                 <XCircle className="w-3.5 h-3.5 me-1" />
@@ -378,11 +377,12 @@ export default function AdminSotwPage() {
                             </div>
                           )}
                         </td>
-                        <td className="p-4">
+                        <td className="px-4 py-3">
                           {auction.bids.length > 0 && (
                             <Button
                               variant="ghost"
                               size="icon"
+                              className="h-7 w-7"
                               onClick={() =>
                                 setExpandedAuction(isExpanded ? null : auction.id)
                               }
@@ -401,23 +401,23 @@ export default function AdminSotwPage() {
                       {isExpanded && (
                         <tr>
                           <td colSpan={7} className="p-0">
-                            <div className="bg-muted/30 p-4 border-b">
-                              <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
-                                <Gavel className="w-4 h-4" />
+                            <div className="bg-muted/20 px-5 py-4 border-b border-border/40">
+                              <h4 className="font-medium text-[13px] mb-3 flex items-center gap-2 text-muted-foreground">
+                                <Gavel className="w-3.5 h-3.5" />
                                 All Bids ({auction.bids.length})
                               </h4>
-                              <div className="space-y-2">
+                              <div className="space-y-1.5">
                                 {auction.bids.map((bid) => (
                                   <div
                                     key={bid.id}
                                     className={cn(
-                                      "flex items-center justify-between p-3 rounded-lg bg-white border",
+                                      "flex items-center justify-between p-3 rounded-lg bg-background border border-border/60 text-[13px]",
                                       bid.status === "pending_approval" && "border-amber-300 bg-amber-50/50"
                                     )}
                                   >
                                     <div className="flex items-center gap-3">
                                       <div>
-                                        <p className="font-medium text-sm">
+                                        <p className="font-medium">
                                           {bid.shopName}
                                           {bid.isBuyNow && (
                                             <Zap className="w-3.5 h-3.5 text-amber-500 inline ms-1" />
@@ -431,7 +431,7 @@ export default function AdminSotwPage() {
                                     </div>
                                     <div className="flex items-center gap-3">
                                       {bidStatusBadge(bid.status)}
-                                      <span className="font-semibold text-sm">
+                                      <span className="font-semibold tabular-nums">
                                         {formatAED(bid.amountFils)}
                                       </span>
                                       {bid.status === "pending_approval" && (
@@ -439,7 +439,7 @@ export default function AdminSotwPage() {
                                           <Button
                                             size="sm"
                                             variant="ghost"
-                                            className="text-green-600 hover:bg-green-50"
+                                            className="text-green-600 hover:bg-green-50 h-7 w-7 p-0"
                                             onClick={() => setApproveDialog(bid)}
                                           >
                                             <CheckCircle className="w-4 h-4" />
@@ -447,7 +447,7 @@ export default function AdminSotwPage() {
                                           <Button
                                             size="sm"
                                             variant="ghost"
-                                            className="text-red-600 hover:bg-red-50"
+                                            className="text-red-600 hover:bg-red-50 h-7 w-7 p-0"
                                             onClick={() => setRejectDialog(bid)}
                                           >
                                             <XCircle className="w-4 h-4" />
