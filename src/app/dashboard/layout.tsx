@@ -14,7 +14,7 @@ import { StreakCounter } from "@/components/gamification/StreakCounter";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
   LayoutDashboard, Package, Heart, Trophy, User,
-  Bell, Settings, LogOut, Sparkles, Gift
+  Bell, Settings, LogOut, Sparkles
 } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -124,25 +124,6 @@ export default function DashboardLayout({
                         );
                       })}
                     </nav>
-                  </Card>
-
-                  {/* Referral Card */}
-                  <Card className="p-4 bg-gradient-to-br from-moulna-gold/10 to-transparent">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-full bg-moulna-gold/20 flex items-center justify-center">
-                        <Gift className="w-5 h-5 text-moulna-gold" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm">Invite Friends</p>
-                        <p className="text-xs text-muted-foreground">Earn 500 XP each</p>
-                      </div>
-                    </div>
-                    <Link
-                      href="/dashboard/referrals"
-                      className="text-sm text-moulna-gold hover:underline"
-                    >
-                      Get your referral link →
-                    </Link>
                   </Card>
 
                   {/* Logout */}

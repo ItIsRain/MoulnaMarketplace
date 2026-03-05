@@ -15,7 +15,9 @@
       "mcp__plugin_supabase_supabase__apply_migration",
       "Bash(grep:*)",
       "Read(//c/Users/itzm2/OneDrive/Desktop/MoulnaMarketplace/**)",
-      "Bash(done)"
+      "Bash(done)",
+      "mcp__supabase__list_tables",
+      "mcp__supabase__execute_sql"
     ]
   }
 }

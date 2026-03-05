@@ -27,6 +27,7 @@ import { ShopAvatar } from "@/components/avatar/ShopAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
 import { formatAED } from "@/lib/utils";
 import { useAuthStore } from "@/store/useAuthStore";
+import { getCurrentCampaign } from "@/lib/campaigns";
 import type { Product, Shop } from "@/lib/types";
 
 // Animation variants
@@ -48,142 +49,53 @@ const scaleIn = {
   visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
 };
 
-// ─── Seasonal Campaigns ───
-
-interface SeasonalCampaign {
-  slug: string;
-  title: string;
-  description: string;
-  image: string;
-  gradient: string;
-  badge: string;
-}
-
-const SEASONAL_CAMPAIGNS: { start: string; end: string; campaign: SeasonalCampaign }[] = [
-  // Ramadan (approx late Feb – late Mar 2026)
-  {
-    start: "02-15",
-    end: "03-25",
-    campaign: {
-      slug: "ramadan-sale",
-      title: "Ramadan Kareem",
-      description: "Discover handcrafted gifts, oud collections, and special Ramadan bundles from UAE's finest artisans. Exclusive deals throughout the holy month.",
-      image: "https://images.unsplash.com/photo-1564769625905-50e93615e769?w=1200&q=80",
-      gradient: "from-purple-900/80 via-indigo-900/60 to-transparent",
-      badge: "Ramadan Special",
-    },
-  },
-  // Eid Al Fitr (late Mar – mid Apr)
-  {
-    start: "03-26",
-    end: "04-15",
-    campaign: {
-      slug: "eid-al-fitr-sale",
-      title: "Eid Mubarak",
-      description: "Celebrate Eid with stunning handmade gifts, festive home décor, and exclusive collections. Treat yourself and your loved ones.",
-      image: "https://images.unsplash.com/photo-1590076215667-875d4ef2d7de?w=1200&q=80",
-      gradient: "from-emerald-900/80 via-teal-900/60 to-transparent",
-      badge: "Eid Collection",
-    },
-  },
-  // Summer Sale (Jun – Aug)
-  {
-    start: "06-01",
-    end: "08-31",
-    campaign: {
-      slug: "summer-sale",
-      title: "Summer Sale",
-      description: "Beat the heat with cool deals! Up to 50% off on handmade accessories, home fragrances, and artisan crafts all summer long.",
-      image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=80",
-      gradient: "from-orange-900/80 via-amber-900/60 to-transparent",
-      badge: "Summer Deals",
-    },
-  },
-  // Back to School (Sep)
-  {
-    start: "09-01",
-    end: "09-30",
-    campaign: {
-      slug: "back-to-school",
-      title: "Back to School",
-      description: "Start the new school year with unique handmade stationery, calligraphy sets, and personalized accessories for students.",
-      image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1200&q=80",
-      gradient: "from-blue-900/80 via-sky-900/60 to-transparent",
-      badge: "School Season",
-    },
-  },
-  // UAE National Day (Nov 15 – Dec 10)
-  {
-    start: "11-15",
-    end: "12-10",
-    campaign: {
-      slug: "national-day-sale",
-      title: "UAE National Day",
-      description: "Celebrate the spirit of the union with proudly Emirati crafts, heritage items, and patriotic collections from local artisans.",
-      image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1200&q=80",
-      gradient: "from-red-900/80 via-rose-900/60 to-transparent",
-      badge: "National Day",
-    },
-  },
-  // Year-End / New Year (Dec 11 – Jan 10)
-  {
-    start: "12-11",
-    end: "01-10",
-    campaign: {
-      slug: "new-year-sale",
-      title: "New Year, New Finds",
-      description: "Ring in the new year with exclusive artisan collections. Handpicked gifts, limited editions, and festive deals to start fresh.",
-      image: "https://images.unsplash.com/photo-1482245294234-b3f2f8d5f1a4?w=1200&q=80",
-      gradient: "from-violet-900/80 via-purple-900/60 to-transparent",
-      badge: "New Year Sale",
-    },
-  },
-  // Dubai Shopping Festival (Jan 11 – Feb 14)
-  {
-    start: "01-11",
-    end: "02-14",
-    campaign: {
-      slug: "dsf-sale",
-      title: "Dubai Shopping Festival",
-      description: "The biggest shopping event in the region! Explore thousands of handmade products with exclusive DSF deals and surprise discounts.",
-      image: "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=1200&q=80",
-      gradient: "from-cyan-900/80 via-blue-900/60 to-transparent",
-      badge: "DSF Deals",
-    },
-  },
-];
-
-// Default campaign when nothing else matches
-const DEFAULT_CAMPAIGN: SeasonalCampaign = {
-  slug: "deals",
-  title: "Explore What's New",
-  description: "Discover the latest handmade products, artisan collections, and exclusive finds from UAE's best creators.",
-  image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&q=80",
-  gradient: "from-neutral-900/80 via-neutral-800/60 to-transparent",
-  badge: "Featured",
-};
-
-function getCurrentCampaign(): SeasonalCampaign {
-  const now = new Date();
-  const mmdd = `${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-
-  for (const { start, end, campaign } of SEASONAL_CAMPAIGNS) {
-    // Handle year-wrap (e.g., Dec 11 – Jan 10)
-    if (start > end) {
-      if (mmdd >= start || mmdd <= end) return campaign;
-    } else {
-      if (mmdd >= start && mmdd <= end) return campaign;
-    }
-  }
-
-  return DEFAULT_CAMPAIGN;
-}
-
-
 // ─── Seasonal Banner Component ───
 
+interface BannerOverride {
+  enabled: boolean;
+  title: string;
+  badge: string;
+  description: string;
+  link: string;
+  image: string;
+  gradient: string;
+}
+
 function SeasonalBanner() {
-  const campaign = getCurrentCampaign();
+  const fallback = getCurrentCampaign();
+  const [banner, setBanner] = React.useState<{
+    title: string;
+    badge: string;
+    description: string;
+    image: string;
+    gradient: string;
+    link: string;
+  }>({
+    title: fallback.title,
+    badge: fallback.badge,
+    description: fallback.description,
+    image: fallback.image,
+    gradient: fallback.gradient,
+    link: `/explore/${fallback.slug}`,
+  });
+
+  React.useEffect(() => {
+    fetch("/api/banner")
+      .then((res) => res.json())
+      .then((data: { banner: BannerOverride | null }) => {
+        if (data.banner) {
+          setBanner({
+            title: data.banner.title,
+            badge: data.banner.badge,
+            description: data.banner.description,
+            image: data.banner.image,
+            gradient: data.banner.gradient,
+            link: data.banner.link,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <section className="py-10 lg:py-16 bg-background">
@@ -194,18 +106,19 @@ function SeasonalBanner() {
           viewport={{ once: true }}
           variants={fadeInUp}
         >
-          <Link href={`/explore/${campaign.slug}`}>
+          <Link href={banner.link}>
             <div className="relative rounded-2xl overflow-hidden group cursor-pointer shadow-lg hover:shadow-2xl transition-shadow duration-300">
               {/* Background Image */}
               <div className="relative h-[280px] md:h-[360px] lg:h-[420px]">
                 <Image
-                  src={campaign.image}
-                  alt={campaign.title}
+                  src={banner.image}
+                  alt={banner.title}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                   priority
+                  unoptimized
                 />
-                <div className={`absolute inset-0 bg-gradient-to-r ${campaign.gradient}`} />
+                <div className={`absolute inset-0 bg-gradient-to-r ${banner.gradient}`} />
                 <div className="absolute inset-0 bg-black/20" />
               </div>
 
@@ -213,15 +126,15 @@ function SeasonalBanner() {
               <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-14 lg:px-20">
                 <Badge variant="gold" className="w-fit mb-4 text-sm px-4 py-1.5">
                   <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                  {campaign.badge}
+                  {banner.badge}
                 </Badge>
 
                 <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold text-gold-gradient mb-3 max-w-xl drop-shadow-lg">
-                  {campaign.title}
+                  {banner.title}
                 </h2>
 
                 <p className="text-white/80 text-sm md:text-base lg:text-lg max-w-lg leading-relaxed line-clamp-3">
-                  {campaign.description}
+                  {banner.description}
                 </p>
               </div>
             </div>

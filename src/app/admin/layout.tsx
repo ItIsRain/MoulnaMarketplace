@@ -10,7 +10,7 @@ import {
   LayoutDashboard, Users, Store, Package, Flag,
   Settings, BarChart3, Shield, Bell, LogOut, ChevronUp,
   Menu, X, Tag, MessageSquare, Trophy, ExternalLink, Loader2,
-  User, ChevronDown
+  User, ChevronDown, ImageIcon
 } from "lucide-react";
 
 const ADMIN_NAV = [
@@ -23,6 +23,7 @@ const ADMIN_NAV = [
   { href: "/admin/sotw", label: "SOTW Auctions", icon: Trophy },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/categories", label: "Categories", icon: Tag },
+  { href: "/admin/banner", label: "Hero Banner", icon: ImageIcon },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 

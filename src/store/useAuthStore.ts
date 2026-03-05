@@ -51,15 +51,19 @@ export const useAuthStore = create<AuthState>()(
           const supabase = createClient();
           const {
             data: { user: authUser },
+            error,
           } = await supabase.auth.getUser();
 
-          if (authUser) {
+          if (error || !authUser) {
+            // Clear stale persisted state (handles expired/missing refresh tokens)
+            set({ user: null, shop: null, isAuthenticated: false });
+          } else {
             const profile = await get().fetchProfile();
             if (profile) {
               set({ user: profile, isAuthenticated: true });
+            } else {
+              set({ user: null, shop: null, isAuthenticated: false });
             }
-          } else {
-            set({ user: null, shop: null, isAuthenticated: false });
           }
         } catch (error) {
           console.error("Failed to initialize auth:", error);

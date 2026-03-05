@@ -8,11 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   History, Sparkles, MessageCircle, Star,
-  Users, Flame, Award, Gift, Filter, Calendar,
+  Flame, Award, Gift, Filter, Calendar,
   TrendingUp, ChevronDown, Loader2
 } from "lucide-react";
 
-const CATEGORIES = ["All", "inquiry", "engagement", "streak", "achievement", "challenge", "referral", "system"];
+const CATEGORIES = ["All", "inquiry", "engagement", "streak", "achievement", "challenge", "system"];
 const CATEGORY_LABELS: Record<string, string> = {
   All: "All",
   inquiry: "Inquiries",
@@ -20,7 +20,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   streak: "Streak",
   achievement: "Achievement",
   challenge: "Challenge",
-  referral: "Referral",
   system: "System",
 };
 
@@ -30,7 +29,6 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
   streak: Flame,
   achievement: Award,
   challenge: Gift,
-  referral: Users,
   system: Sparkles,
 };
 

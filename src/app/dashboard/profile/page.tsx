@@ -35,7 +35,6 @@ const BADGE_DEFINITIONS: Record<string, { name: string; icon: string; descriptio
   "first-review": { name: "First Review", icon: "📝", description: "Write your first review" },
   "review-master": { name: "Review Master", icon: "⭐", description: "Write 25 reviews" },
   "social-butterfly": { name: "Social Butterfly", icon: "🦋", description: "Share 10 products" },
-  "referral-champion": { name: "Referral Champion", icon: "🏆", description: "Refer 5 friends" },
   "week-warrior": { name: "Week Warrior", icon: "🔥", description: "7-day login streak" },
   "month-master": { name: "Month Master", icon: "🗓️", description: "30-day login streak" },
   "wishlist-curator": { name: "Wishlist Curator", icon: "❤️", description: "Save 20 items to wishlist" },

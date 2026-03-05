@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard, User, Heart, MapPin,
   MessageSquare, Gift, Award, Settings, LogOut,
-  Flame, Target, Star, Users, Bell
+  Flame, Target, Star, Bell
 } from "lucide-react";
 
 const SIDEBAR_ITEMS = [
@@ -48,11 +48,6 @@ const SIDEBAR_ITEMS = [
       { label: "Badges", href: "/dashboard/rewards/badges", icon: Award },
       { label: "Challenges", href: "/dashboard/rewards/challenges", icon: Target },
     ],
-  },
-  {
-    label: "Referrals",
-    href: "/dashboard/referrals",
-    icon: Users,
   },
   {
     label: "Settings",
