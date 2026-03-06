@@ -3,136 +3,119 @@
 import * as React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, timeAgo } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import {
   Bell, Package, Star, Gift, MessageSquare, Heart,
-  AlertCircle, CheckCircle, Settings, Trash2, Eye
+  AlertCircle, CheckCircle, Settings, Trash2, Eye, Loader2
 } from "lucide-react";
 
-const NOTIFICATIONS = [
-  {
-    id: "1",
-    type: "listing",
-    title: "New inquiry on your listing!",
-    message: "Someone is interested in your Arabian Oud Perfume listing.",
-    time: "5 minutes ago",
-    read: false,
-    icon: Eye,
-    color: "text-blue-600",
-    bg: "bg-blue-100",
-    link: "/seller/orders",
-  },
-  {
-    id: "2",
-    type: "achievement",
-    title: "Challenge Complete!",
-    message: "Congratulations! You've completed the 'First Review' challenge and leveled up.",
-    time: "1 hour ago",
-    read: false,
-    icon: Gift,
-    color: "text-moulna-gold",
-    bg: "bg-moulna-gold/10",
-    link: "/dashboard/rewards",
-  },
-  {
-    id: "3",
-    type: "message",
-    title: "New message from Arabian Scents",
-    message: "Thanks for reaching out! The item is still available...",
-    time: "2 hours ago",
-    read: false,
-    icon: MessageSquare,
-    color: "text-green-600",
-    bg: "bg-green-100",
-    link: "/dashboard/messages/conv-1",
-  },
-  {
-    id: "4",
-    type: "review",
-    title: "Someone liked your review",
-    message: "Your review on 'Premium Oud Set' received 5 helpful votes.",
-    time: "5 hours ago",
-    read: true,
-    icon: Star,
-    color: "text-yellow-600",
-    bg: "bg-yellow-100",
-    link: "/dashboard/reviews",
-  },
-  {
-    id: "5",
-    type: "wishlist",
-    title: "Price drop on wishlist item!",
-    message: "Arabian Nights Perfume is now 20% off.",
-    time: "1 day ago",
-    read: true,
-    icon: Heart,
-    color: "text-red-500",
-    bg: "bg-red-100",
-    link: "/products/2",
-  },
-  {
-    id: "6",
-    type: "listing",
-    title: "Listing Renewed",
-    message: "Your listing 'Premium Oud Set' has been automatically renewed.",
-    time: "2 days ago",
-    read: true,
-    icon: CheckCircle,
-    color: "text-green-600",
-    bg: "bg-green-100",
-    link: "/seller/products",
-  },
-  {
-    id: "7",
-    type: "system",
-    title: "Complete your profile",
-    message: "Add a profile picture to earn 50 XP bonus.",
-    time: "3 days ago",
-    read: true,
-    icon: AlertCircle,
-    color: "text-orange-600",
-    bg: "bg-orange-100",
-    link: "/dashboard/profile",
-  },
-];
+interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+  link: string | null;
+  xpAmount: number | null;
+  badgeName: string | null;
+}
+
+const TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
+  message: { icon: MessageSquare, color: "text-green-600", bg: "bg-green-100 dark:bg-green-900/30" },
+  listing: { icon: Eye, color: "text-blue-600", bg: "bg-blue-100 dark:bg-blue-900/30" },
+  xp: { icon: Star, color: "text-moulna-gold", bg: "bg-moulna-gold/10" },
+  badge: { icon: Gift, color: "text-purple-600", bg: "bg-purple-100 dark:bg-purple-900/30" },
+  review: { icon: Star, color: "text-yellow-600", bg: "bg-yellow-100 dark:bg-yellow-900/30" },
+  wishlist: { icon: Heart, color: "text-red-500", bg: "bg-red-100 dark:bg-red-900/30" },
+  sale: { icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-100 dark:bg-emerald-900/30" },
+  system: { icon: AlertCircle, color: "text-orange-600", bg: "bg-orange-100 dark:bg-orange-900/30" },
+};
 
 const FILTER_OPTIONS = [
   { id: "all", label: "All" },
   { id: "unread", label: "Unread" },
-  { id: "listings", label: "Listings" },
-  { id: "achievement", label: "Achievements" },
-  { id: "messages", label: "Messages" },
+  { id: "message", label: "Messages" },
+  { id: "listing", label: "Listings" },
+  { id: "badge", label: "Achievements" },
 ];
 
 export default function NotificationsPage() {
   const [selectedFilter, setSelectedFilter] = React.useState("all");
-  const [notifications, setNotifications] = React.useState(NOTIFICATIONS);
+  const [notifications, setNotifications] = React.useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = React.useState(0);
+  const [loading, setLoading] = React.useState(true);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  React.useEffect(() => {
+    fetch("/api/notifications")
+      .then((res) => res.ok ? res.json() : { notifications: [], unreadCount: 0 })
+      .then((data) => {
+        setNotifications(data.notifications || []);
+        setUnreadCount(data.unreadCount || 0);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   const filteredNotifications = notifications.filter((n) => {
     if (selectedFilter === "all") return true;
     if (selectedFilter === "unread") return !n.read;
-    return n.type === selectedFilter.slice(0, -1); // Remove 's' from 'listings' etc.
+    return n.type === selectedFilter;
   });
 
-  const markAllRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, read: true })));
+  const markAllRead = async () => {
+    try {
+      const res = await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markAllRead: true }),
+      });
+      if (res.ok) {
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        setUnreadCount(0);
+      }
+    } catch {}
   };
 
-  const markAsRead = (id: string) => {
-    setNotifications(
-      notifications.map((n) => (n.id === id ? { ...n, read: true } : n))
+  const markAsRead = async (id: string) => {
+    const notif = notifications.find((n) => n.id === id);
+    if (notif?.read) return;
+    try {
+      await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notificationId: id }),
+      });
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch {}
+  };
+
+  const deleteNotification = async (id: string) => {
+    try {
+      const res = await fetch(`/api/notifications?id=${id}`, { method: "DELETE" });
+      if (res.ok) {
+        const wasUnread = notifications.find((n) => n.id === id && !n.read);
+        setNotifications((prev) => prev.filter((n) => n.id !== id));
+        if (wasUnread) setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch {}
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background py-8">
+        <div className="container mx-auto px-4 max-w-3xl flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
+        </div>
+      </div>
     );
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications(notifications.filter((n) => n.id !== id));
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background py-8">
@@ -155,7 +138,7 @@ export default function NotificationsPage() {
               </Button>
             )}
             <Button variant="ghost" size="icon" asChild>
-              <Link href="/dashboard/settings">
+              <Link href="/dashboard/profile">
                 <Settings className="w-5 h-5" />
               </Link>
             </Button>
@@ -196,62 +179,83 @@ export default function NotificationsPage() {
               </p>
             </div>
           ) : (
-            filteredNotifications.map((notification, index) => (
-              <motion.div
-                key={notification.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Link
-                  href={notification.link}
-                  onClick={() => markAsRead(notification.id)}
-                  className={cn(
-                    "flex items-start gap-4 p-4 hover:bg-muted/50 transition-colors",
-                    !notification.read && "bg-moulna-gold/5"
-                  )}
+            filteredNotifications.map((notification, index) => {
+              const config = TYPE_CONFIG[notification.type] || TYPE_CONFIG.system;
+              const Icon = config.icon;
+              const content = (
+                <motion.div
+                  key={notification.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: index * 0.03 }}
                 >
                   <div
                     className={cn(
-                      "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
-                      notification.bg
+                      "flex items-start gap-4 p-4 hover:bg-muted/50 transition-colors group",
+                      !notification.read && "bg-moulna-gold/5"
                     )}
                   >
-                    <notification.icon className={cn("w-5 h-5", notification.color)} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3
-                        className={cn(
-                          "font-medium",
-                          !notification.read && "font-semibold"
-                        )}
-                      >
-                        {notification.title}
-                      </h3>
-                      {!notification.read && (
-                        <span className="w-2 h-2 rounded-full bg-moulna-gold" />
+                    <div
+                      className={cn(
+                        "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
+                        config.bg
                       )}
+                    >
+                      <Icon className={cn("w-5 h-5", config.color)} />
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {notification.message}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {notification.time}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3
+                          className={cn(
+                            "font-medium",
+                            !notification.read && "font-semibold"
+                          )}
+                        >
+                          {notification.title}
+                        </h3>
+                        {!notification.read && (
+                          <span className="w-2 h-2 rounded-full bg-moulna-gold" />
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {notification.message}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {timeAgo(notification.createdAt)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        deleteNotification(notification.id);
+                      }}
+                      className="p-2 hover:bg-muted rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="w-4 h-4 text-muted-foreground" />
+                    </button>
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      deleteNotification(notification.id);
-                    }}
-                    className="p-2 hover:bg-muted rounded-lg opacity-0 group-hover:opacity-100"
+                </motion.div>
+              );
+
+              if (notification.link) {
+                return (
+                  <Link
+                    key={notification.id}
+                    href={notification.link}
+                    onClick={() => markAsRead(notification.id)}
                   >
-                    <Trash2 className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                </Link>
-              </motion.div>
-            ))
+                    {content}
+                  </Link>
+                );
+              }
+
+              return (
+                <div key={notification.id} onClick={() => markAsRead(notification.id)} className="cursor-pointer">
+                  {content}
+                </div>
+              );
+            })
           )}
         </Card>
       </div>

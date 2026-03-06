@@ -484,16 +484,17 @@ export default function ShopStoryPage() {
       </div>
 
       {/* Tips */}
-      <Card className="p-4 bg-blue-50 border-blue-200">
+      <Card className="p-4 bg-moulna-charcoal dark:bg-moulna-charcoal-dark border-moulna-charcoal-light/30">
         <div className="flex items-start gap-3">
-          <Lightbulb className="w-5 h-5 text-blue-600 mt-0.5" />
+          <Lightbulb className="w-5 h-5 text-moulna-gold mt-0.5 shrink-0" />
           <div>
-            <p className="font-medium text-blue-800">Tips for a great story</p>
-            <ul className="text-sm text-blue-700 mt-1 space-y-1">
+            <p className="font-medium text-white">Tips for a great story</p>
+            <ul className="text-sm text-white/70 mt-1 space-y-1">
               <li>Share your passion and what makes your shop unique</li>
               <li>Include photos of your workspace, team, or process</li>
               <li>Tell customers about your values and mission</li>
               <li>Add milestones to show your journey</li>
+              <li>Story images: <span className="text-moulna-gold font-medium">1200 × 800px</span> recommended</li>
             </ul>
           </div>
         </div>

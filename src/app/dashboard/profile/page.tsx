@@ -28,20 +28,20 @@ const AVATAR_STYLES = [
 
 // Badge definition map — maps badge IDs from the API to display metadata
 const BADGE_DEFINITIONS: Record<string, { name: string; icon: string; description: string }> = {
-  "first-inquiry": { name: "First Inquiry", icon: "💬", description: "Contact your first seller" },
+  "first_inquiry": { name: "First Inquiry", icon: "💬", description: "Contact your first seller" },
   "explorer": { name: "Explorer", icon: "🧭", description: "Contact 10 different sellers" },
-  "power-browser": { name: "Power Browser", icon: "👑", description: "Save 50 listings" },
+  "power_browser": { name: "Power Browser", icon: "👑", description: "Save 50 listings" },
   "collector": { name: "Collector", icon: "⭐", description: "Contact sellers from 10 shops" },
-  "first-review": { name: "First Review", icon: "📝", description: "Write your first review" },
-  "review-master": { name: "Review Master", icon: "⭐", description: "Write 25 reviews" },
-  "social-butterfly": { name: "Social Butterfly", icon: "🦋", description: "Share 10 products" },
-  "week-warrior": { name: "Week Warrior", icon: "🔥", description: "7-day login streak" },
-  "month-master": { name: "Month Master", icon: "🗓️", description: "30-day login streak" },
-  "wishlist-curator": { name: "Wishlist Curator", icon: "❤️", description: "Save 20 items to wishlist" },
-  "first-deal": { name: "First Deal", icon: "🛍️", description: "Complete your first purchase" },
-  "big-spender": { name: "Big Spender", icon: "💎", description: "Spend over 1000 AED" },
-  "early-adopter": { name: "Early Adopter", icon: "🚀", description: "Joined during launch period" },
-  "verified-user": { name: "Verified User", icon: "✅", description: "Verify your email address" },
+  "first_review": { name: "First Review", icon: "📝", description: "Write your first review" },
+  "review_master": { name: "Review Master", icon: "⭐", description: "Write 25 reviews" },
+  "social_butterfly": { name: "Social Butterfly", icon: "🦋", description: "Share 10 products" },
+  "week_warrior": { name: "Week Warrior", icon: "🔥", description: "7-day login streak" },
+  "monthly_master": { name: "Monthly Master", icon: "🗓️", description: "30-day login streak" },
+  "wishlist_curator": { name: "Wishlist Curator", icon: "❤️", description: "Save 20 items to wishlist" },
+  "first_deal": { name: "First Deal", icon: "🛍️", description: "Complete your first purchase" },
+  "big_spender": { name: "Big Spender", icon: "💎", description: "Spend over 1000 AED" },
+  "early_adopter": { name: "Early Adopter", icon: "🚀", description: "Joined during launch period" },
+  "verified_user": { name: "Verified User", icon: "✅", description: "Verify your email address" },
   "profile-complete": { name: "Profile Complete", icon: "🎯", description: "Complete your profile" },
 };
 
@@ -391,22 +391,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Bio</label>
-                {isEditing ? (
-                  <textarea
-                    value={editedProfile.bio}
-                    onChange={(e) => setEditedProfile(prev => ({ ...prev, bio: e.target.value }))}
-                    rows={3}
-                    className="w-full px-3 py-2 rounded-lg border bg-background resize-none"
-                    placeholder="Tell us about yourself..."
-                  />
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    {profile.bio || "No bio yet"}
-                  </p>
-                )}
-              </div>
             </div>
           </Card>
 

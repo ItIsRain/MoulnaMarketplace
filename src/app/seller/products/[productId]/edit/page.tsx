@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Product } from "@/lib/types";
+import { MultiImageUpload } from "@/components/ui/image-upload";
 import {
   ArrowLeft, Save, Eye, Trash2, Package, Image as ImageIcon,
   DollarSign, Box, Settings, Upload, X, Loader2
@@ -338,60 +339,19 @@ export default function EditProductPage() {
       {activeTab === "media" && (
         <Card className="p-6">
           <div className="space-y-4">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              className="hidden"
-              onChange={handleImageUpload}
-            />
             <div>
               <Label>Listing Images</Label>
               <p className="text-sm text-muted-foreground mb-4">
                 First image is the main image. Max 8 images.
               </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {images.map((image, index) => (
-                  <div key={index} className="relative group aspect-square rounded-lg overflow-hidden border">
-                    <Image
-                      src={image}
-                      alt={`Product ${index + 1}`}
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => setImages(images.filter((_, i) => i !== index))}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    {index === 0 && (
-                      <Badge className="absolute top-2 left-2 bg-moulna-gold">Main</Badge>
-                    )}
-                  </div>
-                ))}
-                {images.length < 8 && (
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    className="aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-2 hover:border-moulna-gold transition-colors"
-                  >
-                    {uploading ? (
-                      <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
-                    ) : (
-                      <Upload className="w-8 h-8 text-muted-foreground" />
-                    )}
-                    <span className="text-sm text-muted-foreground">
-                      {uploading ? "Uploading..." : "Add Image"}
-                    </span>
-                  </button>
-                )}
-              </div>
+              <MultiImageUpload
+                value={images}
+                onChange={setImages}
+                folder="products"
+                maxImages={8}
+                maxSizeMB={10}
+                recommendedSize="1200 × 1200px square"
+              />
             </div>
           </div>
         </Card>

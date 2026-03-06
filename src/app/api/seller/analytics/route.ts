@@ -378,7 +378,7 @@ export async function GET(req: NextRequest) {
       .from("profiles")
       .select("id, full_name, username, avatar_style, avatar_seed, location, level, created_at")
       .eq("id", customerId)
-      .single();
+      .maybeSingle();
 
     if (!profile) {
       return NextResponse.json({ error: "Customer not found" }, { status: 404 });

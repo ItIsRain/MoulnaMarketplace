@@ -579,7 +579,7 @@ export default function AdminSotwPage() {
                 />
               </div>
 
-              <div className="p-3 bg-blue-50 text-blue-800 rounded-lg text-sm border border-blue-200">
+              <div className="p-3 bg-moulna-charcoal text-white/80 rounded-lg text-sm border border-moulna-charcoal-light/30">
                 The next highest bidder will automatically be notified and promoted to pending approval.
               </div>
             </div>

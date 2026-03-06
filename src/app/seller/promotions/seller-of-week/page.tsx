@@ -659,9 +659,9 @@ export default function SellerOfWeekPage() {
             </ul>
           </Card>
 
-          <Card className="p-6 bg-blue-50 border-blue-200">
-            <h3 className="font-semibold text-blue-900 mb-2">Why become Seller of the Week?</h3>
-            <ul className="text-sm text-blue-800 space-y-2">
+          <Card className="p-6 bg-moulna-charcoal dark:bg-moulna-charcoal-dark border-moulna-charcoal-light/30">
+            <h3 className="font-semibold text-white mb-2">Why become Seller of the Week?</h3>
+            <ul className="text-sm text-white/70 space-y-2">
               <li>Thousands of homepage views per week</li>
               <li>Build brand awareness and trust</li>
               <li>Drive traffic directly to your shop</li>

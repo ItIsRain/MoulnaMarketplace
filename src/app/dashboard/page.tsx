@@ -17,7 +17,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import type { DailyChallenge } from "@/lib/types";
 import {
   MessageSquare, Heart, Star, Trophy, Sparkles,
-  ChevronRight, Check, Loader2
+  ChevronRight, Check, Loader2, Inbox
 } from "lucide-react";
 
 interface DashboardOverview {
@@ -182,51 +182,59 @@ export default function DashboardPage() {
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-display text-lg font-semibold">Recent Conversations</h2>
-              <Link href="/dashboard/messages" className="text-sm text-moulna-gold hover:underline flex items-center gap-1">
-                View All <ChevronRight className="w-4 h-4" />
-              </Link>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/dashboard/messages">
+                  View All <ChevronRight className="w-4 h-4 ms-1" />
+                </Link>
+              </Button>
             </div>
 
             {recentConversations.length > 0 ? (
-              <div className="space-y-4">
+              <div className="divide-y">
                 {recentConversations.map((conv) => (
                   <Link
                     key={conv.id}
                     href={`/dashboard/messages/${conv.id}`}
-                    className="block"
+                    className={cn(
+                      "flex items-center gap-3 py-3 hover:bg-muted/50 transition-colors rounded-lg px-2 -mx-2",
+                      conv.unread && "bg-moulna-gold/5"
+                    )}
                   >
-                    <div className={cn(
-                      "flex items-center gap-4 p-4 rounded-lg border hover:border-moulna-gold/50 transition-colors",
-                      conv.unread && "border-blue-200 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-900/10"
-                    )}>
-                      <DiceBearAvatar seed={conv.otherUser.avatarSeed} style={conv.otherUser.avatarStyle} size="md" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-medium text-sm">{conv.otherUser.name}</span>
-                          <LevelBadge level={conv.otherUser.level} size="sm" />
-                          {conv.unread && (
-                            <span className="w-2 h-2 rounded-full bg-blue-500" />
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground mb-1">
-                          Re: {conv.product}
-                        </p>
-                        <p className="text-sm text-muted-foreground line-clamp-1">
-                          {conv.lastMessage}
-                        </p>
+                    <DiceBearAvatar
+                      seed={conv.otherUser.avatarSeed || "user"}
+                      style={conv.otherUser.avatarStyle || "adventurer"}
+                      size="sm"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className={cn("text-sm font-medium truncate", conv.unread && "font-semibold")}>
+                          {conv.otherUser.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground flex-shrink-0">
+                          {timeAgo(conv.updatedAt)}
+                        </span>
                       </div>
-                      <div className="text-end flex-shrink-0">
-                        <p className="text-xs text-muted-foreground">{timeAgo(conv.updatedAt)}</p>
-                      </div>
+                      <p className={cn(
+                        "text-xs truncate",
+                        conv.unread ? "text-foreground" : "text-muted-foreground"
+                      )}>
+                        {conv.lastMessage || "No messages yet"}
+                      </p>
                     </div>
+                    {conv.unread && (
+                      <span className="bg-moulna-gold text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0">
+                        1
+                      </span>
+                    )}
                   </Link>
                 ))}
               </div>
             ) : (
               <div className="text-center py-8">
-                <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-muted-foreground mb-4">No conversations yet</p>
-                <Button variant="gold" asChild>
+                <Inbox className="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground">No conversations yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Contact a seller about a listing to start a conversation</p>
+                <Button variant="gold" size="sm" className="mt-4" asChild>
                   <Link href="/explore">Browse Listings</Link>
                 </Button>
               </div>

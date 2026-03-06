@@ -27,6 +27,12 @@ export async function GET() {
     );
   }
 
+  // Get earned badge count
+  const { count: badgeCount } = await supabase
+    .from("user_badges")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id);
+
   // Map DB profile to app User shape
   const appUser = {
     id: profile.id,
@@ -37,7 +43,7 @@ export async function GET() {
     role: profile.role || "buyer",
     level: profile.level || 1,
     xp: profile.xp || 0,
-    badges: [],
+    badgeCount: badgeCount || 0,
     streakDays: profile.streak_days || 0,
     avatar: {
       style: profile.avatar_style || "adventurer",

@@ -19,7 +19,7 @@ export async function GET() {
     .from("shops")
     .select("*")
     .eq("owner_id", user.id)
-    .single();
+    .maybeSingle();
 
   if (error || !shop) {
     return NextResponse.json({ error: "Shop not found" }, { status: 404 });
@@ -71,7 +71,7 @@ export async function PATCH(request: NextRequest) {
     .from("shops")
     .select("id")
     .eq("owner_id", user.id)
-    .single();
+    .maybeSingle();
 
   if (!existingShop) {
     return NextResponse.json({ error: "Shop not found" }, { status: 404 });

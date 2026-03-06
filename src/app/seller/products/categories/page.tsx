@@ -170,9 +170,9 @@ export default function ProductCategoriesPage() {
       </Card>
 
       {/* Tips */}
-      <Card className="p-4 bg-blue-50 border-blue-200">
-        <h3 className="font-medium text-blue-800 mb-2">Tips for organizing categories</h3>
-        <ul className="text-sm text-blue-700 space-y-1">
+      <Card className="p-4 bg-moulna-charcoal dark:bg-moulna-charcoal-dark border-moulna-charcoal-light/30">
+        <h3 className="font-medium text-white mb-2">Tips for organizing categories</h3>
+        <ul className="text-sm text-white/70 space-y-1">
           <li>• Keep category names clear and descriptive</li>
           <li>• Use consistent naming across your listings</li>
           <li>• Well-chosen categories help buyers find your products faster</li>

@@ -29,6 +29,7 @@ const SELLER_PERKS = [
 ];
 
 const SELLER_BADGE_DEFS = [
+  { id: "first_listing", name: "First Listing", description: "Published your first product", icon: Star, xp: 50 },
   { id: "first_sale", name: "First Sale", description: "Made your first sale", icon: Star, xp: 100 },
   { id: "top_seller", name: "Top Seller", description: "100+ deals completed", icon: Crown, xp: 500 },
   { id: "fast_responder", name: "Fast Responder", description: "Reply to 50 inquiries within 1 hour", icon: TrendingUp, xp: 300 },
@@ -43,6 +44,7 @@ interface SellerChallenge {
   target: number;
   progress: number;
   period: string;
+  completed: boolean;
 }
 
 function getChallengeEndsIn(period: string): string {
@@ -56,6 +58,9 @@ function getChallengeEndsIn(period: string): string {
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const daysLeft = lastDay - now.getDate();
     return `${daysLeft} day${daysLeft !== 1 ? "s" : ""}`;
+  }
+  if (period === "onboarding" || period === "special") {
+    return "No expiry";
   }
   return period;
 }
@@ -86,7 +91,7 @@ export default function SellerRewardsPage() {
         }
         if (challengesData?.challenges) {
           const mapped: SellerChallenge[] = challengesData.challenges.map(
-            (c: { id: string; title: string; description: string; xp: number; target: number; progress: number; period: string }) => ({
+            (c: { id: string; title: string; description: string; xp: number; target: number; progress: number; period: string; completed: boolean }) => ({
               id: c.id,
               title: c.title,
               description: c.description,
@@ -94,6 +99,7 @@ export default function SellerRewardsPage() {
               target: c.target,
               progress: c.progress,
               period: c.period,
+              completed: c.completed,
             })
           );
           setSellerChallenges(mapped);
@@ -168,26 +174,42 @@ export default function SellerRewardsPage() {
               {sellerChallenges.map((challenge) => (
                 <div
                   key={challenge.id}
-                  className="p-4 rounded-lg border"
+                  className={cn(
+                    "p-4 rounded-lg border",
+                    challenge.completed && "bg-green-50/50 border-green-200"
+                  )}
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="font-medium">{challenge.title}</h3>
-                      <p className="text-sm text-muted-foreground">{challenge.description}</p>
+                    <div className="flex items-start gap-3">
+                      {challenge.completed && (
+                        <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+                      )}
+                      <div>
+                        <h3 className="font-medium">{challenge.title}</h3>
+                        <p className="text-sm text-muted-foreground">{challenge.description}</p>
+                      </div>
                     </div>
-                    <Badge variant="secondary">
+                    <Badge variant={challenge.completed ? "default" : "secondary"} className={cn(challenge.completed && "bg-green-600")}>
                       <Sparkles className="w-3 h-3 me-1" />
                       +{challenge.xp} XP
                     </Badge>
                   </div>
-                  <Progress
-                    value={challenge.target > 0 ? (challenge.progress / challenge.target) * 100 : 0}
-                    className="h-2 mb-2"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{challenge.progress}/{challenge.target}</span>
-                    <span>Ends in {getChallengeEndsIn(challenge.period)}</span>
-                  </div>
+                  {challenge.completed ? (
+                    <p className="text-sm text-green-600 font-medium">
+                      Earned
+                    </p>
+                  ) : (
+                    <>
+                      <Progress
+                        value={challenge.target > 0 ? (challenge.progress / challenge.target) * 100 : 0}
+                        className="h-2 mb-2"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>{challenge.progress}/{challenge.target}</span>
+                        <span>{getChallengeEndsIn(challenge.period)}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>

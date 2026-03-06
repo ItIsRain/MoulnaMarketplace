@@ -5,148 +5,189 @@ import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { cn, formatAED } from "@/lib/utils";
+import { cn, formatAED, getDiscountPercentage } from "@/lib/utils";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import type { Product } from "@/lib/types";
 import {
-  Search, Filter, SlidersHorizontal, Grid3X3, LayoutGrid,
-  ChevronDown, Star, Heart, Sparkles, ArrowUpDown
+  Search, Filter, Grid3X3, LayoutGrid,
+  ChevronDown, Heart, ArrowUpDown, Loader2, MessageCircle
 } from "lucide-react";
 import { useTracking } from "@/hooks/useTracking";
 
-const CATEGORY_DATA: Record<string, {
+const CATEGORY_META: Record<string, {
   name: string;
+  apiCategory: string;
   description: string;
   image: string;
-  subcategories: string[];
 }> = {
   "jewelry": {
     name: "Handmade Jewelry",
+    apiCategory: "Handmade Jewelry",
     description: "Discover unique rings, necklaces, bracelets and earrings crafted by UAE's finest artisans",
     image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1200",
-    subcategories: ["All", "Rings", "Necklaces", "Bracelets", "Earrings", "Sets"],
   },
   "perfumes-oud": {
     name: "Perfumes & Oud",
+    apiCategory: "Perfumes & Oud",
     description: "Authentic Arabian fragrances, oud oils and bakhoor from traditional perfumers",
     image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=1200",
-    subcategories: ["All", "Oud Oil", "Perfumes", "Bakhoor", "Diffusers", "Gift Sets"],
   },
   "home-decor": {
-    name: "Home Décor",
+    name: "Home D\u00e9cor",
+    apiCategory: "Home D\u00e9cor",
     description: "Beautiful home accessories, vases, candles and decorative items",
     image: "https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=1200",
-    subcategories: ["All", "Vases", "Candles", "Wall Art", "Cushions", "Rugs"],
+  },
+  "arabic-calligraphy": {
+    name: "Arabic Calligraphy",
+    apiCategory: "Arabic Calligraphy",
+    description: "Stunning Arabic calligraphy art, personalized pieces and traditional writing",
+    image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=1200",
+  },
+  "fashion-clothing": {
+    name: "Fashion & Clothing",
+    apiCategory: "Fashion & Clothing",
+    description: "Handmade fashion, abayas, and clothing designed by local talent",
+    image: "https://images.unsplash.com/photo-1445205170230-053b83016050?w=1200",
+  },
+  "food-sweets": {
+    name: "Food & Sweets",
+    apiCategory: "Food & Sweets",
+    description: "Artisan chocolates, traditional sweets and gourmet treats",
+    image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=1200",
+  },
+  "art-prints": {
+    name: "Art & Prints",
+    apiCategory: "Art & Prints",
+    description: "Original artwork, prints and creative pieces from local artists",
+    image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1200",
+  },
+  "baby-kids": {
+    name: "Baby & Kids",
+    apiCategory: "Baby & Kids",
+    description: "Handmade toys, clothing and accessories for little ones",
+    image: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=1200",
   },
 };
 
-const PRODUCTS = [
-  {
-    id: "prd_1",
-    title: "Handcrafted Gold Ring with Pearl",
-    image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=400",
-    priceFils: 89000,
-    originalPriceFils: 120000,
-    rating: 4.9,
-    reviewCount: 45,
-    seller: "Dubai Gold House",
-    isHandmade: true,
-    isTrending: true,
-    xpReward: 5,
-  },
-  {
-    id: "prd_2",
-    title: "Silver Arabic Calligraphy Necklace",
-    image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400",
-    priceFils: 45000,
-    rating: 4.8,
-    reviewCount: 32,
-    seller: "Calligraphy Dreams",
-    isHandmade: true,
-  },
-  {
-    id: "prd_3",
-    title: "Traditional Emirati Bracelet Set",
-    image: "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=400",
-    priceFils: 67000,
-    rating: 5.0,
-    reviewCount: 18,
-    seller: "Heritage Jewels",
-    isHandmade: true,
-    isTrending: true,
-  },
-  {
-    id: "prd_4",
-    title: "Turquoise Stone Earrings",
-    image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400",
-    priceFils: 35000,
-    rating: 4.7,
-    reviewCount: 28,
-    seller: "Stone & Silver",
-    isHandmade: true,
-  },
-  {
-    id: "prd_5",
-    title: "Rose Gold Minimalist Ring",
-    image: "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=400",
-    priceFils: 55000,
-    rating: 4.9,
-    reviewCount: 52,
-    seller: "Modern Luxe",
-  },
-  {
-    id: "prd_6",
-    title: "Pearl Drop Earrings - Handmade",
-    image: "https://images.unsplash.com/photo-1589128777073-263566ae5e4d?w=400",
-    priceFils: 78000,
-    rating: 4.8,
-    reviewCount: 15,
-    seller: "Pearl Paradise",
-    isHandmade: true,
-    xpReward: 5,
-  },
-  {
-    id: "prd_7",
-    title: "Diamond Accent Tennis Bracelet",
-    image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400",
-    priceFils: 250000,
-    rating: 5.0,
-    reviewCount: 8,
-    seller: "Luxury Gems",
-  },
-  {
-    id: "prd_8",
-    title: "Customizable Name Necklace - Arabic",
-    image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400",
-    priceFils: 42000,
-    rating: 4.6,
-    reviewCount: 67,
-    seller: "Custom Creations",
-    isHandmade: true,
-  },
+const SORT_OPTIONS = [
+  { value: "trending", label: "Most Popular" },
+  { value: "newest", label: "Newest" },
+  { value: "price_low", label: "Price: Low to High" },
+  { value: "price_high", label: "Price: High to Low" },
 ];
 
 export default function CategoryPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const category = CATEGORY_DATA[slug] || CATEGORY_DATA["jewelry"];
+  const meta = CATEGORY_META[slug];
   const { trackEvent } = useTracking();
 
-  // Track category view for challenge progress
-  React.useEffect(() => {
-    if (slug) {
-      trackEvent("category_viewed", slug);
+  const [products, setProducts] = React.useState<Product[]>([]);
+  const [total, setTotal] = React.useState(0);
+  const [loading, setLoading] = React.useState(true);
+  const [loadingMore, setLoadingMore] = React.useState(false);
+  const [offset, setOffset] = React.useState(0);
+  const [hasMore, setHasMore] = React.useState(false);
+  const [viewMode, setViewMode] = React.useState<"grid" | "compact">("grid");
+  const [sortBy, setSortBy] = React.useState("trending");
+  const [showHandmadeOnly, setShowHandmadeOnly] = React.useState(false);
+  const [showVerifiedOnly, setShowVerifiedOnly] = React.useState(false);
+  const [minPrice, setMinPrice] = React.useState("");
+  const [maxPrice, setMaxPrice] = React.useState("");
+  const [showMobileFilters, setShowMobileFilters] = React.useState(false);
+  const [wishlist, setWishlist] = React.useState<string[]>([]);
+  const limit = 20;
+
+  const categoryName = meta?.apiCategory || slug;
+
+  const fetchProducts = React.useCallback(async (reset = false) => {
+    const currentOffset = reset ? 0 : offset;
+    if (reset) setLoading(true);
+    else setLoadingMore(true);
+
+    const params = new URLSearchParams();
+    params.set("category", categoryName);
+    params.set("sort", sortBy);
+    params.set("limit", String(limit));
+    params.set("offset", String(currentOffset));
+    if (showHandmadeOnly) params.set("handmade", "true");
+    if (showVerifiedOnly) params.set("verified", "true");
+    if (minPrice) params.set("minPrice", String(Number(minPrice) * 100));
+    if (maxPrice) params.set("maxPrice", String(Number(maxPrice) * 100));
+
+    try {
+      const res = await fetch(`/api/products?${params}`);
+      const data = await res.json();
+      if (res.ok) {
+        if (reset) {
+          setProducts(data.products);
+          setOffset(data.products.length);
+        } else {
+          setProducts((prev) => [...prev, ...data.products]);
+          setOffset((prev) => prev + data.products.length);
+        }
+        setTotal(data.total);
+        setHasMore((reset ? data.products.length : currentOffset + data.products.length) < data.total);
+      }
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
     }
+  }, [categoryName, sortBy, showHandmadeOnly, showVerifiedOnly, minPrice, maxPrice, offset]);
+
+  // Track category view
+  React.useEffect(() => {
+    if (slug) trackEvent("category_viewed", slug);
   }, [slug, trackEvent]);
 
-  const [selectedSubcategory, setSelectedSubcategory] = React.useState("All");
-  const [viewMode, setViewMode] = React.useState<"grid" | "compact">("grid");
-  const [sortBy, setSortBy] = React.useState("popular");
-  const [showMobileFilters, setShowMobileFilters] = React.useState(false);
+  // Load wishlist
+  React.useEffect(() => {
+    fetch("/api/wishlist")
+      .then((res) => res.ok ? res.json() : { items: [] })
+      .then((data) => {
+        const ids = (data.items || []).map((i: { productId: string }) => i.productId);
+        setWishlist(ids);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Refetch when filters change
+  React.useEffect(() => {
+    fetchProducts(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryName, sortBy, showHandmadeOnly, showVerifiedOnly]);
+
+  const toggleWishlist = async (productId: string) => {
+    const isInWishlist = wishlist.includes(productId);
+    setWishlist((prev) =>
+      isInWishlist ? prev.filter((id) => id !== productId) : [...prev, productId]
+    );
+    try {
+      if (isInWishlist) {
+        await fetch(`/api/wishlist?productId=${productId}`, { method: "DELETE" });
+      } else {
+        await fetch("/api/wishlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId }),
+        });
+      }
+    } catch {
+      setWishlist((prev) =>
+        isInWishlist ? [...prev, productId] : prev.filter((id) => id !== productId)
+      );
+    }
+  };
+
+  const heroImage = meta?.image || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200";
+  const heroName = meta?.name || slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  const heroDescription = meta?.description || `Browse ${heroName} products from UAE artisans`;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -155,12 +196,7 @@ export default function CategoryPage() {
       <main className="flex-1">
         {/* Hero Banner */}
         <section className="relative h-64 md:h-80">
-          <Image
-            src={category.image}
-            alt={category.name}
-            fill
-            className="object-cover"
-          />
+          <Image src={heroImage} alt={heroName} fill className="object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-8">
             <div className="container mx-auto">
@@ -169,36 +205,12 @@ export default function CategoryPage() {
                 <span>/</span>
                 <Link href="/explore/categories" className="hover:text-white">Categories</Link>
                 <span>/</span>
-                <span className="text-white">{category.name}</span>
+                <span className="text-white">{heroName}</span>
               </nav>
               <h1 className="font-display text-3xl md:text-4xl font-bold text-white mb-2">
-                {category.name}
+                {heroName}
               </h1>
-              <p className="text-white/80 max-w-xl">
-                {category.description}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Subcategories */}
-        <section className="border-b sticky top-0 bg-background/95 backdrop-blur z-10">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center gap-2 py-4 overflow-x-auto">
-              {category.subcategories.map((sub) => (
-                <button
-                  key={sub}
-                  onClick={() => setSelectedSubcategory(sub)}
-                  className={cn(
-                    "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
-                    selectedSubcategory === sub
-                      ? "bg-moulna-gold text-white"
-                      : "bg-muted hover:bg-muted/80"
-                  )}
-                >
-                  {sub}
-                </button>
-              ))}
+              <p className="text-white/80 max-w-xl">{heroDescription}</p>
             </div>
           </div>
         </section>
@@ -207,7 +219,7 @@ export default function CategoryPage() {
         <section className="container mx-auto px-4 py-8">
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Mobile Filter Toggle */}
-            <div className="lg:hidden mb-4">
+            <div className="lg:hidden">
               <Button
                 variant="outline"
                 size="sm"
@@ -228,46 +240,72 @@ export default function CategoryPage() {
 
                 {/* Price Range */}
                 <div className="mb-6">
-                  <p className="text-sm font-medium mb-3">Price Range</p>
+                  <p className="text-sm font-medium mb-3">Price Range (AED)</p>
                   <div className="flex items-center gap-2">
-                    <Input placeholder="Min" type="number" className="text-sm" />
+                    <Input
+                      placeholder="Min"
+                      type="number"
+                      className="text-sm"
+                      value={minPrice}
+                      onChange={(e) => setMinPrice(e.target.value)}
+                    />
                     <span className="text-muted-foreground">-</span>
-                    <Input placeholder="Max" type="number" className="text-sm" />
+                    <Input
+                      placeholder="Max"
+                      type="number"
+                      className="text-sm"
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(e.target.value)}
+                    />
                   </div>
-                </div>
-
-                {/* Rating */}
-                <div className="mb-6">
-                  <p className="text-sm font-medium mb-3">Rating</p>
-                  <div className="space-y-2">
-                    {[4, 3, 2, 1].map((rating) => (
-                      <label key={rating} className="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" className="rounded text-moulna-gold focus:ring-moulna-gold" />
-                        <div className="flex items-center gap-1">
-                          {Array.from({ length: rating }).map((_, i) => (
-                            <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          ))}
-                          <span className="text-sm text-muted-foreground">& up</span>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
+                  {(minPrice || maxPrice) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-2 w-full"
+                      onClick={() => fetchProducts(true)}
+                    >
+                      Apply Price Filter
+                    </Button>
+                  )}
                 </div>
 
                 {/* Features */}
                 <div className="mb-6">
                   <p className="text-sm font-medium mb-3">Features</p>
                   <div className="space-y-2">
-                    {["Handmade", "Verified Sellers", "On Sale", "New Arrivals"].map((feature) => (
-                      <label key={feature} className="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" className="rounded text-moulna-gold focus:ring-moulna-gold" />
-                        <span className="text-sm">{feature}</span>
-                      </label>
-                    ))}
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={showHandmadeOnly}
+                        onChange={(e) => setShowHandmadeOnly(e.target.checked)}
+                        className="rounded text-moulna-gold focus:ring-moulna-gold"
+                      />
+                      <span className="text-sm">Handmade Only</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={showVerifiedOnly}
+                        onChange={(e) => setShowVerifiedOnly(e.target.checked)}
+                        className="rounded text-moulna-gold focus:ring-moulna-gold"
+                      />
+                      <span className="text-sm">Verified Sellers</span>
+                    </label>
                   </div>
                 </div>
 
-                <Button variant="outline" className="w-full">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setShowHandmadeOnly(false);
+                    setShowVerifiedOnly(false);
+                    setMinPrice("");
+                    setMaxPrice("");
+                    setSortBy("trending");
+                  }}
+                >
                   Clear All Filters
                 </Button>
               </Card>
@@ -278,7 +316,7 @@ export default function CategoryPage() {
               {/* Toolbar */}
               <div className="flex items-center justify-between mb-6">
                 <p className="text-sm text-muted-foreground">
-                  Showing <span className="font-medium text-foreground">{PRODUCTS.length}</span> products
+                  Showing <span className="font-medium text-foreground">{total}</span> products
                 </p>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
@@ -288,11 +326,9 @@ export default function CategoryPage() {
                       onChange={(e) => setSortBy(e.target.value)}
                       className="text-sm border-0 bg-transparent focus:ring-0"
                     >
-                      <option value="popular">Most Popular</option>
-                      <option value="newest">Newest</option>
-                      <option value="price-low">Price: Low to High</option>
-                      <option value="price-high">Price: High to Low</option>
-                      <option value="rating">Highest Rated</option>
+                      {SORT_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
                     </select>
                   </div>
                   <div className="flex items-center gap-1 border rounded-lg p-1">
@@ -318,103 +354,152 @@ export default function CategoryPage() {
                 </div>
               </div>
 
-              {/* Products */}
-              <div className={cn(
-                "grid gap-6",
-                viewMode === "grid"
-                  ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                  : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
-              )}>
-                {PRODUCTS.map((product, index) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Link href={`/products/${product.id}`}>
-                      <Card className="overflow-hidden group cursor-pointer h-full">
-                        <div className={cn(
-                          "relative overflow-hidden",
-                          viewMode === "grid" ? "aspect-square" : "aspect-[4/5]"
-                        )}>
-                          <Image
-                            src={product.image}
-                            alt={product.title}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
+              {/* Loading / Empty / Products */}
+              {loading ? (
+                <div className="py-20 text-center">
+                  <Loader2 className="w-8 h-8 mx-auto animate-spin text-muted-foreground" />
+                </div>
+              ) : products.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <Search className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="font-semibold text-lg mb-2">No products found</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Try adjusting your filters or check back later
+                  </p>
+                </Card>
+              ) : (
+                <>
+                  <div className={cn(
+                    "grid gap-6",
+                    viewMode === "grid"
+                      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                      : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
+                  )}>
+                    {products.map((product, index) => {
+                      const discount = product.compareAtPriceFils
+                        ? getDiscountPercentage(product.priceFils, product.compareAtPriceFils)
+                        : 0;
 
-                          {/* Badges */}
-                          <div className="absolute top-3 left-3 flex flex-col items-start gap-1">
-                            {"isSponsored" in product && (product as { isSponsored?: boolean }).isSponsored && (
-                              <Badge variant="sponsored">Sponsored</Badge>
-                            )}
-                            {product.isTrending && (
-                              <Badge className="bg-moulna-gold text-white">Trending</Badge>
-                            )}
-                            {product.isHandmade && (
-                              <Badge variant="handmade">Handmade</Badge>
-                            )}
-                            {product.originalPriceFils && (
-                              <Badge className="bg-red-500 text-white">
-                                {Math.round((1 - product.priceFils / product.originalPriceFils) * 100)}% Off
-                              </Badge>
-                            )}
-                          </div>
-
-                          {/* Wishlist */}
-                          <button className="absolute top-3 right-3 p-2 rounded-full bg-white/90 hover:bg-white transition-colors">
-                            <Heart className="w-4 h-4" />
-                          </button>
-
-                        </div>
-
-                        <div className={cn("p-4", viewMode === "compact" && "p-3")}>
-                          <p className="text-xs text-muted-foreground mb-1">
-                            {product.seller}
-                          </p>
-                          <h3 className={cn(
-                            "font-medium mb-2 line-clamp-2",
-                            viewMode === "compact" && "text-sm"
-                          )}>
-                            {product.title}
-                          </h3>
-
-                          <div className="flex items-center gap-1 mb-2">
-                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                            <span className="text-sm font-medium">{product.rating}</span>
-                            <span className="text-sm text-muted-foreground">
-                              ({product.reviewCount})
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <span className={cn(
-                              "font-bold text-moulna-gold",
-                              viewMode === "compact" ? "text-sm" : "text-lg"
+                      return (
+                        <motion.div
+                          key={product.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: Math.min(index, 8) * 0.05 }}
+                        >
+                          <Card className="overflow-hidden group cursor-pointer h-full">
+                            <div className={cn(
+                              "relative overflow-hidden",
+                              viewMode === "grid" ? "aspect-square" : "aspect-[4/5]"
                             )}>
-                              {formatAED(product.priceFils)}
-                            </span>
-                            {product.originalPriceFils && (
-                              <span className="text-sm text-muted-foreground line-through">
-                                {formatAED(product.originalPriceFils)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </Card>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
+                              {product.images[0] ? (
+                                <Image
+                                  src={product.images[0]}
+                                  alt={product.title}
+                                  fill
+                                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-sm">
+                                  No image
+                                </div>
+                              )}
 
-              {/* Load More */}
-              <div className="mt-12 text-center">
-                <Button variant="outline" size="lg">
-                  Load More Products
-                </Button>
-              </div>
+                              {/* Badges */}
+                              <div className="absolute top-3 left-3 flex flex-col items-start gap-1">
+                                {product.isSponsored && (
+                                  <Badge variant="sponsored">Sponsored</Badge>
+                                )}
+                                {product.isTrending && (
+                                  <Badge variant="trending">Trending</Badge>
+                                )}
+                                {product.isNew && (
+                                  <Badge variant="new">New</Badge>
+                                )}
+                                {product.isHandmade && (
+                                  <Badge variant="handmade">Handmade</Badge>
+                                )}
+                                {discount > 0 && (
+                                  <Badge className="bg-red-500 text-white">
+                                    -{discount}%
+                                  </Badge>
+                                )}
+                              </div>
+
+                              {/* Wishlist */}
+                              <button
+                                onClick={(e) => { e.preventDefault(); toggleWishlist(product.id); }}
+                                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 dark:bg-black/50 flex items-center justify-center shadow-sm hover:scale-110 transition-transform"
+                              >
+                                <Heart className={cn(
+                                  "w-4 h-4",
+                                  wishlist.includes(product.id) ? "fill-red-500 text-red-500" : "text-muted-foreground"
+                                )} />
+                              </button>
+
+                              {/* Quick View */}
+                              <div className="absolute bottom-3 inset-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button variant="gold" size="sm" className="w-full" asChild>
+                                  <Link href={`/products/${product.slug}`}>
+                                    <MessageCircle className="w-4 h-4 me-2" />
+                                    View Listing
+                                  </Link>
+                                </Button>
+                              </div>
+                            </div>
+
+                            <Link href={`/products/${product.slug}`}>
+                              <div className={cn("p-4", viewMode === "compact" && "p-3")}>
+                                <p className="text-xs text-muted-foreground mb-1">
+                                  {product.seller.name}
+                                </p>
+                                <h3 className={cn(
+                                  "font-medium mb-2 line-clamp-2",
+                                  viewMode === "compact" && "text-sm"
+                                )}>
+                                  {product.title}
+                                </h3>
+                                <div className="flex items-center gap-2">
+                                  <span className={cn(
+                                    "font-bold text-moulna-gold",
+                                    viewMode === "compact" ? "text-sm" : "text-lg"
+                                  )}>
+                                    {formatAED(product.priceFils)}
+                                  </span>
+                                  {product.compareAtPriceFils && (
+                                    <span className="text-sm text-muted-foreground line-through">
+                                      {formatAED(product.compareAtPriceFils)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </Link>
+                          </Card>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Load More */}
+                  {hasMore && (
+                    <div className="mt-12 text-center">
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => fetchProducts(false)}
+                        disabled={loadingMore}
+                      >
+                        {loadingMore ? (
+                          <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 me-2" />
+                        )}
+                        Load More Products
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </section>

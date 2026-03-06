@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DailyChallengePanel } from "@/components/gamification/DailyChallenge";
+import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
+import { timeAgo } from "@/lib/utils";
 import {
   Package, Inbox, TrendingUp, MessageSquare,
   Eye, Users, ChevronRight,
@@ -15,6 +17,21 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import type { DailyChallenge } from "@/lib/types";
+
+interface Inquiry {
+  id: string;
+  participant: {
+    id: string;
+    name: string;
+    username: string;
+    avatarStyle: string;
+    avatarSeed: string;
+    level: number;
+  } | null;
+  lastMessage: string | null;
+  lastMessageAt: string;
+  unreadCount: number;
+}
 
 interface DashStats {
   totalListings: number;
@@ -28,6 +45,7 @@ export default function SellerDashboard() {
   const [kycLoading, setKycLoading] = React.useState(false);
   const [dashStats, setDashStats] = React.useState<DashStats>({ totalListings: 0, unreadMessages: 0, totalViews: 0, totalFollowers: 0 });
   const [challenges, setChallenges] = React.useState<DailyChallenge[]>([]);
+  const [inquiries, setInquiries] = React.useState<Inquiry[]>([]);
 
   const kycStatus = user?.kycStatus || "none";
 
@@ -49,6 +67,18 @@ export default function SellerDashboard() {
               target: c.target,
             }))
           );
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Fetch recent inquiries (conversations)
+  React.useEffect(() => {
+    fetch("/api/messages")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.conversations) {
+          setInquiries(data.conversations.slice(0, 5));
         }
       })
       .catch(() => {});
@@ -224,7 +254,7 @@ export default function SellerDashboard() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Recent Inquiries — Empty State */}
+          {/* Recent Inquiries */}
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-display text-lg font-semibold">Recent Inquiries</h2>
@@ -234,22 +264,64 @@ export default function SellerDashboard() {
                 </Link>
               </Button>
             </div>
-            <div className="text-center py-8">
-              <Inbox className="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
-              <p className="text-sm text-muted-foreground">No inquiries yet</p>
-              <p className="text-xs text-muted-foreground mt-1">Create your first listing to start receiving messages from buyers</p>
-              {kycStatus === "approved" ? (
-                <Button variant="gold" size="sm" className="mt-4" asChild>
-                  <Link href="/seller/products/new">
-                    <Plus className="w-4 h-4 me-1" /> Create Listing
+            {inquiries.length > 0 ? (
+              <div className="divide-y">
+                {inquiries.map((inq) => (
+                  <Link
+                    key={inq.id}
+                    href={`/seller/messages/${inq.id}`}
+                    className={cn(
+                      "flex items-center gap-3 py-3 hover:bg-muted/50 transition-colors rounded-lg px-2 -mx-2",
+                      inq.unreadCount > 0 && "bg-moulna-gold/5"
+                    )}
+                  >
+                    <DiceBearAvatar
+                      seed={inq.participant?.avatarSeed || "user"}
+                      style={inq.participant?.avatarStyle || "adventurer"}
+                      size="sm"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className={cn("text-sm font-medium truncate", inq.unreadCount > 0 && "font-semibold")}>
+                          {inq.participant?.name || "User"}
+                        </span>
+                        <span className="text-xs text-muted-foreground flex-shrink-0">
+                          {timeAgo(inq.lastMessageAt)}
+                        </span>
+                      </div>
+                      <p className={cn(
+                        "text-xs truncate",
+                        inq.unreadCount > 0 ? "text-foreground" : "text-muted-foreground"
+                      )}>
+                        {inq.lastMessage || "No messages yet"}
+                      </p>
+                    </div>
+                    {inq.unreadCount > 0 && (
+                      <span className="bg-moulna-gold text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0">
+                        {inq.unreadCount}
+                      </span>
+                    )}
                   </Link>
-                </Button>
-              ) : (
-                <Button variant="gold" size="sm" className="mt-4" disabled title="Complete ID verification first">
-                  <Plus className="w-4 h-4 me-1" /> Create Listing
-                </Button>
-              )}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Inbox className="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground">No inquiries yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Create your first listing to start receiving messages from buyers</p>
+                {kycStatus === "approved" ? (
+                  <Button variant="gold" size="sm" className="mt-4" asChild>
+                    <Link href="/seller/products/new">
+                      <Plus className="w-4 h-4 me-1" /> Create Listing
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button variant="gold" size="sm" className="mt-4" disabled title="Complete ID verification first">
+                    <Plus className="w-4 h-4 me-1" /> Create Listing
+                  </Button>
+                )}
+              </div>
+            )}
           </Card>
 
           {/* Performance Overview */}
@@ -257,18 +329,18 @@ export default function SellerDashboard() {
             <h2 className="font-display text-lg font-semibold mb-4">Performance Overview</h2>
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center p-4 rounded-lg bg-muted/50">
-                <Clock className="w-6 h-6 mx-auto mb-2 text-blue-500" />
-                <p className="text-2xl font-bold">-</p>
-                <p className="text-sm text-muted-foreground">Response Rate</p>
+                <Eye className="w-6 h-6 mx-auto mb-2 text-blue-500" />
+                <p className="text-2xl font-bold">{dashStats.totalViews}</p>
+                <p className="text-sm text-muted-foreground">Total Views</p>
               </div>
               <div className="text-center p-4 rounded-lg bg-muted/50">
                 <Package className="w-6 h-6 mx-auto mb-2 text-purple-500" />
-                <p className="text-2xl font-bold">0</p>
+                <p className="text-2xl font-bold">{dashStats.totalListings}</p>
                 <p className="text-sm text-muted-foreground">Listings</p>
               </div>
               <div className="text-center p-4 rounded-lg bg-muted/50">
-                <TrendingUp className="w-6 h-6 mx-auto mb-2 text-emerald-500" />
-                <p className="text-2xl font-bold">0</p>
+                <Users className="w-6 h-6 mx-auto mb-2 text-emerald-500" />
+                <p className="text-2xl font-bold">{dashStats.totalFollowers}</p>
                 <p className="text-sm text-muted-foreground">Followers</p>
               </div>
             </div>
@@ -294,7 +366,7 @@ export default function SellerDashboard() {
                   <p className="text-xs text-muted-foreground">Level</p>
                 </div>
                 <div>
-                  <p className="text-xl font-bold">{user?.badges?.length ?? 0}</p>
+                  <p className="text-xl font-bold">{user?.badgeCount ?? 0}</p>
                   <p className="text-xs text-muted-foreground">Badges</p>
                 </div>
               </div>

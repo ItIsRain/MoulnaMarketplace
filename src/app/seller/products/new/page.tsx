@@ -17,6 +17,7 @@ import {
   ShieldCheck, Plus, Trash2, Check, X as XIcon
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
+import { MultiImageUpload } from "@/components/ui/image-upload";
 import type { CustomField } from "@/lib/types";
 
 const CATEGORIES = [
@@ -432,7 +433,7 @@ export default function NewProductPage() {
           <div>
             <p className="font-medium">Earn +25 XP for creating a new listing!</p>
             <p className="text-sm text-muted-foreground">
-              Add 5+ photos for an extra +10 XP bonus
+              Add 5+ photos for an extra +15 XP bonus
             </p>
           </div>
         </div>
@@ -610,67 +611,24 @@ export default function NewProductPage() {
                 </h2>
 
                 <div className="space-y-4">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    multiple
-                    className="hidden"
-                    onChange={handleImageUpload}
+                  <MultiImageUpload
+                    value={images}
+                    onChange={setImages}
+                    folder="products"
+                    maxImages={8}
+                    maxSizeMB={10}
+                    recommendedSize="1200 × 1200px square"
                   />
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {images.map((img, index) => (
-                      <div
-                        key={index}
-                        className="relative aspect-square rounded-lg overflow-hidden group"
-                      >
-                        <Image
-                          src={img}
-                          alt={`Product image ${index + 1}`}
-                          fill
-                          className="object-cover"
-                        />
-                        <button
-                          onClick={() => removeImage(index)}
-                          className="absolute top-2 right-2 p-1 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                        {index === 0 && (
-                          <Badge className="absolute bottom-2 left-2 bg-moulna-gold">
-                            Main
-                          </Badge>
-                        )}
-                      </div>
-                    ))}
-                    {images.length < 8 && (
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploading}
-                        className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 hover:border-moulna-gold hover:bg-moulna-gold/5 transition-colors"
-                      >
-                        {uploading ? (
-                          <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
-                        ) : (
-                          <Upload className="w-8 h-8 text-muted-foreground" />
-                        )}
-                        <span className="text-sm text-muted-foreground">
-                          {uploading ? "Uploading..." : "Add Image"}
-                        </span>
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20">
-                    <Info className="w-5 h-5 text-blue-500 mt-0.5" />
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-moulna-charcoal dark:bg-moulna-charcoal-dark border border-moulna-charcoal-light/30">
+                    <Info className="w-5 h-5 text-moulna-gold mt-0.5 shrink-0" />
                     <div className="text-sm">
-                      <p className="font-medium text-blue-700 dark:text-blue-400">Photo Tips</p>
-                      <ul className="text-blue-600 dark:text-blue-300 mt-1 space-y-1">
+                      <p className="font-medium text-white">Photo Tips</p>
+                      <ul className="text-white/70 mt-1 space-y-1">
                         <li>Use natural lighting for best results</li>
                         <li>Show your product from multiple angles</li>
                         <li>Include a photo showing scale/size</li>
-                        <li>Minimum 800x800 pixels recommended</li>
+                        <li>Recommended: <span className="text-moulna-gold font-medium">1200 × 1200px</span>, max <span className="text-moulna-gold font-medium">10MB</span> per image</li>
                       </ul>
                     </div>
                   </div>
@@ -769,8 +727,8 @@ export default function NewProductPage() {
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20">
-                    <p className="text-sm text-blue-700 dark:text-blue-400">
+                  <div className="p-4 rounded-lg bg-moulna-charcoal dark:bg-moulna-charcoal-dark border border-moulna-charcoal-light/30">
+                    <p className="text-sm text-white/80">
                       Pricing is shown to buyers as your asking price. All transactions happen directly between you and the buyer.
                     </p>
                   </div>

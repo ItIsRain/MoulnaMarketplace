@@ -14,6 +14,9 @@ function getPeriodStart(period: string): string {
     weekStart.setDate(now.getDate() - dayOfWeek);
     return weekStart.toISOString().split("T")[0];
   }
+  if (period === "onboarding" || period === "special") {
+    return "2000-01-01"; // permanent challenges use a fixed date
+  }
   // monthly
   const monthStart = new Date(now);
   monthStart.setDate(1);
@@ -149,7 +152,7 @@ async function checkBadgeMilestones(
     if (count === 1) {
       await awardBadge({
         userId,
-        badgeId: "first-inquiry",
+        badgeId: "first_inquiry",
         xpReward: 50,
         badgeName: "First Inquiry",
       });
@@ -173,7 +176,7 @@ async function checkBadgeMilestones(
     if (count === 1) {
       await awardBadge({
         userId,
-        badgeId: "first-review",
+        badgeId: "first_review",
         xpReward: 30,
         badgeName: "Reviewer",
       });

@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   Trophy, Star, Package, Users, MessageSquare, TrendingUp,
   Award, Crown, Zap, Target, Gift, CheckCircle,
@@ -23,121 +22,107 @@ const ACHIEVEMENT_CATEGORIES = [
 
 const ACHIEVEMENTS = [
   {
-    id: "1",
+    id: "first_inquiry",
     name: "First Inquiry",
     description: "Receive your first inquiry on Moulna",
     icon: MessageSquare,
     category: "sales",
-    xpReward: 100,
-    unlocked: true,
-    unlockedDate: "2024-01-15",
+    xpReward: 50,
+    unlocked: false,
     rarity: "common",
   },
   {
-    id: "2",
+    id: "rising_star",
     name: "Rising Star",
     description: "Receive 10 inquiries",
     icon: Star,
     category: "sales",
     xpReward: 250,
-    unlocked: true,
-    unlockedDate: "2024-02-20",
+    unlocked: false,
     rarity: "common",
   },
   {
-    id: "3",
+    id: "top_seller",
     name: "Top Seller",
     description: "Receive 100 inquiries",
     icon: TrendingUp,
     category: "sales",
     xpReward: 500,
     unlocked: false,
-    progress: 67,
-    progressText: "67/100 inquiries",
     rarity: "rare",
   },
   {
-    id: "4",
+    id: "first_listing",
+    name: "First Listing",
+    description: "Publish your first product on Moulna",
+    icon: Package,
+    category: "products",
+    xpReward: 50,
+    unlocked: false,
+    rarity: "common",
+  },
+  {
+    id: "catalog_builder",
     name: "Catalog Builder",
     description: "List 25 items",
     icon: Package,
     category: "products",
     xpReward: 200,
-    unlocked: true,
-    unlockedDate: "2024-03-01",
-    rarity: "common",
+    unlocked: false,
+    rarity: "uncommon",
   },
   {
-    id: "5",
+    id: "product_master",
     name: "Product Master",
     description: "List 100 items",
     icon: Package,
     category: "products",
     xpReward: 500,
     unlocked: false,
-    progress: 45,
-    progressText: "45/100 listings",
     rarity: "rare",
   },
   {
-    id: "6",
+    id: "fan_favorite",
     name: "Fan Favorite",
     description: "Get 50 followers",
     icon: Users,
     category: "customers",
     xpReward: 300,
-    unlocked: true,
-    unlockedDate: "2024-02-28",
+    unlocked: false,
     rarity: "uncommon",
   },
   {
-    id: "7",
+    id: "community_leader",
     name: "Community Leader",
     description: "Get 500 followers",
     icon: Crown,
     category: "customers",
     xpReward: 1000,
     unlocked: false,
-    progress: 47,
-    progressText: "234/500 followers",
     rarity: "epic",
   },
   {
-    id: "8",
+    id: "five_star_service",
     name: "5-Star Service",
     description: "Maintain 5-star rating for 30 days",
     icon: Star,
     category: "reviews",
     xpReward: 400,
-    unlocked: true,
-    unlockedDate: "2024-03-10",
+    unlocked: false,
     rarity: "uncommon",
   },
   {
-    id: "9",
-    name: "Review Champion",
-    description: "Receive 100 positive reviews",
-    icon: MessageSquare,
-    category: "reviews",
-    xpReward: 750,
-    unlocked: false,
-    progress: 82,
-    progressText: "82/100 reviews",
-    rarity: "rare",
-  },
-  {
-    id: "10",
+    id: "fast_responder",
     name: "Quick Responder",
     description: "Reply to all messages within 1 hour for 7 days",
     icon: Zap,
     category: "special",
     xpReward: 300,
-    unlocked: true,
-    unlockedDate: "2024-03-05",
+    unlocked: false,
     rarity: "uncommon",
   },
   {
-    id: "11",
+    id: "artisan_elite",
     name: "Artisan Elite",
     description: "Join the Artisan Program",
     icon: Award,
@@ -149,15 +134,13 @@ const ACHIEVEMENTS = [
     rarity: "legendary",
   },
   {
-    id: "12",
+    id: "uae_champion",
     name: "UAE Champion",
     description: "Receive inquiries from all 7 emirates",
     icon: Target,
     category: "special",
     xpReward: 500,
     unlocked: false,
-    progress: 71,
-    progressText: "5/7 emirates",
     rarity: "rare",
   },
 ];
@@ -220,7 +203,7 @@ export default function SellerAchievementsPage() {
   const achievements = ACHIEVEMENTS.map((a) => ({
     ...a,
     unlocked: earnedBadgeIds.has(a.id),
-    unlockedDate: earnedBadgeIds.get(a.id) || a.unlockedDate,
+    unlockedDate: earnedBadgeIds.get(a.id) || undefined,
   }));
 
   const filteredAchievements = achievements.filter(
@@ -376,14 +359,11 @@ export default function SellerAchievementsPage() {
                     {achievement.lockedReason}
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        {achievement.progressText}
-                      </span>
-                      <Badge variant="outline">{achievement.progressText}</Badge>
-                    </div>
-                    <Progress value={achievement.progress} className="h-2" />
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Not yet earned
+                    </span>
+                    <Badge variant="outline">+{achievement.xpReward} XP</Badge>
                   </div>
                 )}
               </Card>

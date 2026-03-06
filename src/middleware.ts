@@ -50,7 +50,7 @@ export async function middleware(request: NextRequest) {
       .from("profiles")
       .select("role")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (!profile || profile.role !== "admin") {
       // Logged in but not admin — redirect to home (don't reveal admin exists)
@@ -64,7 +64,7 @@ export async function middleware(request: NextRequest) {
       .from("profiles")
       .select("role")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     // Admin can access seller routes without being a seller
     if (sellerProfile?.role === "admin") {

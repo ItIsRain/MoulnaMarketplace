@@ -52,7 +52,7 @@ export function mapDbProductSeller(shop: any): ProductSeller {
     avatarStyle: shop.avatar_style || "adventurer",
     avatarSeed: shop.avatar_seed ?? undefined,
     logoUrl: shop.logo_url ?? undefined,
-    level: 1, // TODO: derive from profile XP when gamification is wired
+    level: shop.owner_level || shop.level || 1,
     totalListings: shop.total_listings || 0,
     location: shop.location ?? undefined,
     isVerified: shop.is_verified || false,
@@ -83,7 +83,7 @@ export function mapDbProduct(row: any, shop?: any, isSponsored = false): Product
         avatarStyle: row.shops?.avatar_style || "adventurer",
         avatarSeed: row.shops?.avatar_seed ?? undefined,
         logoUrl: row.shops?.logo_url ?? undefined,
-        level: 1,
+        level: row.shops?.owner_level || row.shops?.level || 1,
         totalListings: row.shops?.total_listings || 0,
         location: row.shops?.location ?? undefined,
         isVerified: row.shops?.is_verified || false,

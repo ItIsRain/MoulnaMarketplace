@@ -36,6 +36,24 @@ function SearchContent() {
   const [loading, setLoading] = React.useState(false);
   const [showHandmadeOnly, setShowHandmadeOnly] = React.useState(false);
   const [showVerifiedOnly, setShowVerifiedOnly] = React.useState(false);
+  const [savedIds, setSavedIds] = React.useState<Set<string>>(new Set());
+
+  const toggleWishlist = async (productId: string) => {
+    const isSaved = savedIds.has(productId);
+    try {
+      if (isSaved) {
+        await fetch(`/api/wishlist?productId=${productId}`, { method: "DELETE" });
+        setSavedIds((prev) => { const next = new Set(prev); next.delete(productId); return next; });
+      } else {
+        await fetch("/api/wishlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId }),
+        });
+        setSavedIds((prev) => new Set(prev).add(productId));
+      }
+    } catch {}
+  };
 
   const fetchResults = React.useCallback(async (q: string) => {
     if (!q.trim()) {
@@ -280,8 +298,11 @@ function SearchContent() {
                             </div>
 
                             {/* Wishlist */}
-                            <button className="absolute top-3 end-3 p-2 rounded-full bg-white/90 hover:bg-white transition-colors">
-                              <Heart className="w-4 h-4" />
+                            <button
+                              className="absolute top-3 end-3 p-2 rounded-full bg-white/90 hover:bg-white transition-colors"
+                              onClick={(e) => { e.preventDefault(); toggleWishlist(product.id); }}
+                            >
+                              <Heart className={cn("w-4 h-4", savedIds.has(product.id) && "fill-red-500 text-red-500")} />
                             </button>
 
                           </div>

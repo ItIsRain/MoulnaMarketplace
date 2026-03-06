@@ -62,18 +62,15 @@ export async function POST(request: NextRequest) {
     .update({ used_at: new Date().toISOString() })
     .eq("id", matchedCode.id);
 
-  // Get current profile for XP and name
+  // Get profile name for welcome email
   const { data: profile } = await adminClient
     .from("profiles")
-    .select("full_name, xp")
+    .select("full_name")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  // Mark profile as verified and credit 100 XP welcome bonus
-  await adminClient
-    .from("profiles")
-    .update({ is_verified: true, xp: (profile?.xp || 0) + 100 })
-    .eq("id", user.id);
+  // Mark profile as verified and credit 100 XP welcome bonus (atomic increment)
+  await adminClient.rpc("increment_xp_and_verify", { user_id: user.id, xp_amount: 100 });
 
   const name = profile?.full_name || "there";
 

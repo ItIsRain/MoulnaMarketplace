@@ -27,17 +27,17 @@ const LEVELS = [
   { level: 7, title: "Tastemaker", xpRequired: 20000, color: "#a8863d", unlocks: ["Exclusive listings", "All avatars"] },
   { level: 8, title: "Elite", xpRequired: 35000, color: "#363e42", unlocks: ["Trusted member badge", "Personal curator"] },
   { level: 9, title: "Legend", xpRequired: 60000, color: "#e11d48", unlocks: ["Top of search results", "Invite-only events"] },
-  { level: 10, title: "Patron", xpRequired: 100000, color: "#fbbf24", unlocks: ["Lifetime perks", "All features unlocked"] },
+  { level: 10, title: "Moulna Patron", xpRequired: 100000, color: "#c7a34d", unlocks: ["Lifetime perks", "All features unlocked"] },
 ];
 
 // Badge definitions (config — always the same)
 const BADGE_DEFS = [
-  { id: "first_inquiry", name: "First Inquiry", icon: "💬", description: "Contacted your first seller", category: "engagement" as const, xpReward: 100 },
+  { id: "first_inquiry", name: "First Inquiry", icon: "💬", description: "Contacted your first seller", category: "engagement" as const, xpReward: 50 },
   { id: "week_warrior", name: "Week Warrior", icon: "🔥", description: "7-day login streak", category: "streak" as const, xpReward: 100 },
-  { id: "listing_curator", name: "Listing Curator", icon: "❤️", description: "Saved 20 listings to wishlist", category: "engagement" as const, xpReward: 50 },
-  { id: "category_explorer", name: "Category Explorer", icon: "🗺️", description: "Browsed 5 different categories", category: "engagement" as const, xpReward: 150 },
-  { id: "monthly_master", name: "Monthly Master", icon: "📅", description: "30-day login streak", category: "streak" as const, xpReward: 500 },
-  { id: "super_explorer", name: "Super Explorer", icon: "💎", description: "Contact 50 different sellers", category: "engagement" as const, xpReward: 500 },
+  { id: "explorer", name: "Explorer", icon: "🗺️", description: "Contact 10 different sellers", category: "engagement" as const, xpReward: 200 },
+  { id: "first_review", name: "Reviewer", icon: "⭐", description: "Write your first seller review", category: "engagement" as const, xpReward: 30 },
+  { id: "monthly_master", name: "Monthly Master", icon: "📅", description: "30-day login streak", category: "streak" as const, xpReward: 200 },
+  { id: "first_listing", name: "First Listing", icon: "📦", description: "Published your first product", category: "engagement" as const, xpReward: 50 },
   { id: "social_butterfly", name: "Social Butterfly", icon: "🦋", description: "Shared 10 listings", category: "social" as const, xpReward: 150 },
   { id: "influencer", name: "Influencer", icon: "📣", description: "Referred 5 friends", category: "social" as const, xpReward: 500 },
   { id: "trendsetter", name: "Trendsetter", icon: "🌟", description: "Reach Level 6", category: "seasonal" as const, xpReward: 500 },

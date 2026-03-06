@@ -13,6 +13,7 @@ import {
   Palette, Save, Image, Upload, RefreshCw, Check,
   Eye, Sparkles, Crown, Lock
 } from "lucide-react";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 const COLOR_PRESETS = [
   { id: "gold", name: "Moulna Gold", primary: "#c7a34d", secondary: "#363e42" },
@@ -45,6 +46,8 @@ export default function ShopBrandingPage() {
   const [selectedLogoStyle, setSelectedLogoStyle] = React.useState("lorelei");
   const [customPrimary, setCustomPrimary] = React.useState("#c7a34d");
   const [customSecondary, setCustomSecondary] = React.useState("#363e42");
+  const [bannerImageUrl, setBannerImageUrl] = React.useState("");
+  const [logoImageUrl, setLogoImageUrl] = React.useState("");
   const [isSaving, setIsSaving] = React.useState(false);
 
   const currentPreset = COLOR_PRESETS.find(p => p.id === selectedColor);
@@ -227,18 +230,15 @@ export default function ShopBrandingPage() {
             </div>
 
             {selectedBanner === "photo" && (
-              <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground mb-2">
-                  Upload your banner image
-                </p>
-                <Button variant="outline" size="sm">
-                  Choose File
-                </Button>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Recommended: 1200x300px, max 2MB
-                </p>
-              </div>
+              <ImageUpload
+                value={bannerImageUrl}
+                onChange={setBannerImageUrl}
+                folder="banners"
+                aspectRatio="banner"
+                placeholder="Upload your banner image"
+                maxSizeMB={5}
+                recommendedSize="1920 × 600px landscape"
+              />
             )}
           </Card>
 
@@ -273,15 +273,17 @@ export default function ShopBrandingPage() {
               ))}
             </div>
 
-            <div className="flex items-center gap-4 pt-4 border-t">
-              <Button variant="outline">
-                <Upload className="w-4 h-4 me-2" />
-                Upload Custom Logo
-              </Button>
-              <Button variant="ghost">
-                <RefreshCw className="w-4 h-4 me-2" />
-                Randomize
-              </Button>
+            <div className="pt-4 border-t space-y-3">
+              <p className="text-sm font-medium text-muted-foreground">Or upload a custom logo</p>
+              <ImageUpload
+                value={logoImageUrl}
+                onChange={setLogoImageUrl}
+                folder="logos"
+                aspectRatio="square"
+                placeholder="Upload your shop logo"
+                maxSizeMB={5}
+                recommendedSize="512 × 512px square"
+              />
             </div>
           </Card>
         </div>

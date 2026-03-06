@@ -17,6 +17,8 @@ export async function GET(
     .from("products")
     .select(`*, shops!inner(${SHOP_SELECT})`)
     .eq("slug", slug)
+    .eq("status", "active")
+    .or("expires_at.is.null,expires_at.gt.now()")
     .single();
 
   if (error || !row) {
@@ -25,13 +27,9 @@ export async function GET(
 
   const product = mapDbProduct(row);
 
-  // Increment view count (fire-and-forget with admin client to bypass RLS)
+  // Increment view count atomically (fire-and-forget with admin client to bypass RLS)
   const admin = createAdminClient();
-  admin
-    .from("products")
-    .update({ view_count: (row.view_count || 0) + 1 })
-    .eq("id", row.id)
-    .then();
+  void admin.rpc("increment_view_count", { product_id: row.id });
 
   return NextResponse.json({ product });
 }

@@ -335,7 +335,7 @@ export default function ProductPage() {
                   </Button>
                 ) : (
                   <Button variant="gold" size="lg" className="w-full" asChild>
-                    <Link href={`/dashboard/messages/new?seller=${product.seller.slug}`}>
+                    <Link href={`/dashboard/messages/new?seller=${product.seller.slug}&product=${product.id}`}>
                       <MessageCircle className="w-5 h-5 me-2" />
                       Contact Seller
                     </Link>
@@ -462,6 +462,9 @@ export default function ProductPage() {
           )}
 
         </div>
+
+        {/* Similar Products */}
+        {product && <SimilarProducts productId={product.id} category={product.category} />}
       </main>
 
       <Footer />
@@ -522,6 +525,69 @@ export default function ProductPage() {
           </DialogContent>
         </Dialog>
       )}
+    </div>
+  );
+}
+
+function SimilarProducts({ productId, category }: { productId: string; category?: string }) {
+  const [products, setProducts] = React.useState<Product[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch(`/api/products/recommended?type=similar&productId=${productId}&limit=6`);
+        const data = await res.json();
+        if (res.ok && data.products) {
+          setProducts(data.products);
+        }
+      } catch { /* ignore */ }
+      finally { setLoading(false); }
+    }
+    load();
+  }, [productId]);
+
+  if (loading) return null;
+  if (products.length === 0) return null;
+
+  return (
+    <div className="container mx-auto px-4 py-12 border-t">
+      <h2 className="font-display text-2xl font-bold mb-6 flex items-center gap-2">
+        <Sparkles className="w-5 h-5 text-moulna-gold" />
+        Similar Products
+      </h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        {products.map((product) => (
+          <Link key={product.id} href={`/products/${product.slug}`}>
+            <Card className="overflow-hidden group cursor-pointer h-full hover:shadow-lg transition-shadow">
+              <div className="relative aspect-square overflow-hidden">
+                {product.images[0] ? (
+                  <Image
+                    src={product.images[0]}
+                    alt={product.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-xs">
+                    No image
+                  </div>
+                )}
+                {product.isSponsored && (
+                  <Badge variant="sponsored" className="absolute top-2 left-2 text-[10px]">Ad</Badge>
+                )}
+              </div>
+              <div className="p-3">
+                <p className="text-xs text-muted-foreground truncate">{product.seller.name}</p>
+                <h3 className="text-sm font-medium line-clamp-2 mt-0.5 group-hover:text-moulna-gold transition-colors">
+                  {product.title}
+                </h3>
+                <p className="font-bold text-moulna-gold mt-1">{formatAED(product.priceFils)}</p>
+              </div>
+            </Card>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

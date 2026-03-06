@@ -37,7 +37,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
     icon: MessageCircle,
     badges: [
       {
-        id: "first-inquiry",
+        id: "first_inquiry",
         name: "First Inquiry",
         description: "Contact your first seller on Moulna",
         icon: MessageCircle,
@@ -56,7 +56,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         progress: { current: 0, total: 10 },
       },
       {
-        id: "power-browser",
+        id: "power_browser",
         name: "Power Browser",
         description: "Save 50 listings",
         icon: Crown,
@@ -82,7 +82,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
     icon: MessageSquare,
     badges: [
       {
-        id: "first-review",
+        id: "first_review",
         name: "Reviewer",
         description: "Write your first seller review",
         icon: MessageSquare,
@@ -101,7 +101,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         progress: { current: 0, total: 20 },
       },
       {
-        id: "social-butterfly",
+        id: "social_butterfly",
         name: "Social Butterfly",
         description: "Follow 25 shops",
         icon: Heart,
@@ -126,7 +126,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
     icon: Flame,
     badges: [
       {
-        id: "week-streak",
+        id: "week_warrior",
         name: "Week Warrior",
         description: "7-day login streak",
         icon: Flame,
@@ -135,8 +135,8 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         rarity: "common",
       },
       {
-        id: "month-streak",
-        name: "Dedicated",
+        id: "monthly_master",
+        name: "Monthly Master",
         description: "30-day login streak",
         icon: Zap,
         xp: 500,
@@ -145,7 +145,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         progress: { current: 0, total: 30 },
       },
       {
-        id: "year-member",
+        id: "year_member",
         name: "Founding Member",
         description: "Be a member for 1 year",
         icon: Trophy,
@@ -171,7 +171,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
     icon: Gift,
     badges: [
       {
-        id: "beta-tester",
+        id: "beta_tester",
         name: "Early Adopter",
         description: "Joined during beta period",
         icon: Medal,
@@ -180,7 +180,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         rarity: "legendary",
       },
       {
-        id: "event-participant",
+        id: "event_participant",
         name: "Festival Explorer",
         description: "Participate in a seasonal event",
         icon: Gift,
@@ -189,7 +189,7 @@ const BADGE_CATEGORIES: BadgeCategory[] = [
         rarity: "rare",
       },
       {
-        id: "perfect-rating",
+        id: "perfect_rating",
         name: "Five Stars",
         description: "Receive 5 star rating as a seller",
         icon: Star,

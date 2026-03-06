@@ -53,6 +53,7 @@ const scaleIn = {
 
 interface BannerOverride {
   enabled: boolean;
+  hidden: boolean;
   title: string;
   badge: string;
   description: string;
@@ -78,11 +79,16 @@ function SeasonalBanner() {
     gradient: fallback.gradient,
     link: `/explore/${fallback.slug}`,
   });
+  const [hidden, setHidden] = React.useState(false);
 
   React.useEffect(() => {
     fetch("/api/banner")
       .then((res) => res.json())
-      .then((data: { banner: BannerOverride | null }) => {
+      .then((data: { banner: BannerOverride | null; hidden?: boolean }) => {
+        if (data.hidden) {
+          setHidden(true);
+          return;
+        }
         if (data.banner) {
           setBanner({
             title: data.banner.title,
@@ -96,6 +102,8 @@ function SeasonalBanner() {
       })
       .catch(() => {});
   }, []);
+
+  if (hidden) return null;
 
   return (
     <section className="py-10 lg:py-16 bg-background">
@@ -813,9 +821,104 @@ export default function HomePage() {
 
         {/* Sellers You Follow */}
         <FollowedSellersSection />
+
+        {/* Recommended For You */}
+        <RecommendedForYou />
       </main>
 
       <Footer />
     </>
+  );
+}
+
+function RecommendedForYou() {
+  const [products, setProducts] = React.useState<Product[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch("/api/products/recommended?type=for_you&limit=8")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.products) setProducts(data.products);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading || products.length === 0) return null;
+
+  return (
+    <section className="py-16 lg:py-24 bg-muted/30">
+      <div className="container-app">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="flex items-end justify-between mb-8"
+        >
+          <div>
+            <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-2">
+              <Sparkles className="w-5 h-5 text-moulna-gold" />
+              <span className="text-sm font-medium text-moulna-gold">Picked For You</span>
+            </motion.div>
+            <motion.h2 variants={fadeInUp} className="text-3xl lg:text-4xl font-display font-bold">
+              Recommended For You
+            </motion.h2>
+          </div>
+          <motion.div variants={fadeInUp}>
+            <Button variant="outline" asChild>
+              <Link href="/explore">
+                Explore All
+                <ArrowRight className="w-4 h-4 ms-2" />
+              </Link>
+            </Button>
+          </motion.div>
+        </motion.div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
+          {products.map((product, index) => (
+            <motion.div
+              key={product.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: Math.min(index, 6) * 0.05 }}
+            >
+              <Link href={`/products/${product.slug}`}>
+                <Card className="overflow-hidden group cursor-pointer h-full hover:shadow-lg transition-shadow">
+                  <div className="relative aspect-square overflow-hidden">
+                    {product.images[0] ? (
+                      <Image
+                        src={product.images[0]}
+                        alt={product.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-xs">
+                        No image
+                      </div>
+                    )}
+                    {product.isSponsored && (
+                      <Badge variant="sponsored" className="absolute top-2 start-2 text-[10px]">Sponsored</Badge>
+                    )}
+                    {product.isTrending && !product.isSponsored && (
+                      <Badge variant="trending" className="absolute top-2 start-2 text-[10px]">Trending</Badge>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <p className="text-xs text-muted-foreground truncate">{product.seller.name}</p>
+                    <h3 className="text-sm font-medium line-clamp-2 mt-0.5 group-hover:text-moulna-gold transition-colors">
+                      {product.title}
+                    </h3>
+                    <p className="font-bold text-moulna-gold mt-1">{formatAED(product.priceFils)}</p>
+                  </div>
+                </Card>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

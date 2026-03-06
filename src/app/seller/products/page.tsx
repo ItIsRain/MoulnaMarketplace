@@ -76,8 +76,8 @@ export default function SellerProductsPage() {
 
   const stats = {
     total,
-    active: products.filter(p => p.status === "active").length,
-    expired: products.filter(p => p.status === "expired").length,
+    active: products.filter(p => p.status === "active" && (!p.expiresAt || new Date(p.expiresAt) > new Date())).length,
+    expired: products.filter(p => p.status === "expired" || (p.status === "active" && p.expiresAt && new Date(p.expiresAt) <= new Date())).length,
     draft: products.filter(p => p.status === "draft").length,
   };
 
@@ -147,7 +147,7 @@ export default function SellerProductsPage() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: "Total", value: stats.total, color: "text-foreground" },
           { label: "Active", value: stats.active, color: "text-emerald-600" },

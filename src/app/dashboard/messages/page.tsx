@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
-import { ShopAvatar } from "@/components/avatar/ShopAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
 import {
   MessageSquare, Search, Store, Loader2
@@ -104,23 +103,11 @@ export default function MessagesPage() {
                     conv.unreadCount > 0 && "bg-moulna-gold/5"
                   )}
                 >
-                  <div className="relative flex-shrink-0">
-                    {conv.participant?.isShop ? (
-                      <ShopAvatar
-                        logoUrl={conv.participant.logoUrl}
-                        avatarSeed={conv.participant.avatarSeed}
-                        avatarStyle={conv.participant.avatarStyle}
-                        name={conv.participant.shopName || conv.participant.name}
-                        size="md"
-                      />
-                    ) : (
-                      <DiceBearAvatar
-                        seed={conv.participant?.avatarSeed || "user"}
-                        style={conv.participant?.avatarStyle || "adventurer"}
-                        size="md"
-                      />
-                    )}
-                  </div>
+                  <DiceBearAvatar
+                    seed={conv.participant?.avatarSeed || "user"}
+                    style={conv.participant?.avatarStyle || "adventurer"}
+                    size="md"
+                  />
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -132,7 +119,7 @@ export default function MessagesPage() {
                       {conv.participant?.isShop && (
                         <Store className="w-3.5 h-3.5 text-moulna-gold flex-shrink-0" />
                       )}
-                      {conv.participant && !conv.participant.isShop && conv.participant.level > 1 && (
+                      {conv.participant && conv.participant.level > 1 && (
                         <LevelBadge level={conv.participant.level} size="xs" />
                       )}
                     </div>

@@ -44,7 +44,7 @@ export function getLevelFromXP(xp: number): {
     { level: 6,  title: "Trendsetter",     xpRequired: 12000,  color: "#c7a34d" },
     { level: 7,  title: "Tastemaker",      xpRequired: 20000,  color: "#a8863d" },
     { level: 8,  title: "Elite",           xpRequired: 35000,  color: "#363e42" },
-    { level: 9,  title: "Legend",          xpRequired: 60000,  color: "#252a2d" },
+    { level: 9,  title: "Legend",          xpRequired: 60000,  color: "#e11d48" },
     { level: 10, title: "Moulna Patron",   xpRequired: 100000, color: "#c7a34d", special: true },
   ];
 

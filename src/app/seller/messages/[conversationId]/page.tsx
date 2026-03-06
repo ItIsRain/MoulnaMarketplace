@@ -2,17 +2,18 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useParams } from "next/navigation";
-import { motion } from "framer-motion";
-import { cn, formatAED } from "@/lib/utils";
+import { cn, timeAgo, formatAED } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
+import { Badge } from "@/components/ui/badge";
+import { useAuthStore } from "@/store/useAuthStore";
 import {
-  ArrowLeft, Send, Paperclip, Image, MoreVertical,
-  CheckCheck, Check, Smile, Loader2, Package
+  ArrowLeft, Send, Store, Loader2, Package
 } from "lucide-react";
 
 interface Participant {
@@ -48,17 +49,13 @@ interface RelatedProduct {
 export default function SellerConversationPage() {
   const params = useParams();
   const conversationId = params.conversationId as string;
+  const { user } = useAuthStore();
   const [participant, setParticipant] = React.useState<Participant | null>(null);
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [relatedProduct, setRelatedProduct] = React.useState<RelatedProduct | null>(null);
   const [loading, setLoading] = React.useState(true);
-  const [message, setMessage] = React.useState("");
+  const [replyText, setReplyText] = React.useState("");
   const [sending, setSending] = React.useState(false);
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
 
   React.useEffect(() => {
     fetch(`/api/messages?conversationId=${conversationId}`)
@@ -74,12 +71,8 @@ export default function SellerConversationPage() {
       .finally(() => setLoading(false));
   }, [conversationId]);
 
-  React.useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  async function handleSend() {
-    if (!message.trim() || sending) return;
+  async function handleSendReply() {
+    if (!replyText.trim() || sending) return;
     setSending(true);
     try {
       const res = await fetch("/api/messages", {
@@ -87,7 +80,7 @@ export default function SellerConversationPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           conversationId,
-          content: message.trim(),
+          content: replyText.trim(),
         }),
       });
       if (res.ok) {
@@ -97,13 +90,13 @@ export default function SellerConversationPage() {
           {
             id: data.messageId,
             senderId: "",
-            content: message.trim(),
+            content: replyText.trim(),
             isFromMe: true,
             read: false,
             createdAt: new Date().toISOString(),
           },
         ]);
-        setMessage("");
+        setReplyText("");
       }
     } catch {
       // silently fail
@@ -121,132 +114,185 @@ export default function SellerConversationPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between pb-4 border-b">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/seller/messages">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-          </Button>
-          <div className="flex items-center gap-3">
-            <DiceBearAvatar
-              seed={participant?.avatarSeed || "user"}
-              style={participant?.avatarStyle || "adventurer"}
-              size="md"
-            />
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-semibold">
-                  {participant?.name || "Unknown"}
-                </h1>
-                {participant && participant.level > 1 && (
-                  <LevelBadge level={participant.level} size="xs" />
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-        <Button variant="ghost" size="icon">
-          <MoreVertical className="w-5 h-5" />
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" asChild>
+          <Link href="/seller/messages">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
         </Button>
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold">
+              Inquiry from {participant?.name || "Unknown"}
+            </h1>
+            {participant?.isShop && (
+              <Badge variant="outline" className="text-xs">
+                <Store className="w-3 h-3 me-1" />
+                Shop
+              </Badge>
+            )}
+          </div>
+          {relatedProduct && (
+            <p className="text-muted-foreground">
+              About: {relatedProduct.title}
+            </p>
+          )}
+        </div>
       </div>
 
-      <div className="flex-1 flex gap-4 mt-4 min-h-0">
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-          {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              <p>No messages yet. Start the conversation!</p>
-            </div>
-          ) : (
-            messages.map((msg, index) => (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.03 }}
-                className={cn(
-                  "flex",
-                  msg.isFromMe ? "justify-end" : "justify-start"
-                )}
-              >
-                <div className={cn(
-                  "max-w-[70%] rounded-2xl px-4 py-2",
-                  msg.isFromMe
-                    ? "bg-moulna-gold text-white rounded-br-none"
-                    : "bg-muted rounded-bl-none"
-                )}>
-                  <p>{msg.content}</p>
-                  <div className={cn(
-                    "flex items-center gap-1 mt-1 text-xs",
-                    msg.isFromMe ? "text-white/70 justify-end" : "text-muted-foreground"
-                  )}>
-                    <span>
-                      {new Date(msg.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                    {msg.isFromMe && (
-                      msg.read ? (
-                        <CheckCheck className="w-4 h-4" />
-                      ) : (
-                        <Check className="w-4 h-4" />
-                      )
-                    )}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Main Content - Conversation */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Listing Reference */}
+          {relatedProduct && (
+            <Card className="p-4">
+              <div className="flex items-center gap-4">
+                {relatedProduct.image ? (
+                  <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                    <Image
+                      src={relatedProduct.image}
+                      alt={relatedProduct.title}
+                      fill
+                      className="object-cover"
+                    />
                   </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-lg bg-muted flex-shrink-0" />
+                )}
+                <div className="flex-1">
+                  <Link
+                    href={`/products/${relatedProduct.slug}`}
+                    className="font-medium hover:text-moulna-gold transition-colors"
+                  >
+                    {relatedProduct.title}
+                  </Link>
+                  <p className="text-sm text-muted-foreground">
+                    Listed at {formatAED(relatedProduct.priceFils)}
+                  </p>
                 </div>
-              </motion.div>
-            ))
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/products/${relatedProduct.slug}`}>
+                    View Listing
+                  </Link>
+                </Button>
+              </div>
+            </Card>
           )}
-          <div ref={messagesEndRef} />
+
+          {/* Messages */}
+          <Card className="p-6">
+            <h2 className="font-semibold mb-4">Conversation</h2>
+            <div className="space-y-4">
+              {messages.length === 0 ? (
+                <p className="text-muted-foreground text-center py-4">No messages yet</p>
+              ) : (
+                messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={cn(
+                      "flex gap-3",
+                      msg.isFromMe && "flex-row-reverse"
+                    )}
+                  >
+                    <DiceBearAvatar
+                      seed={msg.isFromMe ? (user?.avatar?.seed || "me") : (participant?.avatarSeed || "user")}
+                      style={msg.isFromMe ? (user?.avatar?.style || "adventurer") : (participant?.avatarStyle || "adventurer")}
+                      size="sm"
+                    />
+                    <div className={cn(
+                      "max-w-[70%] p-3 rounded-lg",
+                      msg.isFromMe
+                        ? "bg-moulna-gold/10 text-foreground"
+                        : "bg-muted"
+                    )}>
+                      <p className="text-sm">{msg.content}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {timeAgo(msg.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Reply Box */}
+            <div className="mt-6 pt-4 border-t">
+              <Textarea
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                placeholder="Type your reply..."
+                rows={3}
+              />
+              <div className="flex items-center justify-end mt-3">
+                <Button
+                  variant="gold"
+                  disabled={!replyText.trim() || sending}
+                  onClick={handleSendReply}
+                >
+                  {sending ? (
+                    <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4 me-2" />
+                  )}
+                  Send Reply
+                </Button>
+              </div>
+            </div>
+          </Card>
         </div>
 
         {/* Sidebar */}
-        <div className="w-80 hidden lg:block space-y-4 flex-shrink-0">
-          {/* Participant Info */}
-          <Card className="p-4">
-            <div className="text-center mb-4">
+        <div className="space-y-6">
+          {/* Customer Info */}
+          <Card className="p-6">
+            <h2 className="font-semibold mb-4">Customer</h2>
+            <div className="flex items-center gap-3 mb-4">
               <DiceBearAvatar
                 seed={participant?.avatarSeed || "user"}
                 style={participant?.avatarStyle || "adventurer"}
-                size="xl"
-                className="mx-auto mb-3"
+                size="lg"
               />
-              <h3 className="font-semibold">
-                {participant?.name || "Unknown"}
-              </h3>
-              {participant && participant.level > 1 && (
-                <div className="flex justify-center mt-1">
-                  <LevelBadge level={participant.level} size="sm" />
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">{participant?.name || "Unknown"}</p>
+                  {participant && participant.level > 1 && (
+                    <LevelBadge level={participant.level} size="sm" />
+                  )}
                 </div>
-              )}
+                {participant?.isShop && (
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Store className="w-3 h-3" />
+                    Also a seller
+                  </p>
+                )}
+              </div>
             </div>
-            {participant?.username && (
+            {participant?.isShop && participant.shopSlug && (
               <Button variant="outline" size="sm" className="w-full" asChild>
-                <Link href={`/profile/${participant.username}`}>
-                  View Profile
+                <Link href={`/shops/${participant.shopSlug}`}>
+                  View Shop
                 </Link>
               </Button>
             )}
           </Card>
 
-          {/* Related Product */}
+          {/* Related Listing */}
           {relatedProduct && (
-            <Card className="p-4">
-              <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+            <Card className="p-6">
+              <h2 className="font-semibold mb-4 flex items-center gap-2">
                 <Package className="w-4 h-4" />
                 Related Listing
-              </h4>
+              </h2>
               <div className="flex gap-3">
                 {relatedProduct.image ? (
-                  <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                    <img
+                  <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                    <Image
                       src={relatedProduct.image}
                       alt={relatedProduct.title}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                   </div>
                 ) : (
@@ -266,41 +312,6 @@ export default function SellerConversationPage() {
               </Button>
             </Card>
           )}
-        </div>
-      </div>
-
-      {/* Input Area — full width below messages + sidebar */}
-      <div className="pt-4 border-t mt-4">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="flex-shrink-0">
-            <Paperclip className="w-5 h-5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="flex-shrink-0">
-            <Image className="w-5 h-5" />
-          </Button>
-          <div className="flex-1 relative">
-            <Input
-              placeholder="Type a message..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              className="pe-12"
-            />
-            <button className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-              <Smile className="w-5 h-5" />
-            </button>
-          </div>
-          <Button
-            onClick={handleSend}
-            disabled={!message.trim() || sending}
-            className="bg-moulna-gold hover:bg-moulna-gold-dark flex-shrink-0"
-          >
-            {sending ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Send className="w-5 h-5" />
-            )}
-          </Button>
         </div>
       </div>
     </div>

@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     .eq("seller_id", user.id)
     .order("created_at", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (recentBid) {
     const elapsed = Date.now() - new Date(recentBid.created_at).getTime();

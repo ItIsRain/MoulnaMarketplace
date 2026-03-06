@@ -12,7 +12,7 @@ export interface User {
   role: UserRole;
   level: number;
   xp: number;
-  badges: Badge[];
+  badgeCount: number;
   streakDays: number;
   avatar: AvatarConfig;
   location?: string;

@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
 import {
-  MessageSquare, Search, Loader2
+  MessageSquare, Search, Store, Loader2
 } from "lucide-react";
 
 interface Participant {
@@ -49,7 +49,7 @@ export default function SellerMessagesPage() {
 
   const filtered = conversations.filter((c) => {
     if (!searchQuery) return true;
-    const name = c.participant?.name || "";
+    const name = c.participant?.shopName || c.participant?.name || "";
     return name.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
@@ -111,8 +111,13 @@ export default function SellerMessagesPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className={cn("font-medium truncate", conv.unreadCount > 0 && "font-semibold")}>
-                        {conv.participant?.name || "Unknown"}
+                        {conv.participant?.isShop
+                          ? conv.participant.shopName || conv.participant.name
+                          : conv.participant?.name || "Unknown"}
                       </span>
+                      {conv.participant?.isShop && (
+                        <Store className="w-3.5 h-3.5 text-moulna-gold flex-shrink-0" />
+                      )}
                       {conv.participant && conv.participant.level > 1 && (
                         <LevelBadge level={conv.participant.level} size="xs" />
                       )}

@@ -106,7 +106,8 @@ export async function awardBadge(params: {
 // Update login streak for a user
 export async function updateLoginStreak(userId: string) {
   const supabase = createAdminClient();
-  const today = new Date().toISOString().split("T")[0];
+  // Use UAE timezone (UTC+4) for consistent date comparison
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Dubai" });
 
   // Get or create streak
   const { data: streak } = await supabase
@@ -147,9 +148,10 @@ export async function updateLoginStreak(userId: string) {
     return { streak: streak.current_streak, isNew: false };
   }
 
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split("T")[0];
+  // Calculate yesterday in UAE timezone
+  const yesterdayDate = new Date();
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const yesterdayStr = yesterdayDate.toLocaleDateString("en-CA", { timeZone: "Asia/Dubai" });
 
   let newStreak: number;
   if (streak.last_activity_date === yesterdayStr) {
@@ -185,16 +187,8 @@ export async function updateLoginStreak(userId: string) {
     description: "Daily login bonus",
   });
 
-  // Streak milestone bonuses
+  // Streak milestone bonuses (badge award includes XP)
   if (newStreak === 7) {
-    await awardXP({
-      userId,
-      amount: 100,
-      action: "streak_milestone",
-      category: "streak",
-      description: "7-day streak bonus!",
-      isBonus: true,
-    });
     await awardBadge({
       userId,
       badgeId: "week_warrior",
@@ -202,18 +196,10 @@ export async function updateLoginStreak(userId: string) {
       badgeName: "Week Warrior",
     });
   } else if (newStreak === 30) {
-    await awardXP({
-      userId,
-      amount: 300,
-      action: "streak_milestone",
-      category: "streak",
-      description: "30-day streak bonus!",
-      isBonus: true,
-    });
     await awardBadge({
       userId,
       badgeId: "monthly_master",
-      xpReward: 200,
+      xpReward: 300,
       badgeName: "Monthly Master",
     });
   }

@@ -45,6 +45,7 @@ export default function ExplorePage() {
   const [showHandmadeOnly, setShowHandmadeOnly] = React.useState(false);
   const [showVerifiedOnly, setShowVerifiedOnly] = React.useState(false);
   const [priceRange, setPriceRange] = React.useState<[number, number]>([0, 0]);
+  const [selectedEmirate, setSelectedEmirate] = React.useState("All Emirates");
   const [wishlist, setWishlist] = React.useState<string[]>([]);
   const [showMobileFilters, setShowMobileFilters] = React.useState(false);
   const [products, setProducts] = React.useState<Product[]>([]);
@@ -220,7 +221,11 @@ export default function ExplorePage() {
                     {EMIRATES.slice(0, 5).map((emirate) => (
                       <button
                         key={emirate}
-                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-muted transition-colors"
+                        onClick={() => setSelectedEmirate(emirate)}
+                        className={cn(
+                          "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-muted transition-colors",
+                          selectedEmirate === emirate && "bg-moulna-gold/10 text-moulna-gold font-medium"
+                        )}
                       >
                         <MapPin className="w-4 h-4 text-muted-foreground" />
                         <span>{emirate}</span>
@@ -530,9 +535,81 @@ export default function ExplorePage() {
             </div>
           </div>
         </div>
+        {/* Recommended For You */}
+        <RecommendedSection />
       </main>
 
       <Footer />
+    </div>
+  );
+}
+
+function RecommendedSection() {
+  const [products, setProducts] = React.useState<Product[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("/api/products/recommended?type=for_you&limit=8");
+        const data = await res.json();
+        if (res.ok && data.products) {
+          setProducts(data.products);
+        }
+      } catch { /* ignore */ }
+      finally { setLoading(false); }
+    }
+    load();
+  }, []);
+
+  if (loading || products.length === 0) return null;
+
+  return (
+    <div className="container mx-auto px-4 py-12 border-t">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="font-display text-xl font-bold flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-moulna-gold" />
+          Recommended For You
+        </h2>
+        <Link href="/explore?sort=trending" className="text-sm text-moulna-gold hover:underline">
+          View All
+        </Link>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        {products.map((product) => (
+          <Link key={product.id} href={`/products/${product.slug}`}>
+            <Card className="overflow-hidden group cursor-pointer h-full hover:shadow-lg transition-shadow">
+              <div className="relative aspect-square overflow-hidden">
+                {product.images[0] ? (
+                  <Image
+                    src={product.images[0]}
+                    alt={product.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-xs">
+                    No image
+                  </div>
+                )}
+                {product.isSponsored && (
+                  <Badge variant="sponsored" className="absolute top-2 left-2 text-[10px]">Sponsored</Badge>
+                )}
+                {product.isTrending && (
+                  <Badge variant="trending" className="absolute top-2 left-2 text-[10px]">Trending</Badge>
+                )}
+              </div>
+              <div className="p-3">
+                <p className="text-xs text-muted-foreground truncate">{product.seller.name}</p>
+                <h3 className="text-sm font-medium line-clamp-2 mt-0.5 group-hover:text-moulna-gold transition-colors">
+                  {product.title}
+                </h3>
+                <p className="font-bold text-moulna-gold mt-1">{formatAED(product.priceFils)}</p>
+              </div>
+            </Card>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

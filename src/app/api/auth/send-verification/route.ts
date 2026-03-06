@@ -79,7 +79,7 @@ export async function POST() {
     .from("profiles")
     .select("full_name")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
   const name = profile?.full_name || "there";
 

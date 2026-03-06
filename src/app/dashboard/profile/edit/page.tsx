@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
+import { useAuthStore } from "@/store/useAuthStore";
 import {
   User, Camera, Mail, Phone, MapPin, Calendar,
   Save, ChevronRight, Sparkles, Globe, Instagram,
@@ -20,24 +21,66 @@ import {
 
 export default function EditProfilePage() {
   const [formData, setFormData] = React.useState({
-    firstName: "Ahmed",
-    lastName: "Hassan",
-    email: "ahmed@example.com",
-    phone: "+971 50 123 4567",
-    bio: "Passionate collector of Arabian fragrances and handmade crafts. Level 5 Moulna enthusiast!",
-    location: "Dubai",
-    website: "",
-    instagram: "@ahmed_uae",
-    twitter: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    location: "",
   });
 
+  const { user, isLoading: authLoading, fetchProfile } = useAuthStore();
   const [isSaving, setIsSaving] = React.useState(false);
+  const [saveMessage, setSaveMessage] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (user) {
+      const nameParts = (user.name || "").split(" ");
+      setFormData({
+        firstName: nameParts[0] || "",
+        lastName: nameParts.slice(1).join(" ") || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        location: user.location || "",
+      });
+    }
+  }, [user]);
 
   const handleSave = async () => {
     setIsSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsSaving(false);
+    setSaveMessage(null);
+    try {
+      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+      const res = await fetch("/api/profile/update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: fullName,
+          phone: formData.phone,
+          location: formData.location,
+        }),
+      });
+      if (res.ok) {
+        setSaveMessage("Profile saved successfully!");
+        fetchProfile();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setSaveMessage(err.error || "Failed to save profile");
+      }
+    } catch {
+      setSaveMessage("Failed to save profile");
+    } finally {
+      setIsSaving(false);
+      setTimeout(() => setSaveMessage(null), 3000);
+    }
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Save className="w-8 h-8 animate-pulse text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -48,6 +91,11 @@ export default function EditProfilePage() {
             <p className="text-muted-foreground">
               Update your personal information
             </p>
+            {saveMessage && (
+              <p className={cn("text-sm mt-1", saveMessage.includes("success") ? "text-green-600" : "text-red-600")}>
+                {saveMessage}
+              </p>
+            )}
           </div>
           <Button
             onClick={handleSave}
@@ -64,7 +112,7 @@ export default function EditProfilePage() {
           <h2 className="font-semibold mb-4">Profile Picture</h2>
           <div className="flex items-center gap-6">
             <div className="relative">
-              <DiceBearAvatar seed="ahmed-user" size="xl" className="w-24 h-24" />
+              <DiceBearAvatar seed={user?.avatar?.seed || user?.username || "default"} style={user?.avatar?.style} size="xl" className="w-24 h-24" />
               <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-moulna-gold text-white flex items-center justify-center shadow-lg">
                 <Camera className="w-4 h-4" />
               </button>
@@ -111,20 +159,6 @@ export default function EditProfilePage() {
                 className="mt-1"
               />
             </div>
-            <div className="md:col-span-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                value={formData.bio}
-                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                className="mt-1"
-                rows={3}
-                placeholder="Tell others about yourself..."
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                {formData.bio.length}/200 characters
-              </p>
-            </div>
           </div>
         </Card>
 
@@ -140,8 +174,9 @@ export default function EditProfilePage() {
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="ps-10"
+                  readOnly
+                  disabled
+                  className="ps-10 opacity-60"
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
@@ -185,68 +220,30 @@ export default function EditProfilePage() {
           </div>
         </Card>
 
-        {/* Social Links */}
-        <Card className="p-6">
-          <h2 className="font-semibold mb-4">Social Links</h2>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="website">Website</Label>
-              <div className="relative mt-1">
-                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="website"
-                  type="url"
-                  value={formData.website}
-                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                  className="ps-10"
-                  placeholder="https://yourwebsite.com"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="instagram">Instagram</Label>
-              <div className="relative mt-1">
-                <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="instagram"
-                  value={formData.instagram}
-                  onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
-                  className="ps-10"
-                  placeholder="@username"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="twitter">Twitter / X</Label>
-              <div className="relative mt-1">
-                <Twitter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="twitter"
-                  value={formData.twitter}
-                  onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
-                  className="ps-10"
-                  placeholder="@username"
-                />
-              </div>
-            </div>
-          </div>
-        </Card>
+        {/* Social Links — managed via Shop settings for sellers */}
 
         {/* Profile Completion */}
-        <Card className="p-4 bg-gradient-to-r from-moulna-gold/10 to-transparent border-moulna-gold/20">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-6 h-6 text-moulna-gold" />
-            <div>
-              <p className="font-medium">Complete Your Profile</p>
-              <p className="text-sm text-muted-foreground">
-                Fill out all fields to unlock the profile completion badge!
-              </p>
-            </div>
-            <div className="ms-auto">
-              <Badge className="bg-moulna-gold">80% Complete</Badge>
-            </div>
-          </div>
-        </Card>
+        {(() => {
+          const fields = [formData.firstName, formData.lastName, formData.email, formData.phone, formData.location];
+          const filled = fields.filter(f => f.trim().length > 0).length;
+          const pct = Math.round((filled / fields.length) * 100);
+          return (
+            <Card className="p-4 bg-gradient-to-r from-moulna-gold/10 to-transparent border-moulna-gold/20">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-6 h-6 text-moulna-gold" />
+                <div>
+                  <p className="font-medium">{pct === 100 ? "Profile Complete!" : "Complete Your Profile"}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {pct === 100 ? "All fields are filled out." : "Fill out all fields to unlock the profile completion badge!"}
+                  </p>
+                </div>
+                <div className="ms-auto">
+                  <Badge className={pct === 100 ? "bg-green-600" : "bg-moulna-gold"}>{pct}% Complete</Badge>
+                </div>
+              </div>
+            </Card>
+          );
+        })()}
 
         {/* Save Button (Mobile) */}
         <div className="lg:hidden">

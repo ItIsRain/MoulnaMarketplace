@@ -11,118 +11,72 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShopAvatar } from "@/components/avatar/ShopAvatar";
+import type { Product } from "@/lib/types";
 import {
-  TrendingUp, Flame, Star, Heart, Sparkles, Clock,
-  ArrowUpRight, ChevronRight, Zap
+  TrendingUp, Flame, Heart, Sparkles, Clock,
+  ArrowUpRight, ChevronRight, ChevronDown, Zap, Loader2
 } from "lucide-react";
 
-const TRENDING_PRODUCTS = [
-  {
-    id: "prd_1",
-    title: "Handcrafted Arabian Oud Perfume - 100ml",
-    image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400",
-    priceFils: 45000,
-    rating: 4.9,
-    reviewCount: 124,
-    seller: { name: "Scent of Arabia", slug: "scent-of-arabia", avatar: "scent-of-arabia" },
-    trendScore: 98,
-    salesLast24h: 45,
-    xpReward: 5,
-  },
-  {
-    id: "prd_2",
-    title: "Premium Gold Ring with Pearl Accent",
-    image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=400",
-    priceFils: 89000,
-    rating: 5.0,
-    reviewCount: 67,
-    seller: { name: "Heritage Jewels", slug: "heritage-jewels", avatar: "heritage-jewels" },
-    trendScore: 95,
-    salesLast24h: 32,
-  },
-  {
-    id: "prd_3",
-    title: "Traditional Arabic Calligraphy Art",
-    image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400",
-    priceFils: 35000,
-    rating: 4.8,
-    reviewCount: 89,
-    seller: { name: "Calligraphy Dreams", slug: "calligraphy-dreams", avatar: "calligraphy" },
-    trendScore: 92,
-    salesLast24h: 28,
-    xpReward: 5,
-  },
-  {
-    id: "prd_4",
-    title: "Rose Oud Mist - Premium Edition",
-    image: "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400",
-    priceFils: 28000,
-    rating: 4.9,
-    reviewCount: 156,
-    seller: { name: "Scent of Arabia", slug: "scent-of-arabia", avatar: "scent-of-arabia" },
-    trendScore: 90,
-    salesLast24h: 52,
-  },
-  {
-    id: "prd_5",
-    title: "Handwoven Sadu Cushion Cover",
-    image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400",
-    priceFils: 18000,
-    rating: 4.7,
-    reviewCount: 43,
-    seller: { name: "Desert Weaves", slug: "desert-weaves", avatar: "desert-weaves" },
-    trendScore: 88,
-    salesLast24h: 19,
-  },
-  {
-    id: "prd_6",
-    title: "Premium Oud Gift Collection",
-    image: "https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=400",
-    priceFils: 85000,
-    rating: 4.9,
-    reviewCount: 78,
-    seller: { name: "Scent of Arabia", slug: "scent-of-arabia", avatar: "scent-of-arabia" },
-    trendScore: 86,
-    salesLast24h: 15,
-    xpReward: 10,
-  },
-];
-
-const TRENDING_SHOPS = [
-  {
-    slug: "scent-of-arabia",
-    name: "Scent of Arabia",
-    avatar: "scent-of-arabia",
-    category: "Perfumes & Oud",
-    followers: 2450,
-    growth: 28,
-  },
-  {
-    slug: "heritage-jewels",
-    name: "Heritage Jewels",
-    avatar: "heritage-jewels",
-    category: "Jewelry",
-    followers: 1890,
-    growth: 22,
-  },
-  {
-    slug: "calligraphy-dreams",
-    name: "Calligraphy Dreams",
-    avatar: "calligraphy",
-    category: "Art",
-    followers: 1540,
-    growth: 35,
-  },
-];
-
-const TRENDING_CATEGORIES = [
-  { name: "Perfumes & Oud", growth: 45, color: "from-amber-500 to-orange-500" },
-  { name: "Jewelry", growth: 32, color: "from-pink-500 to-rose-500" },
-  { name: "Home Décor", growth: 28, color: "from-blue-500 to-cyan-500" },
-  { name: "Arabic Art", growth: 25, color: "from-purple-500 to-violet-500" },
-];
+interface TrendingShop {
+  slug: string;
+  name: string;
+  avatar_seed?: string;
+  avatar_style?: string;
+  logo_url?: string;
+  category?: string;
+  total_listings: number;
+}
 
 export default function TrendingPage() {
+  const [products, setProducts] = React.useState<Product[]>([]);
+  const [shops, setShops] = React.useState<TrendingShop[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [loadingMore, setLoadingMore] = React.useState(false);
+  const [offset, setOffset] = React.useState(0);
+  const [hasMore, setHasMore] = React.useState(false);
+  const limit = 10;
+
+  const fetchProducts = React.useCallback(async (reset = false) => {
+    const currentOffset = reset ? 0 : offset;
+    if (reset) setLoading(true);
+    else setLoadingMore(true);
+
+    try {
+      const res = await fetch(`/api/products?sort=trending&limit=${limit}&offset=${currentOffset}`);
+      const data = await res.json();
+      if (res.ok) {
+        if (reset) {
+          setProducts(data.products);
+          setOffset(data.products.length);
+        } else {
+          setProducts((prev) => [...prev, ...data.products]);
+          setOffset((prev) => prev + data.products.length);
+        }
+        setHasMore((reset ? data.products.length : offset + data.products.length) < data.total);
+      }
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [offset]);
+
+  // Fetch trending shops
+  const fetchShops = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/shops?sort=popular&limit=5");
+      const data = await res.json();
+      if (res.ok && data.shops) {
+        setShops(data.shops);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  React.useEffect(() => {
+    fetchProducts(true);
+    fetchShops();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -143,38 +97,10 @@ export default function TrendingPage() {
                 Trending on Moulna
               </h1>
               <p className="text-lg text-muted-foreground">
-                Discover what&apos;s popular right now. Updated every hour based on
-                sales, views, and customer activity.
+                Discover what&apos;s popular right now. Products ranked by views,
+                inquiries, and customer activity.
               </p>
             </div>
-          </div>
-        </section>
-
-        {/* Trending Categories */}
-        <section className="container mx-auto px-4 py-8 border-b">
-          <div className="flex items-center gap-8 overflow-x-auto pb-2">
-            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-              Hot categories:
-            </span>
-            {TRENDING_CATEGORIES.map((cat) => (
-              <Link
-                key={cat.name}
-                href={`/explore/categories/${cat.name.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
-                className="flex items-center gap-2 whitespace-nowrap group"
-              >
-                <span className={cn(
-                  "w-2 h-2 rounded-full bg-gradient-to-r",
-                  cat.color
-                )} />
-                <span className="font-medium group-hover:text-moulna-gold transition-colors">
-                  {cat.name}
-                </span>
-                <span className="text-xs text-emerald-600 flex items-center">
-                  <ArrowUpRight className="w-3 h-3" />
-                  {cat.growth}%
-                </span>
-              </Link>
-            ))}
           </div>
         </section>
 
@@ -190,145 +116,190 @@ export default function TrendingPage() {
                 </h2>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="w-4 h-4" />
-                  Updated 15 min ago
+                  Live
                 </div>
               </div>
 
-              <div className="space-y-4">
-                {TRENDING_PRODUCTS.map((product, index) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Link href={`/products/${product.id}`}>
-                      <Card className="p-4 hover:shadow-lg transition-all hover:border-moulna-gold group">
-                        <div className="flex gap-4">
-                          {/* Rank */}
-                          <div className={cn(
-                            "w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shrink-0",
-                            index === 0 && "bg-gradient-to-br from-yellow-400 to-orange-500 text-white",
-                            index === 1 && "bg-gradient-to-br from-gray-300 to-gray-400 text-white",
-                            index === 2 && "bg-gradient-to-br from-amber-600 to-amber-700 text-white",
-                            index > 2 && "bg-muted text-muted-foreground"
-                          )}>
-                            {index + 1}
-                          </div>
-
-                          {/* Image */}
-                          <div className="relative w-24 h-24 rounded-lg overflow-hidden shrink-0">
-                            <Image
-                              src={product.image}
-                              alt={product.title}
-                              fill
-                              className="object-cover group-hover:scale-105 transition-transform"
-                            />
-                          </div>
-
-                          {/* Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <ShopAvatar avatarSeed={product.seller.avatar} name={product.seller.name} size="xs" />
-                              <span className="text-xs text-muted-foreground">
-                                {product.seller.name}
-                              </span>
+              {loading ? (
+                <div className="py-20 text-center">
+                  <Loader2 className="w-8 h-8 mx-auto animate-spin text-muted-foreground" />
+                </div>
+              ) : products.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <Flame className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="font-semibold text-lg mb-2">No trending products yet</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Check back later as products gain more views and inquiries
+                  </p>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {products.map((product, index) => (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: Math.min(index, 8) * 0.05 }}
+                    >
+                      <Link href={`/products/${product.slug}`}>
+                        <Card className="p-4 hover:shadow-lg transition-all hover:border-moulna-gold group">
+                          <div className="flex gap-4">
+                            {/* Rank */}
+                            <div className={cn(
+                              "w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shrink-0",
+                              index === 0 && "bg-gradient-to-br from-yellow-400 to-orange-500 text-white",
+                              index === 1 && "bg-gradient-to-br from-gray-300 to-gray-400 text-white",
+                              index === 2 && "bg-gradient-to-br from-amber-600 to-amber-700 text-white",
+                              index > 2 && "bg-muted text-muted-foreground"
+                            )}>
+                              {index + 1}
                             </div>
-                            <h3 className="font-medium line-clamp-1 group-hover:text-moulna-gold transition-colors">
-                              {product.title}
-                            </h3>
-                            <div className="flex items-center gap-3 mt-1">
-                              <div className="flex items-center gap-1">
-                                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                <span className="text-sm font-medium">{product.rating}</span>
-                                <span className="text-xs text-muted-foreground">
-                                  ({product.reviewCount})
+
+                            {/* Image */}
+                            <div className="relative w-24 h-24 rounded-lg overflow-hidden shrink-0">
+                              {product.images[0] ? (
+                                <Image
+                                  src={product.images[0]}
+                                  alt={product.title}
+                                  fill
+                                  className="object-cover group-hover:scale-105 transition-transform"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-xs">
+                                  No image
+                                </div>
+                              )}
+                              {product.isSponsored && (
+                                <Badge variant="sponsored" className="absolute top-1 left-1 text-[10px] px-1.5 py-0.5">
+                                  Ad
+                                </Badge>
+                              )}
+                            </div>
+
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <ShopAvatar
+                                  avatarSeed={product.seller.avatarSeed}
+                                  avatarStyle={product.seller.avatarStyle}
+                                  logoUrl={product.seller.logoUrl}
+                                  name={product.seller.name}
+                                  size="xs"
+                                />
+                                <span className="text-xs text-muted-foreground truncate">
+                                  {product.seller.name}
                                 </span>
+                                {product.seller.isVerified && (
+                                  <Badge variant="outline" className="text-[10px] px-1 py-0">Verified</Badge>
+                                )}
                               </div>
-                              <span className="text-lg font-bold text-moulna-gold">
-                                {formatAED(product.priceFils)}
-                              </span>
+                              <h3 className="font-medium line-clamp-1 group-hover:text-moulna-gold transition-colors">
+                                {product.title}
+                              </h3>
+                              <div className="flex items-center gap-3 mt-1">
+                                <span className="text-lg font-bold text-moulna-gold">
+                                  {formatAED(product.priceFils)}
+                                </span>
+                                {product.isHandmade && (
+                                  <Badge variant="handmade" className="text-[10px]">Handmade</Badge>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Stats */}
+                            <div className="text-end shrink-0 hidden sm:block">
+                              <div className="flex items-center gap-1 text-orange-500 mb-1">
+                                <Flame className="w-4 h-4" />
+                                <span className="font-bold text-sm">{product.viewCount}</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {product.viewCount} views
+                              </p>
+                              {product.inquiryCount > 0 && (
+                                <p className="text-xs text-muted-foreground">
+                                  {product.inquiryCount} inquiries
+                                </p>
+                              )}
                             </div>
                           </div>
+                        </Card>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
 
-                          {/* Stats */}
-                          <div className="text-end shrink-0">
-                            <div className="flex items-center gap-1 text-orange-500 mb-1">
-                              <Flame className="w-4 h-4" />
-                              <span className="font-bold">{product.trendScore}</span>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              {product.salesLast24h} sold today
-                            </p>
-                            <Button variant="ghost" size="sm" className="mt-1">
-                              <Heart className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-
-              <div className="mt-8 text-center">
-                <Button variant="outline" size="lg">
-                  Load More Trending Products
-                </Button>
-              </div>
+              {hasMore && (
+                <div className="mt-8 text-center">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => fetchProducts(false)}
+                    disabled={loadingMore}
+                  >
+                    {loadingMore ? (
+                      <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 me-2" />
+                    )}
+                    Load More Trending Products
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Sidebar */}
             <div className="lg:w-80 space-y-6">
               {/* Trending Shops */}
-              <Card className="p-6">
-                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-moulna-gold" />
-                  Trending Shops
-                </h3>
-                <div className="space-y-4">
-                  {TRENDING_SHOPS.map((shop, index) => (
-                    <Link
-                      key={shop.slug}
-                      href={`/shops/${shop.slug}`}
-                      className="flex items-center gap-3 group"
-                    >
-                      <span className={cn(
-                        "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
-                        index === 0 && "bg-yellow-100 text-yellow-700",
-                        index === 1 && "bg-gray-100 text-gray-700",
-                        index === 2 && "bg-amber-100 text-amber-700"
-                      )}>
-                        {index + 1}
-                      </span>
-                      <ShopAvatar avatarSeed={shop.avatar} name={shop.name} size="sm" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate group-hover:text-moulna-gold transition-colors">
-                          {shop.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {shop.category}
-                        </p>
-                      </div>
-                      <div className="text-end">
-                        <p className="text-xs text-emerald-600 flex items-center">
-                          <ArrowUpRight className="w-3 h-3" />
-                          {shop.growth}%
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {shop.followers.toLocaleString()} followers
-                        </p>
-                      </div>
+              {shops.length > 0 && (
+                <Card className="p-6">
+                  <h3 className="font-semibold mb-4 flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-moulna-gold" />
+                    Popular Shops
+                  </h3>
+                  <div className="space-y-4">
+                    {shops.map((shop, index) => (
+                      <Link
+                        key={shop.slug}
+                        href={`/shops/${shop.slug}`}
+                        className="flex items-center gap-3 group"
+                      >
+                        <span className={cn(
+                          "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
+                          index === 0 && "bg-yellow-100 text-yellow-700",
+                          index === 1 && "bg-gray-100 text-gray-700",
+                          index === 2 && "bg-amber-100 text-amber-700",
+                          index > 2 && "bg-muted text-muted-foreground"
+                        )}>
+                          {index + 1}
+                        </span>
+                        <ShopAvatar
+                          avatarSeed={shop.avatar_seed}
+                          avatarStyle={shop.avatar_style}
+                          logoUrl={shop.logo_url}
+                          name={shop.name}
+                          size="sm"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate group-hover:text-moulna-gold transition-colors text-sm">
+                            {shop.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {shop.total_listings} listings
+                          </p>
+                        </div>
+                        <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-moulna-gold transition-colors" />
+                      </Link>
+                    ))}
+                  </div>
+                  <Button variant="outline" className="w-full mt-4" asChild>
+                    <Link href="/explore">
+                      Browse All
+                      <ChevronRight className="w-4 h-4 ms-1" />
                     </Link>
-                  ))}
-                </div>
-                <Button variant="outline" className="w-full mt-4" asChild>
-                  <Link href="/explore/shops">
-                    View All Shops
-                    <ChevronRight className="w-4 h-4 ms-1" />
-                  </Link>
-                </Button>
-              </Card>
+                  </Button>
+                </Card>
+              )}
 
               {/* How Trending Works */}
               <Card className="p-6 bg-gradient-to-br from-moulna-gold/10 to-transparent">
@@ -339,19 +310,19 @@ export default function TrendingPage() {
                 <ul className="text-sm space-y-2">
                   <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-moulna-gold" />
-                    Recent sales velocity
+                    Product views and engagement
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-moulna-gold" />
-                    Product views and wishlist adds
+                    Customer inquiries
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-moulna-gold" />
-                    Customer ratings and reviews
+                    Wishlist additions
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-moulna-gold" />
-                    Social shares and engagement
+                    Listing recency
                   </li>
                 </ul>
               </Card>

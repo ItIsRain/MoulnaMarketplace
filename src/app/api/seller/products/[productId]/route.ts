@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import { mapDbProduct } from "@/lib/mappers";
 
@@ -75,10 +76,10 @@ export async function PATCH(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  // Verify ownership
+  // Verify ownership and get current status
   const { data: existing } = await supabase
     .from("products")
-    .select("id")
+    .select("id, status")
     .eq("id", productId)
     .eq("owner_id", user.id)
     .single();
@@ -88,6 +89,34 @@ export async function PATCH(
   }
 
   const body = await request.json();
+
+  // Listing limit enforcement: if activating a non-active product, check plan limit
+  if (body.status === "active" && existing.status !== "active") {
+    const admin = createAdminClient();
+
+    const { count: nonDraftCount } = await admin
+      .from("products")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", user.id)
+      .neq("status", "draft");
+
+    const { data: sellerShop } = await admin
+      .from("shops")
+      .select("plan")
+      .eq("owner_id", user.id)
+      .single();
+
+    const shopPlan = (sellerShop?.plan as string) || "free";
+    const planLimits: Record<string, number> = { free: 3, growth: 30, pro: 999999 };
+    const limit = planLimits[shopPlan] ?? 3;
+
+    if ((nonDraftCount ?? 0) >= limit) {
+      return NextResponse.json(
+        { error: "FREE_LIMIT_REACHED", requiresPayment: true },
+        { status: 402 }
+      );
+    }
+  }
 
   // Build update object
   const updates: Record<string, unknown> = {};

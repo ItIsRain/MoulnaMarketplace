@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       .select("*")
       .eq("id", inquiryId)
       .not("product_id", "is", null)
-      .single();
+      .maybeSingle();
 
     if (!conv || (conv.participant_1 !== user.id && conv.participant_2 !== user.id)) {
       return NextResponse.json({ error: "Inquiry not found" }, { status: 404 });
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
       customer: profile
         ? {
             id: profile.id,
-            name: profile.full_name,
+            name: profile.full_name || profile.username || "User",
             username: profile.username,
             avatarStyle: profile.avatar_style,
             avatarSeed: profile.avatar_seed,
@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
     .select("*")
     .not("product_id", "is", null)
     .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
-    .order("created_at", { ascending: false });
+    .order("last_message_at", { ascending: false });
 
   if (!conversations || conversations.length === 0) {
     return NextResponse.json({ inquiries: [], stats: { total: 0, new: 0, replied: 0, archived: 0, sold: 0 } });
@@ -171,7 +171,7 @@ export async function GET(req: NextRequest) {
       customer: profile
         ? {
             id: profile.id,
-            name: profile.full_name,
+            name: profile.full_name || profile.username || "User",
             username: profile.username,
             avatarStyle: profile.avatar_style,
             avatarSeed: profile.avatar_seed,

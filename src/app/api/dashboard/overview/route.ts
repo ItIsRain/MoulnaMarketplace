@@ -41,9 +41,9 @@ export async function GET() {
   // Recent conversations (last 5)
   const { data: convos } = await supabase
     .from("conversations")
-    .select("id, participant_1, participant_2, product_id, status, last_message_text, updated_at, created_at")
+    .select("id, participant_1, participant_2, product_id, status, last_message_text, last_message_at, created_at")
     .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
-    .order("updated_at", { ascending: false })
+    .order("last_message_at", { ascending: false })
     .limit(5);
 
   // Batch fetch other participants and products
@@ -110,7 +110,7 @@ export async function GET() {
       },
       product: c.product_id ? (productMap[c.product_id] || "Unknown") : "General",
       lastMessage: c.last_message_text || "",
-      updatedAt: c.updated_at || c.created_at,
+      updatedAt: c.last_message_at || c.created_at,
       unread: !!unreadMap[c.id],
     };
   });

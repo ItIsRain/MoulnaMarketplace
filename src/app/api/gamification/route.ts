@@ -119,12 +119,16 @@ export async function GET(req: NextRequest) {
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     const weekStartStr = weekStart.toISOString().split("T")[0];
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    const monthStartStr = monthStart.toISOString().split("T")[0];
 
+    // Include daily, weekly, monthly periods AND permanent challenges (period_start = 2000-01-01)
     const { data: progress } = await supabase
       .from("challenge_progress")
       .select("*")
       .eq("user_id", user.id)
-      .or(`period_start.eq.${today},period_start.eq.${weekStartStr}`);
+      .or(`period_start.eq.${today},period_start.eq.${weekStartStr},period_start.eq.${monthStartStr},period_start.eq.2000-01-01`);
 
     return NextResponse.json({
       progress: (progress || []).map((p) => ({

@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import { mapDbProduct } from "@/lib/mappers";
+import { awardXP, awardBadge } from "@/lib/gamification";
 
 // GET /api/seller/products — list seller's own products
 export async function GET(request: NextRequest) {
@@ -73,6 +75,106 @@ async function generateUniqueSlug(
 
     attempt++;
     slug = `${base}-${attempt}`;
+  }
+}
+
+// Fire a challenge tracking event server-side (updates challenge_progress directly)
+async function trackChallengeEvent(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  eventType: string,
+  itemId: string
+) {
+  try {
+    const { data: challenges } = await admin
+      .from("challenges")
+      .select("*")
+      .eq("event_type", eventType)
+      .eq("is_active", true);
+
+    if (!challenges || challenges.length === 0) return;
+
+    for (const challenge of challenges) {
+      const now = new Date();
+      let periodStart: string;
+      if (challenge.period === "daily") {
+        periodStart = now.toISOString().split("T")[0];
+      } else if (challenge.period === "weekly") {
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - now.getDay());
+        periodStart = weekStart.toISOString().split("T")[0];
+      } else if (challenge.period === "monthly") {
+        const monthStart = new Date(now);
+        monthStart.setDate(1);
+        periodStart = monthStart.toISOString().split("T")[0];
+      } else {
+        // onboarding / special — use fixed date
+        periodStart = "2000-01-01";
+      }
+
+      const { data: existing } = await admin
+        .from("challenge_progress")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("challenge_id", challenge.id)
+        .eq("period_start", periodStart)
+        .maybeSingle();
+
+      if (existing?.completed) continue;
+
+      let trackedItems: string[] = [];
+      let currentProgress = 0;
+
+      if (existing) {
+        trackedItems = Array.isArray(existing.tracked_items) ? existing.tracked_items : [];
+        currentProgress = existing.progress || 0;
+      }
+
+      if (challenge.distinct_tracking && itemId) {
+        if (trackedItems.includes(itemId)) continue;
+        trackedItems = [...trackedItems, itemId];
+      }
+
+      const newProgress = currentProgress + 1;
+      const isCompleted = newProgress >= challenge.target;
+
+      if (existing) {
+        await admin
+          .from("challenge_progress")
+          .update({
+            progress: newProgress,
+            completed: isCompleted,
+            completed_at: isCompleted ? new Date().toISOString() : null,
+            tracked_items: trackedItems,
+          })
+          .eq("id", existing.id);
+      } else {
+        await admin.from("challenge_progress").insert({
+          user_id: userId,
+          challenge_id: challenge.id,
+          progress: newProgress,
+          target: challenge.target,
+          completed: isCompleted,
+          completed_at: isCompleted ? new Date().toISOString() : null,
+          period_start: periodStart,
+          tracked_items: trackedItems,
+        });
+      }
+
+      // Award XP on completion
+      if (isCompleted) {
+        const { awardXP: giveXP } = await import("@/lib/gamification");
+        await giveXP({
+          userId,
+          amount: challenge.xp,
+          action: "challenge_completed",
+          category: "challenge",
+          description: `Completed challenge: ${challenge.title}`,
+        });
+      }
+    }
+  } catch {
+    // Non-critical — don't block product creation
   }
 }
 
@@ -190,6 +292,52 @@ export async function POST(request: NextRequest) {
       { error: insertError.message },
       { status: 500 }
     );
+  }
+
+  // Award XP and track challenge progress for active/published listings
+  if (body.status === "active") {
+    // Base XP for publishing a listing
+    await awardXP({
+      userId: user.id,
+      amount: 25,
+      action: "create_listing",
+      category: "seller",
+      description: `Published "${body.title}"`,
+    });
+
+    // Bonus XP for uploading 5+ images
+    const imageCount = (body.images || []).length;
+    if (imageCount >= 5) {
+      await awardXP({
+        userId: user.id,
+        amount: 15,
+        action: "photo_bonus",
+        category: "seller",
+        description: `Uploaded ${imageCount} photos — bonus XP!`,
+        isBonus: true,
+      });
+    }
+
+    // Award "First Listing" badge if this is their first product
+    const adminClient = createAdminClient();
+    const { count: totalProducts } = await adminClient
+      .from("products")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", user.id)
+      .eq("status", "active");
+
+    if (totalProducts === 1) {
+      await awardBadge({
+        userId: user.id,
+        badgeId: "first_listing",
+        xpReward: 50,
+        badgeName: "First Listing",
+      });
+    }
+
+    // Fire tracking event for challenge progress (listing_created + product_listed)
+    await trackChallengeEvent(adminClient, user.id, "listing_created", product.id);
+    await trackChallengeEvent(adminClient, user.id, "product_listed", product.id);
   }
 
   return NextResponse.json({ product: mapDbProduct(product) }, { status: 201 });

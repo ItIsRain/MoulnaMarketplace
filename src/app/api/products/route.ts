@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import { mapDbProduct } from "@/lib/mappers";
+import type { Product } from "@/lib/types";
 
 const SHOP_SELECT = "id, owner_id, name, slug, avatar_style, avatar_seed, logo_url, rating, total_listings, location, is_verified, response_time";
 
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
         boostedProductIds.push(...boostedRows.map((r) => r.id));
 
         // Increment impressions via RPC (fire-and-forget)
-        admin.rpc("increment_boost_impressions", { boost_product_ids: boostIds }).then(() => {});
+        void admin.rpc("increment_boost_impressions", { boost_product_ids: boostIds });
       }
     }
   }
@@ -121,8 +122,39 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const regularProducts = (data || []).map((row) => mapDbProduct(row));
+  let regularProducts = (data || []).map((row) => mapDbProduct(row));
+
+  // Add light randomization for trending sort to keep feed fresh
+  // Products are grouped into tiers and shuffled within each tier
+  if (sort === "trending" && regularProducts.length > 3) {
+    regularProducts = shuffleTiers(regularProducts);
+  }
+
   const products = offset === 0 ? [...sponsoredProducts, ...regularProducts] : regularProducts;
 
   return NextResponse.json({ products, total: count || 0 });
+}
+
+// Shuffle products within tiers to add variety while keeping popular items near the top
+// Tier 1 (top 30%): shuffled lightly among themselves
+// Tier 2 (middle 40%): shuffled among themselves
+// Tier 3 (bottom 30%): shuffled among themselves
+function shuffleTiers(products: Product[]): Product[] {
+  const t1End = Math.ceil(products.length * 0.3);
+  const t2End = Math.ceil(products.length * 0.7);
+
+  const tier1 = products.slice(0, t1End);
+  const tier2 = products.slice(t1End, t2End);
+  const tier3 = products.slice(t2End);
+
+  return [...fisherYates(tier1), ...fisherYates(tier2), ...fisherYates(tier3)];
+}
+
+function fisherYates<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }

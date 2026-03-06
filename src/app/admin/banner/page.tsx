@@ -12,10 +12,12 @@ import {
   ImageIcon, Save, Loader2, CheckCircle, Eye, Type,
   Link2, Sparkles, Palette, FileText, RotateCcw,
 } from "lucide-react";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { getCurrentCampaign } from "@/lib/campaigns";
 
 interface BannerForm {
   enabled: boolean;
+  hidden: boolean;
   title: string;
   badge: string;
   description: string;
@@ -28,6 +30,7 @@ function getDefaultBanner(): BannerForm {
   const campaign = getCurrentCampaign();
   return {
     enabled: false,
+    hidden: false,
     title: campaign.title,
     badge: campaign.badge,
     description: campaign.description,
@@ -166,9 +169,27 @@ export default function AdminBannerPage() {
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Form */}
         <div className="space-y-5">
-          {/* Enable Toggle */}
+          {/* Hide Banner Toggle */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <Card className="border-border/60 shadow-sm">
+            <Card className={`shadow-sm ${form.hidden ? "border-red-300 bg-red-50/30" : "border-border/60"}`}>
+              <div className="p-5 flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold">Hide Hero Banner</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Completely hides the banner section from the homepage (including seasonal campaigns)
+                  </p>
+                </div>
+                <Switch
+                  checked={form.hidden}
+                  onCheckedChange={(checked) => setForm((f) => ({ ...f, hidden: checked, ...(checked ? { enabled: false } : {}) }))}
+                />
+              </div>
+            </Card>
+          </motion.div>
+
+          {/* Enable Toggle */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+            <Card className={`border-border/60 shadow-sm ${form.hidden ? "opacity-40 pointer-events-none" : ""}`}>
               <div className="p-5 flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-semibold">Override Seasonal Banner</h3>
@@ -256,17 +277,17 @@ export default function AdminBannerPage() {
               <div className="p-5 space-y-4">
                 <div>
                   <label className="text-[13px] font-medium mb-1.5 block text-muted-foreground">
-                    Image URL
+                    Banner Image
                   </label>
-                  <Input
+                  <ImageUpload
                     value={form.image}
-                    onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))}
-                    placeholder="https://images.unsplash.com/..."
-                    className="w-full"
+                    onChange={(url) => setForm((f) => ({ ...f, image: url }))}
+                    folder="admin"
+                    aspectRatio="banner"
+                    placeholder="Upload a banner image"
+                    maxSizeMB={10}
+                    recommendedSize="1920 × 600px landscape"
                   />
-                  <p className="text-[11px] text-muted-foreground mt-1">
-                    Recommended: 1200x420px landscape image
-                  </p>
                 </div>
               </div>
             </Card>
@@ -315,14 +336,18 @@ export default function AdminBannerPage() {
                   <Eye className="w-4 h-4 text-moulna-gold" />
                 </div>
                 <h2 className="text-sm font-semibold">Live Preview</h2>
-                {!form.enabled && (
-                  <Badge variant="outline" className="ms-auto text-xs text-muted-foreground">
-                    Disabled
+                {form.hidden ? (
+                  <Badge variant="destructive" className="ms-auto text-xs">
+                    Hidden
                   </Badge>
-                )}
+                ) : !form.enabled ? (
+                  <Badge variant="outline" className="ms-auto text-xs text-muted-foreground">
+                    Using Seasonal
+                  </Badge>
+                ) : null}
               </div>
               <div className="p-5">
-                <div className={`relative rounded-xl overflow-hidden ${!form.enabled ? "opacity-50" : ""}`}>
+                <div className={`relative rounded-xl overflow-hidden ${form.hidden ? "opacity-20 grayscale" : !form.enabled ? "opacity-50" : ""}`}>
                   <div className="relative h-[220px]">
                     {form.image ? (
                       <Image

@@ -32,7 +32,7 @@ export async function GET(
       .select("id")
       .eq("shop_id", shop.id)
       .eq("follower_id", user.id)
-      .single();
+      .maybeSingle();
 
     isFollowing = !!follow;
   }

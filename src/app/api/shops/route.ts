@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     .from("profiles")
     .select("role")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
   if (!profile || !["seller", "both"].includes(profile.role)) {
     return NextResponse.json(
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     .from("shops")
     .select("id")
     .eq("owner_id", user.id)
-    .single();
+    .maybeSingle();
 
   if (existingShop) {
     return NextResponse.json(

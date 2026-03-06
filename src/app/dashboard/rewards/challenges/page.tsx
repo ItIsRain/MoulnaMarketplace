@@ -39,8 +39,9 @@ export default function ChallengesPage() {
       fetch("/api/challenges?period=daily&audience=buyer").then((r) => r.ok ? r.json() : null),
       fetch("/api/challenges?period=weekly&audience=buyer").then((r) => r.ok ? r.json() : null),
       fetch("/api/challenges?period=special&audience=buyer").then((r) => r.ok ? r.json() : null),
+      fetch("/api/challenges?period=onboarding&audience=buyer").then((r) => r.ok ? r.json() : null),
     ])
-      .then(([overview, daily, weekly, special]) => {
+      .then(([overview, daily, weekly, special, onboarding]) => {
         if (overview) {
           setStreakDays(overview.streakDays || 0);
         }
@@ -50,15 +51,18 @@ export default function ChallengesPage() {
         if (weekly?.challenges) {
           setWeeklyChallenges(weekly.challenges);
         }
-        if (special?.challenges) {
-          setSpecialChallenges(special.challenges);
-        }
+        // Combine special + onboarding into the special section
+        const allSpecial = [
+          ...(special?.challenges || []),
+          ...(onboarding?.challenges || []),
+        ];
+        setSpecialChallenges(allSpecial);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  const daysLeft = 7 - new Date().getDay();
+  const daysLeft = (7 - new Date().getDay()) || 7;
 
   const totalDailyXP = dailyChallenges.reduce((sum, c) => sum + c.xp, 0);
   const earnedDailyXP = dailyChallenges.filter(c => c.completed).reduce((sum, c) => sum + c.xp, 0);
@@ -102,7 +106,7 @@ export default function ChallengesPage() {
             </div>
             <div className="flex items-center gap-2">
               <Timer className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Resets in 8h 32m</span>
+              <span className="text-sm text-muted-foreground">Resets at midnight</span>
             </div>
           </div>
           <Progress value={totalDailyXP > 0 ? (earnedDailyXP / totalDailyXP) * 100 : 0} className="h-3 mb-2" />

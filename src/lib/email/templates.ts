@@ -1,5 +1,14 @@
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://moulna.ae";
-const LOGO_URL = `${APP_URL}/moulna-logo.svg`;
+const LOGO_URL = `${APP_URL}/moulna-logo-email.png`;
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function wrapInLayout(content: string): string {
   return `<!DOCTYPE html>
@@ -50,7 +59,7 @@ export function verifyEmailTemplate(code: string, name: string): string {
       </div>
     </div>
     <h1 style="font-size:24px;font-weight:700;color:#1a1a1a;text-align:center;margin:0 0 8px;">Verify your email</h1>
-    <p style="font-size:15px;color:#6b7280;text-align:center;margin:0 0 32px;line-height:1.5;">Hi ${name}, enter this code to verify your email address and activate your Moulna account.</p>
+    <p style="font-size:15px;color:#6b7280;text-align:center;margin:0 0 32px;line-height:1.5;">Hi ${escapeHtml(name)}, enter this code to verify your email address and activate your Moulna account.</p>
     <div style="text-align:center;margin:0 0 32px;">
       <span style="display:inline-block;font-size:36px;font-weight:800;letter-spacing:8px;color:#1a1a1a;background:#f8f6f3;padding:16px 32px;border-radius:12px;border:2px dashed #c7a34d;font-family:'SF Mono','Fira Code',monospace;">${code}</span>
     </div>
@@ -71,7 +80,7 @@ export function welcomeEmailTemplate(name: string): string {
       <span style="display:inline-block;background:#c7a34d;color:#ffffff;font-size:13px;font-weight:700;padding:8px 20px;border-radius:100px;letter-spacing:0.5px;">+100 XP Welcome Bonus</span>
     </div>
     <h1 style="font-size:26px;font-weight:700;color:#1a1a1a;text-align:center;margin:0 0 12px;">Welcome to Moulna!</h1>
-    <p style="font-size:15px;color:#6b7280;text-align:center;margin:0 0 32px;line-height:1.6;">Hey ${name}, your email is verified and your account is ready. Start exploring unique handmade treasures from UAE artisans.</p>
+    <p style="font-size:15px;color:#6b7280;text-align:center;margin:0 0 32px;line-height:1.6;">Hey ${escapeHtml(name)}, your email is verified and your account is ready. Start exploring unique handmade treasures from UAE artisans.</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
       <tr>
         <td align="center">
@@ -133,7 +142,7 @@ export function passwordResetTemplate(code: string, name: string): string {
       </div>
     </div>
     <h1 style="font-size:24px;font-weight:700;color:#1a1a1a;text-align:center;margin:0 0 8px;">Reset your password</h1>
-    <p style="font-size:15px;color:#6b7280;text-align:center;margin:0 0 32px;line-height:1.5;">Hi ${name}, we received a request to reset your password. Use this code to set a new one.</p>
+    <p style="font-size:15px;color:#6b7280;text-align:center;margin:0 0 32px;line-height:1.5;">Hi ${escapeHtml(name)}, we received a request to reset your password. Use this code to set a new one.</p>
     <div style="text-align:center;margin:0 0 32px;">
       <span style="display:inline-block;font-size:36px;font-weight:800;letter-spacing:8px;color:#1a1a1a;background:#f8f6f3;padding:16px 32px;border-radius:12px;border:2px dashed #c7a34d;font-family:'SF Mono','Fira Code',monospace;">${code}</span>
     </div>

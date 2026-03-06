@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
     const otherId = conv.participant_1 === user.id ? conv.participant_2 : conv.participant_1;
     const { data: otherProfile } = await supabase
       .from("profiles")
-      .select("id, full_name, username, avatar_style, avatar_seed, level")
+      .select("id, full_name, username, email, avatar_style, avatar_seed, level")
       .eq("id", otherId)
       .single();
 
@@ -90,7 +90,7 @@ export async function GET(req: NextRequest) {
       participant: otherProfile
         ? {
             id: otherProfile.id,
-            name: otherProfile.full_name,
+            name: otherProfile.full_name || otherProfile.username || otherProfile.email?.split("@")[0] || "User",
             username: otherProfile.username,
             avatarStyle: otherProfile.avatar_style,
             avatarSeed: otherProfile.avatar_seed,
@@ -134,7 +134,7 @@ export async function GET(req: NextRequest) {
   // Fetch profiles + shops in bulk
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, full_name, username, avatar_style, avatar_seed, level")
+    .select("id, full_name, username, email, avatar_style, avatar_seed, level")
     .in("id", uniqueIds);
 
   const { data: shops } = await supabase
@@ -167,7 +167,7 @@ export async function GET(req: NextRequest) {
       participant: profile
         ? {
             id: profile.id,
-            name: profile.full_name,
+            name: profile.full_name || profile.username || profile.email?.split("@")[0] || "User",
             username: profile.username,
             avatarStyle: profile.avatar_style,
             avatarSeed: profile.avatar_seed,
@@ -216,14 +216,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "recipientId or conversationId required" }, { status: 400 });
     }
 
-    // Check for existing conversation between these two users
-    const { data: existing } = await supabase
+    // Check for existing conversation between these two users for this product
+    let existingQuery = supabase
       .from("conversations")
       .select("id")
       .or(
         `and(participant_1.eq.${user.id},participant_2.eq.${recipientId}),and(participant_1.eq.${recipientId},participant_2.eq.${user.id})`
-      )
-      .maybeSingle();
+      );
+
+    if (productId) {
+      existingQuery = existingQuery.eq("product_id", productId);
+    } else {
+      existingQuery = existingQuery.is("product_id", null);
+    }
+
+    const { data: existing } = await existingQuery.maybeSingle();
 
     if (existing) {
       convId = existing.id;
@@ -302,7 +309,7 @@ export async function POST(req: NextRequest) {
 
   // Award XP for first message in a new conversation (inquiry)
   if (!conversationId) {
-    awardXP({
+    await awardXP({
       userId: user.id,
       amount: 50,
       action: "send_inquiry",

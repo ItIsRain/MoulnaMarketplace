@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 export interface BannerConfig {
   enabled: boolean;
+  hidden: boolean;
   title: string;
   badge: string;
   description: string;
@@ -28,11 +29,17 @@ export async function GET() {
     const banner =
       typeof data.value === "string" ? JSON.parse(data.value) : data.value;
 
-    if (!banner || !banner.enabled) {
-      return NextResponse.json({ banner: null });
+    // If admin explicitly hid the banner, tell the client
+    if (banner?.hidden) {
+      return NextResponse.json({ banner: null, hidden: true });
     }
 
-    return NextResponse.json({ banner });
+    // If override not enabled, let client use fallback campaign
+    if (!banner || !banner.enabled) {
+      return NextResponse.json({ banner: null, hidden: false });
+    }
+
+    return NextResponse.json({ banner, hidden: false });
   } catch {
     return NextResponse.json({ banner: null });
   }

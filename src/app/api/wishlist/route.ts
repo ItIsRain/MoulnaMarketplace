@@ -81,14 +81,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Award 5 XP for saving a listing
-  awardXP({
-    userId: user.id,
-    amount: 5,
-    action: "save_listing",
-    category: "engagement",
-    description: "Saved a listing to wishlist",
-  }).catch(() => {});
+  // Award 5 XP for saving a listing (only if newly created, not re-saved)
+  if (data.created_at && (Date.now() - new Date(data.created_at).getTime()) < 5000) {
+    await awardXP({
+      userId: user.id,
+      amount: 5,
+      action: "save_listing",
+      category: "engagement",
+      description: "Saved a listing to wishlist",
+    }).catch(() => {});
+  }
 
   return NextResponse.json({ success: true, wishlistId: data.id });
 }
