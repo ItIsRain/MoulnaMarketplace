@@ -16,7 +16,12 @@ function generateOTP(): string {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   const { email, password, fullName, phone, role, username, avatarStyle, avatarSeed } = body;
 
   // Validate
@@ -30,6 +35,27 @@ export async function POST(request: NextRequest) {
   if (password.length < 8) {
     return NextResponse.json(
       { error: "Password must be at least 8 characters" },
+      { status: 400 }
+    );
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    return NextResponse.json(
+      { error: "Password must contain an uppercase letter" },
+      { status: 400 }
+    );
+  }
+
+  if (!/[0-9]/.test(password)) {
+    return NextResponse.json(
+      { error: "Password must contain a number" },
+      { status: 400 }
+    );
+  }
+
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    return NextResponse.json(
+      { error: "Password must contain a special character" },
       { status: 400 }
     );
   }
@@ -111,7 +137,7 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({
-    user: authData.user,
+    user: { id: authData.user.id, email: authData.user.email },
     requiresKYC: role === "seller",
   });
 }

@@ -17,17 +17,12 @@ import {
   Heart, MessageCircle, Sparkles, MapPin, Filter, Loader2
 } from "lucide-react";
 
-const CATEGORIES = [
-  { id: "all", name: "All Products", icon: "\ud83d\udecd\ufe0f" },
-  { id: "Handmade Jewelry", name: "Handmade Jewelry", icon: "\ud83d\udc8d" },
-  { id: "Home D\u00e9cor", name: "Home D\u00e9cor", icon: "\ud83c\udfe0" },
-  { id: "Arabic Calligraphy", name: "Arabic Calligraphy", icon: "\ud83d\udd8b\ufe0f" },
-  { id: "Perfumes & Oud", name: "Perfumes & Oud", icon: "\ud83c\udf38" },
-  { id: "Fashion & Clothing", name: "Fashion & Clothing", icon: "\ud83d\udc57" },
-  { id: "Food & Sweets", name: "Food & Sweets", icon: "\ud83c\udf6f" },
-  { id: "Art & Prints", name: "Art & Prints", icon: "\ud83c\udfa8" },
-  { id: "Baby & Kids", name: "Baby & Kids", icon: "\ud83e\uddf8" },
-];
+interface CategoryItem {
+  id: string;
+  name: string;
+}
+
+const ALL_CATEGORY: CategoryItem = { id: "all", name: "All Products" };
 
 const EMIRATES = ["All Emirates", "Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Ras Al Khaimah", "Fujairah", "Umm Al Quwain"];
 
@@ -53,7 +48,22 @@ export default function ExplorePage() {
   const [loading, setLoading] = React.useState(true);
   const [offset, setOffset] = React.useState(0);
   const [hasMore, setHasMore] = React.useState(false);
+  const [categories, setCategories] = React.useState<CategoryItem[]>([]);
   const limit = 20;
+
+  // Fetch categories from API
+  React.useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => res.ok ? res.json() : { categories: [] })
+      .then((data) => {
+        const cats: CategoryItem[] = (data.categories || []).map((c: { name: string }) => ({
+          id: c.name,
+          name: c.name,
+        }));
+        setCategories(cats);
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchProducts = React.useCallback(async (reset = false) => {
     setLoading(true);
@@ -167,7 +177,7 @@ export default function ExplorePage() {
                 <Card className="p-4">
                   <h3 className="font-semibold mb-4">Categories</h3>
                   <div className="space-y-1">
-                    {CATEGORIES.map((cat) => (
+                    {[ALL_CATEGORY, ...categories].map((cat) => (
                       <button
                         key={cat.id}
                         onClick={() => setSelectedCategory(cat.id)}
@@ -178,7 +188,6 @@ export default function ExplorePage() {
                             : "text-moulna-gold/80 hover:bg-moulna-gold/5 hover:text-moulna-gold"
                         )}
                       >
-                        <span>{cat.icon}</span>
                         <span>{cat.name}</span>
                       </button>
                     ))}
@@ -330,7 +339,7 @@ export default function ExplorePage() {
                   <Card className="p-4">
                     <h3 className="font-semibold mb-4">Categories</h3>
                     <div className="flex flex-wrap gap-2">
-                      {CATEGORIES.map((cat) => (
+                      {[ALL_CATEGORY, ...categories].map((cat) => (
                         <button
                           key={cat.id}
                           onClick={() => setSelectedCategory(cat.id)}
@@ -341,7 +350,6 @@ export default function ExplorePage() {
                               : "bg-muted hover:bg-muted/80"
                           )}
                         >
-                          <span>{cat.icon}</span>
                           <span>{cat.name}</span>
                         </button>
                       ))}

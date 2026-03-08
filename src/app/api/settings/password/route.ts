@@ -13,7 +13,12 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   const { currentPassword, newPassword } = body;
 
   if (!currentPassword) {
@@ -30,9 +35,13 @@ export async function PUT(request: NextRequest) {
     );
   }
 
+  if (!user.email) {
+    return NextResponse.json({ error: "No email associated with this account" }, { status: 400 });
+  }
+
   // Verify current password before allowing change
   const { error: verifyError } = await supabase.auth.signInWithPassword({
-    email: user.email!,
+    email: user.email,
     password: currentPassword,
   });
 

@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   // Check KYC approval
   const { data: profile } = await admin
     .from("profiles")
-    .select("kyc_status")
+    .select("kyc_status, role")
     .eq("id", user.id)
     .single();
 
@@ -26,7 +26,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "KYC verification required" }, { status: 403 });
   }
 
-  const body = await request.json();
+  const allowedRoles = ["seller", "both", "admin"];
+  if (!profile.role || !allowedRoles.includes(profile.role)) {
+    return NextResponse.json({ error: "Seller account required" }, { status: 403 });
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   const { productId, durationDays } = body;
 
   if (!productId || !VALID_DURATIONS.includes(durationDays)) {
@@ -79,7 +89,6 @@ export async function POST(request: NextRequest) {
 
   const pricePerDayFils = priceSetting ? Number(priceSetting.value) : 1500;
   const totalFils = pricePerDayFils * durationDays;
-  const totalAed = totalFils / 100;
 
   // Create ad_payments record
   const { data: adPayment, error: paymentError } = await admin
@@ -131,7 +140,7 @@ export async function POST(request: NextRequest) {
             name: `Product Boost — ${durationDays} days`,
             description: `Boost "${product.title}" to the top of explore & search`,
           },
-          unit_amount: Math.round(totalAed * 100), // Stripe expects smallest currency unit
+          unit_amount: totalFils, // fils is already the smallest AED unit
         },
         quantity: 1,
       },

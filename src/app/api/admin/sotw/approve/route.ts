@@ -92,7 +92,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Admin access required" }, { status: 403 });
   }
 
-  const { bidId } = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+  const { bidId } = body;
   if (!bidId) {
     return NextResponse.json({ error: "bidId is required" }, { status: 400 });
   }

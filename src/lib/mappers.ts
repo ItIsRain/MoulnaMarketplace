@@ -104,8 +104,6 @@ export function mapDbProduct(row: any, shop?: any, isSponsored = false): Product
     videoUrl: row.video_url ?? undefined,
     priceFils: row.price_fils,
     compareAtPriceFils: row.compare_at_price_fils ?? undefined,
-    costFils: row.cost_fils ?? undefined,
-    sku: row.sku ?? undefined,
     condition: row.condition ?? undefined,
     variants: row.variants || [],
     status: row.status,

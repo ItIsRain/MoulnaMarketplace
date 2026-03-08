@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -131,7 +130,7 @@ export default function ShopAboutPage() {
           <div className="lg:col-span-2 space-y-8">
             {/* Stats */}
             {stats.length > 0 && (
-              <div className={cn("grid gap-4", `grid-cols-${stats.length}`)}>
+              <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${stats.length}, minmax(0, 1fr))` }}>
                 {stats.map((stat, index) => (
                   <motion.div
                     key={stat.label}

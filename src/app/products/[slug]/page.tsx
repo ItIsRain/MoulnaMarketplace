@@ -16,6 +16,7 @@ import { ShopAvatar } from "@/components/avatar/ShopAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
 import { useAuthStore } from "@/store/useAuthStore";
 import type { Product, CustomField } from "@/lib/types";
+import { toast } from "sonner";
 import {
   Star, Heart, Share2, Shield,
   ChevronRight, MessageCircle,
@@ -90,7 +91,7 @@ export default function ProductPage() {
         if (res.ok) setIsWishlisted(true);
       }
     } catch {
-      // silently fail
+      toast.error("Failed to update wishlist");
     } finally {
       setWishlistLoading(false);
     }

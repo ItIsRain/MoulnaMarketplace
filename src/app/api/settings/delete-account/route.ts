@@ -27,8 +27,12 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Password is required to delete account" }, { status: 400 });
   }
 
+  if (!user.email) {
+    return NextResponse.json({ error: "No email associated with this account" }, { status: 400 });
+  }
+
   const { error: verifyError } = await supabase.auth.signInWithPassword({
-    email: user.email!,
+    email: user.email,
     password,
   });
 

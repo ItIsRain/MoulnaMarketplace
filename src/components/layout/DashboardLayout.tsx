@@ -33,7 +33,7 @@ const SIDEBAR_ITEMS = [
     label: "Messages",
     href: "/dashboard/messages",
     icon: MessageSquare,
-    badge: 3,
+    badge: 0,
   },
   {
     label: "Addresses",
@@ -63,18 +63,8 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const [expandedItem, setExpandedItem] = React.useState<string | null>("Progress");
-
-  // Mock user data
-  const user = {
-    name: "Ahmed Hassan",
-    email: "ahmed@example.com",
-    avatar: "ahmed-user",
-    level: 5,
-    xp: 2340,
-    streak: 12,
-  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -87,20 +77,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             {/* User Card */}
             <div className="p-4 border-b">
               <div className="flex items-center gap-3 mb-3">
-                <DiceBearAvatar seed={user.avatar} size="lg" />
+                <DiceBearAvatar seed={user?.avatar?.seed ?? "default"} style={user?.avatar?.style} size="lg" />
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">{user.name}</p>
-                  <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                  <p className="font-semibold truncate">{user?.name ?? "Guest"}</p>
+                  <p className="text-sm text-muted-foreground truncate">{user?.email ?? ""}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 mb-2">
-                <LevelBadge level={user.level} size="sm" />
+                <LevelBadge level={user?.level ?? 1} size="sm" />
                 <div className="flex items-center gap-1 text-sm">
                   <Flame className="w-4 h-4 text-orange-500" />
-                  <span>{user.streak} day streak</span>
+                  <span>{user?.streakDays ?? 0} day streak</span>
                 </div>
               </div>
-              <XPBar xp={user.xp} showLabels size="sm" />
+              <XPBar xp={user?.xp ?? 0} showLabels size="sm" />
             </div>
 
             {/* Navigation */}
@@ -183,7 +173,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <hr className="my-2" />
 
               <button
-                onClick={() => { logout(); router.push("/"); }}
+                onClick={async () => { await logout(); router.push("/"); }}
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors"
               >
                 <LogOut className="w-5 h-5" />

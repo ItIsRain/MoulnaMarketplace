@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthenticatedUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
 import { sendNotification } from "@/lib/notifications";
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await getAuthenticatedUser();
+  if ("error" in auth) return auth.error;
+  const { user } = auth;
 
   const admin = createAdminClient();
 
@@ -40,7 +37,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Shop not found" }, { status: 400 });
   }
 
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   const { weekStart, amountFils, setupIntentId, paymentMethodId, customerId, headline, description } = body;
 
   if (!weekStart || !amountFils) {

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getAuthenticatedUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { mapDbShop } from "@/lib/mappers";
 import { generateSlug, isSlugForbidden } from "@/lib/forbidden-slugs";
@@ -62,24 +63,11 @@ export async function GET(request: NextRequest) {
 
 // POST /api/shops — create shop (seller only)
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
+  const auth = await getAuthenticatedUser();
+  if ("error" in auth) return auth.error;
+  const { user, supabase, profile } = auth;
 
   // Check profile role
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-
   if (!profile || !["seller", "both"].includes(profile.role)) {
     return NextResponse.json(
       { error: "Only sellers can create shops" },
@@ -101,7 +89,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   const { name, tagline, description, category, location, avatarStyle, avatarSeed, logoUrl, bannerUrl, email, phone } = body;
 
   if (!name || name.trim().length < 2) {

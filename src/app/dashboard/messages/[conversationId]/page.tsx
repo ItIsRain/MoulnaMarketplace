@@ -12,6 +12,7 @@ import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/store/useAuthStore";
+import { toast } from "sonner";
 import {
   ArrowLeft, Send, Store, Loader2, Package
 } from "lucide-react";
@@ -99,7 +100,7 @@ export default function ConversationPage() {
         setReplyText("");
       }
     } catch {
-      // silently fail
+      toast.error("Failed to send message");
     } finally {
       setSending(false);
     }

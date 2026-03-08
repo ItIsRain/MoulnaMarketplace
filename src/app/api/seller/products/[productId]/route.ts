@@ -88,7 +88,12 @@ export async function PATCH(
     return NextResponse.json({ error: "Product not found" }, { status: 404 });
   }
 
-  const body = await request.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
 
   // Listing limit enforcement: if activating a non-active product, check plan limit
   if (body.status === "active" && existing.status !== "active") {

@@ -25,23 +25,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  // Atomic idempotency: insert event, skip if already exists (ON CONFLICT DO NOTHING)
+  // Idempotency: check if event was already processed
   const admin = createAdminClient();
-  const { data: inserted, error: idempotencyError } = await admin
+  const { data: existing, error: checkError } = await admin
     .from("webhook_events")
-    .upsert(
-      { event_id: event.id, event_type: event.type },
-      { onConflict: "event_id", ignoreDuplicates: true }
-    )
-    .select("event_id");
+    .select("event_id")
+    .eq("event_id", event.id)
+    .maybeSingle();
 
-  // If the row already existed, upsert with ignoreDuplicates returns empty array
-  if (idempotencyError) {
-    console.error("Idempotency check failed:", idempotencyError);
+  if (checkError) {
+    console.error("Idempotency check failed:", checkError);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 
-  if (!inserted || inserted.length === 0) {
+  if (existing) {
     // Already processed — skip
     return NextResponse.json({ received: true });
   }
@@ -247,6 +244,14 @@ export async function POST(request: NextRequest) {
       }
     }
   }
+
+  // Record event as processed (idempotency). If insert fails due to race condition, that's fine.
+  await admin
+    .from("webhook_events")
+    .insert({ event_id: event.id, event_type: event.type })
+    .then(({ error }) => {
+      if (error) console.warn("Idempotency insert failed (likely race condition):", error.message);
+    });
 
   return NextResponse.json({ received: true });
 }

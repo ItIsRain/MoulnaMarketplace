@@ -91,10 +91,14 @@ export async function POST() {
 
   const name = profile?.full_name || "there";
 
+  if (!user.email) {
+    return NextResponse.json({ error: "No email associated with this account" }, { status: 400 });
+  }
+
   // Send email via Resend
   const { error: emailError } = await resend.emails.send({
     from: FROM_EMAIL,
-    to: user.email!,
+    to: user.email,
     subject: `${code} is your Moulna verification code`,
     html: verifyEmailTemplate(code, name),
   });

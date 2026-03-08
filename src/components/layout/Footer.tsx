@@ -132,7 +132,7 @@ export function Footer() {
         {/* Bottom Footer */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-400">
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <span>© 2025 Moulna. All rights reserved.</span>
+            <span>&copy; {new Date().getFullYear()} Moulna. All rights reserved.</span>
             <Link href="/legal/terms" className="hover:text-moulna-gold transition-colors">
               Terms
             </Link>

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getAuthenticatedUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { sendNotification } from "@/lib/notifications";
 import { awardXP } from "@/lib/gamification";
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
     const otherId = conv.participant_1 === user.id ? conv.participant_2 : conv.participant_1;
     const { data: otherProfile } = await supabase
       .from("profiles")
-      .select("id, full_name, username, email, avatar_style, avatar_seed, level")
+      .select("id, full_name, username, avatar_style, avatar_seed, level")
       .eq("id", otherId)
       .single();
 
@@ -91,7 +92,7 @@ export async function GET(req: NextRequest) {
       participant: otherProfile
         ? {
             id: otherProfile.id,
-            name: otherProfile.full_name || otherProfile.username || otherProfile.email?.split("@")[0] || "User",
+            name: otherProfile.full_name || otherProfile.username || "User",
             username: otherProfile.username,
             avatarStyle: otherProfile.avatar_style,
             avatarSeed: otherProfile.avatar_seed,
@@ -135,7 +136,7 @@ export async function GET(req: NextRequest) {
   // Fetch profiles + shops in bulk
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, full_name, username, email, avatar_style, avatar_seed, level")
+    .select("id, full_name, username, avatar_style, avatar_seed, level")
     .in("id", uniqueIds);
 
   const { data: shops } = await supabase
@@ -168,7 +169,7 @@ export async function GET(req: NextRequest) {
       participant: profile
         ? {
             id: profile.id,
-            name: profile.full_name || profile.username || profile.email?.split("@")[0] || "User",
+            name: profile.full_name || profile.username || "User",
             username: profile.username,
             avatarStyle: profile.avatar_style,
             avatarSeed: profile.avatar_seed,
@@ -191,18 +192,16 @@ export async function GET(req: NextRequest) {
 
 // POST /api/messages — send a message (creates conversation if needed)
 export async function POST(req: NextRequest) {
-  const supabase = await createClient();
+  const auth = await getAuthenticatedUser();
+  if ("error" in auth) return auth.error;
+  const { user, supabase } = auth;
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  let body: { recipientId?: string; content?: string; conversationId?: string; productId?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
-
-  const body = await req.json();
   const { recipientId, content, conversationId, productId } = body;
 
   if (!content?.trim()) {

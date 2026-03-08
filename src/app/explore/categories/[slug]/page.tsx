@@ -19,57 +19,37 @@ import {
 } from "lucide-react";
 import { useTracking } from "@/hooks/useTracking";
 
-const CATEGORY_META: Record<string, {
-  name: string;
-  apiCategory: string;
-  description: string;
-  image: string;
-}> = {
+// Slug-to-display metadata (descriptions & hero images for known categories)
+const CATEGORY_DISPLAY: Record<string, { description: string; image: string }> = {
   "jewelry": {
-    name: "Handmade Jewelry",
-    apiCategory: "Handmade Jewelry",
     description: "Discover unique rings, necklaces, bracelets and earrings crafted by UAE's finest artisans",
     image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1200",
   },
   "perfumes-oud": {
-    name: "Perfumes & Oud",
-    apiCategory: "Perfumes & Oud",
     description: "Authentic Arabian fragrances, oud oils and bakhoor from traditional perfumers",
     image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=1200",
   },
   "home-decor": {
-    name: "Home D\u00e9cor",
-    apiCategory: "Home D\u00e9cor",
     description: "Beautiful home accessories, vases, candles and decorative items",
     image: "https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=1200",
   },
   "arabic-calligraphy": {
-    name: "Arabic Calligraphy",
-    apiCategory: "Arabic Calligraphy",
     description: "Stunning Arabic calligraphy art, personalized pieces and traditional writing",
     image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=1200",
   },
   "fashion-clothing": {
-    name: "Fashion & Clothing",
-    apiCategory: "Fashion & Clothing",
     description: "Handmade fashion, abayas, and clothing designed by local talent",
     image: "https://images.unsplash.com/photo-1445205170230-053b83016050?w=1200",
   },
   "food-sweets": {
-    name: "Food & Sweets",
-    apiCategory: "Food & Sweets",
     description: "Artisan chocolates, traditional sweets and gourmet treats",
     image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=1200",
   },
   "art-prints": {
-    name: "Art & Prints",
-    apiCategory: "Art & Prints",
     description: "Original artwork, prints and creative pieces from local artists",
     image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1200",
   },
   "baby-kids": {
-    name: "Baby & Kids",
-    apiCategory: "Baby & Kids",
     description: "Handmade toys, clothing and accessories for little ones",
     image: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=1200",
   },
@@ -85,7 +65,7 @@ const SORT_OPTIONS = [
 export default function CategoryPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const meta = CATEGORY_META[slug];
+  const display = CATEGORY_DISPLAY[slug];
   const { trackEvent } = useTracking();
 
   const [products, setProducts] = React.useState<Product[]>([]);
@@ -102,9 +82,25 @@ export default function CategoryPage() {
   const [maxPrice, setMaxPrice] = React.useState("");
   const [showMobileFilters, setShowMobileFilters] = React.useState(false);
   const [wishlist, setWishlist] = React.useState<string[]>([]);
+  const [resolvedCategoryName, setResolvedCategoryName] = React.useState<string | null>(null);
   const limit = 20;
 
-  const categoryName = meta?.apiCategory || slug;
+  // Resolve slug to real category name from API
+  React.useEffect(() => {
+    if (!slug) return;
+    fetch("/api/categories")
+      .then((res) => res.ok ? res.json() : { categories: [] })
+      .then((data) => {
+        const cats: { name: string; slug: string }[] = data.categories || [];
+        const match = cats.find((c) => c.slug === slug);
+        setResolvedCategoryName(match ? match.name : slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()));
+      })
+      .catch(() => {
+        setResolvedCategoryName(slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()));
+      });
+  }, [slug]);
+
+  const categoryName = resolvedCategoryName || slug;
 
   const fetchProducts = React.useCallback(async (reset = false) => {
     const currentOffset = reset ? 0 : offset;
@@ -157,11 +153,12 @@ export default function CategoryPage() {
       .catch(() => {});
   }, []);
 
-  // Refetch when filters change
+  // Refetch when filters change (only after category name is resolved)
   React.useEffect(() => {
+    if (!resolvedCategoryName) return;
     fetchProducts(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categoryName, sortBy, showHandmadeOnly, showVerifiedOnly]);
+  }, [resolvedCategoryName, sortBy, showHandmadeOnly, showVerifiedOnly]);
 
   const toggleWishlist = async (productId: string) => {
     const isInWishlist = wishlist.includes(productId);
@@ -185,9 +182,9 @@ export default function CategoryPage() {
     }
   };
 
-  const heroImage = meta?.image || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200";
-  const heroName = meta?.name || slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-  const heroDescription = meta?.description || `Browse ${heroName} products from UAE artisans`;
+  const heroImage = display?.image || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200";
+  const heroName = resolvedCategoryName || slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  const heroDescription = display?.description || `Browse ${heroName} products from UAE artisans`;
 
   return (
     <div className="min-h-screen flex flex-col">

@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     const [profileRes, productRes, messagesRes] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id, full_name, username, avatar_style, avatar_seed, level, phone, created_at")
+        .select("id, full_name, username, avatar_style, avatar_seed, level, created_at")
         .eq("id", buyerId)
         .single(),
       supabase
@@ -78,7 +78,6 @@ export async function GET(req: NextRequest) {
             avatarStyle: profile.avatar_style,
             avatarSeed: profile.avatar_seed,
             level: profile.level,
-            phone: profile.phone,
             joinDate: new Date(profile.created_at).getFullYear().toString(),
           }
         : null,
@@ -218,7 +217,12 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json();
+  let body: { inquiryId?: string; status?: string; salePriceFils?: number };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   const { inquiryId, status, salePriceFils } = body;
 
   if (!inquiryId || !status) {

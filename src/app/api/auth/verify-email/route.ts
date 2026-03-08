@@ -5,7 +5,13 @@ import { welcomeEmailTemplate } from "@/lib/email/templates";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-  const { code } = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+  const { code } = body;
 
   if (!code || typeof code !== "string" || code.length !== 6) {
     return NextResponse.json(
@@ -107,10 +113,14 @@ export async function POST(request: NextRequest) {
 
   const name = profile?.full_name || "there";
 
+  if (!user.email) {
+    return NextResponse.json({ error: "No email associated with this account" }, { status: 400 });
+  }
+
   // Send welcome email
   await resend.emails.send({
     from: FROM_EMAIL,
-    to: user.email!,
+    to: user.email,
     subject: "Welcome to Moulna! 🎉",
     html: welcomeEmailTemplate(name),
   });

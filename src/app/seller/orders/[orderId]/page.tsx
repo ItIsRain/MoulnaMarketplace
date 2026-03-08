@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import {
   ArrowLeft, Phone, MessageSquare, Send, Sparkles,
   Clock, CheckCircle, Inbox, CheckCircle2, DollarSign, Loader2
@@ -118,7 +119,7 @@ export default function InquiryDetailPage() {
         }
       }
     } catch {
-      // silently fail
+      toast.error("Failed to send reply");
     } finally {
       setSending(false);
     }
@@ -145,7 +146,7 @@ export default function InquiryDetailPage() {
         }
       }
     } catch {
-      // silently fail
+      toast.error("Failed to update order");
     } finally {
       setUpdatingStatus(false);
     }

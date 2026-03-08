@@ -38,7 +38,7 @@ export default function SellerFinancesPage() {
           </p>
         </div>
         <Button variant="outline" size="sm" className="w-full mt-4" asChild>
-          <Link href="/seller/listings">
+          <Link href="/seller/products">
             View Listing Plans <ChevronRight className="w-4 h-4 ms-1" />
           </Link>
         </Button>

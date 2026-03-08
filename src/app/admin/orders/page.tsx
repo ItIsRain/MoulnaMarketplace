@@ -407,7 +407,7 @@ export default function AdminInquiriesPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Sale Price</span>
                     <span className="font-semibold text-purple-600">
-                      {(selectedInquiry.salePriceFils / 1000).toFixed(3)} KWD
+                      {(selectedInquiry.salePriceFils / 100).toFixed(2)} AED
                     </span>
                   </div>
                 )}

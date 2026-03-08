@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getAuthenticatedUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { mapDbProduct } from "@/lib/mappers";
 import { awardXP, awardBadge } from "@/lib/gamification";
@@ -182,16 +183,9 @@ async function trackChallengeEvent(
 
 // POST /api/seller/products — create a new product
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
+  const auth = await getAuthenticatedUser();
+  if ("error" in auth) return auth.error;
+  const { user, supabase } = auth;
 
   // Get seller's shop
   const { data: shop } = await supabase
@@ -207,7 +201,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const body = await request.json();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: any;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
 
   // Listing limit enforcement: if publishing (not draft), check plan limit
   if (body.status === "active") {
@@ -258,6 +258,12 @@ export async function POST(request: NextRequest) {
     if (typeof body.compareAtPriceFils !== "number" || body.compareAtPriceFils <= 0) {
       return NextResponse.json(
         { error: "Compare-at price must be greater than 0" },
+        { status: 400 }
+      );
+    }
+    if (body.compareAtPriceFils <= body.priceFils) {
+      return NextResponse.json(
+        { error: "Compare-at price must be greater than the sale price" },
         { status: 400 }
       );
     }

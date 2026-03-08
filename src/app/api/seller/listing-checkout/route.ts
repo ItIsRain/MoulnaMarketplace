@@ -26,7 +26,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "KYC verification required" }, { status: 403 });
   }
 
-  const body = await request.json();
+  let body: { productId: string; addBoost?: { durationDays: number }; addSotw?: { weekStart: string } };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   const { productId, addBoost, addSotw } = body as {
     productId: string;
     addBoost?: { durationDays: number };

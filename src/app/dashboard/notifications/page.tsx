@@ -6,6 +6,7 @@ import { cn, timeAgo } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import {
   Bell, Package, Star, Sparkles, Trophy, Heart,
   MessageCircle, TrendingDown, CheckCheck, Trash2, Settings, Loader2
@@ -59,7 +60,7 @@ export default function NotificationsPage() {
         setUnreadCount(data.unreadCount || 0);
       }
     } catch {
-      // silently fail
+      toast.error("Failed to load notifications");
     } finally {
       setLoading(false);
     }
@@ -81,7 +82,7 @@ export default function NotificationsPage() {
         setUnreadCount(0);
       }
     } catch {
-      // silently fail
+      toast.error("Failed to mark notifications as read");
     }
   }
 
@@ -99,18 +100,19 @@ export default function NotificationsPage() {
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
     } catch {
-      // silently fail
+      toast.error("Failed to mark notification as read");
     }
   }
 
   async function deleteNotification(id: string) {
+    if (!window.confirm("Delete this notification?")) return;
     const notif = notifications.find(n => n.id === id);
     setNotifications(prev => prev.filter(n => n.id !== id));
     if (notif && !notif.read) setUnreadCount(prev => Math.max(0, prev - 1));
     try {
       await fetch(`/api/notifications?id=${id}`, { method: "DELETE" });
     } catch {
-      // silently fail
+      toast.error("Failed to delete notification");
     }
   }
 

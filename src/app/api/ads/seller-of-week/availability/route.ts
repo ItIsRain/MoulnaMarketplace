@@ -6,8 +6,11 @@ export async function GET() {
   const supabase = await createClient();
   const admin = createAdminClient();
 
-  // Ensure auction rows exist for upcoming weeks
-  await admin.rpc("ensure_sotw_auctions");
+  // Ensure auction rows exist for upcoming weeks (only if authenticated)
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    await admin.rpc("ensure_sotw_auctions");
+  }
 
   // Get next 8 Mondays starting from next week
   const today = new Date();

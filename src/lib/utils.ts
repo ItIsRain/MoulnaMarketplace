@@ -149,7 +149,7 @@ export function generateId(): string {
 export function sanitizeFilterValue(value: string): string {
   // Escape characters that have special meaning in PostgREST filters:
   // commas (,), periods (.), parentheses, and percent signs
-  return value.replace(/[,().\\]/g, "");
+  return value.replace(/[,().\\%_]/g, "");
 }
 
 // Validate UUID format

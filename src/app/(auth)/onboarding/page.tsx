@@ -319,7 +319,7 @@ export default function OnboardingPage() {
                     </Link>
                   </Button>
                   <Button variant="outline" className="w-full" asChild>
-                    <Link href="/become-seller">
+                    <Link href="/seller/onboarding">
                       <Star className="w-4 h-4 me-2" />
                       Become a Seller
                     </Link>

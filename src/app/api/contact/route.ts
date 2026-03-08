@@ -2,6 +2,15 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { resend, FROM_EMAIL } from "@/lib/email/resend";
 import { NextRequest, NextResponse } from "next/server";
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -59,15 +68,15 @@ export async function POST(request: NextRequest) {
       const { error: emailError } = await resend.emails.send({
         from: FROM_EMAIL,
         to: "support@moulna.ae",
-        subject: `[Contact Form] ${subject.trim()}`,
+        subject: `[Contact Form] ${escapeHtml(subject.trim())}`,
         html: `
           <h2>New Contact Form Submission</h2>
-          <p><strong>Name:</strong> ${name.trim()}</p>
-          <p><strong>Email:</strong> ${email.trim()}</p>
-          <p><strong>Department:</strong> ${department || "general"}</p>
-          <p><strong>Subject:</strong> ${subject.trim()}</p>
+          <p><strong>Name:</strong> ${escapeHtml(name.trim())}</p>
+          <p><strong>Email:</strong> ${escapeHtml(email.trim())}</p>
+          <p><strong>Department:</strong> ${escapeHtml(department || "general")}</p>
+          <p><strong>Subject:</strong> ${escapeHtml(subject.trim())}</p>
           <hr />
-          <p>${message.trim().replace(/\n/g, "<br />")}</p>
+          <p>${escapeHtml(message.trim()).replace(/\n/g, "<br />")}</p>
         `,
         replyTo: email.trim(),
       });
