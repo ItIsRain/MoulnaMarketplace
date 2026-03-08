@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
   const adminClient = createAdminClient();
 
-  // Find a valid, unused code
+  // Find the most recent valid, unused code
   const { data: verificationCodes, error: fetchError } = await adminClient
     .from("verification_codes")
     .select("*")
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     .is("used_at", null)
     .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false })
-    .limit(5);
+    .limit(1);
 
   if (fetchError || !verificationCodes || verificationCodes.length === 0) {
     return NextResponse.json(
@@ -46,12 +46,45 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Check if any code matches (constant-time-ish: check all recent codes)
-  const matchedCode = verificationCodes.find((vc) => vc.code === code);
+  const latestCode = verificationCodes[0];
 
-  if (!matchedCode) {
+  // Brute-force protection: check if code is locked
+  if (latestCode.locked_until && new Date(latestCode.locked_until) > new Date()) {
+    const waitSec = Math.ceil((new Date(latestCode.locked_until).getTime() - Date.now()) / 1000);
     return NextResponse.json(
-      { error: "Invalid verification code. Please try again." },
+      { error: `Too many attempts. Please wait ${waitSec}s before trying again.` },
+      { status: 429 }
+    );
+  }
+
+  // Check if the code matches
+  if (latestCode.code !== code) {
+    // Increment attempt counter
+    const newAttempts = (latestCode.attempts || 0) + 1;
+    const MAX_ATTEMPTS = 5;
+
+    const updateData: Record<string, unknown> = { attempts: newAttempts };
+
+    // Lock after MAX_ATTEMPTS failed tries (5-minute lockout)
+    if (newAttempts >= MAX_ATTEMPTS) {
+      updateData.locked_until = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+    }
+
+    await adminClient
+      .from("verification_codes")
+      .update(updateData)
+      .eq("id", latestCode.id);
+
+    const remaining = MAX_ATTEMPTS - newAttempts;
+    if (remaining <= 0) {
+      return NextResponse.json(
+        { error: "Too many failed attempts. Code locked for 5 minutes." },
+        { status: 429 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: `Invalid code. ${remaining} attempt(s) remaining.` },
       { status: 400 }
     );
   }
@@ -60,7 +93,7 @@ export async function POST(request: NextRequest) {
   await adminClient
     .from("verification_codes")
     .update({ used_at: new Date().toISOString() })
-    .eq("id", matchedCode.id);
+    .eq("id", latestCode.id);
 
   // Get profile name for welcome email
   const { data: profile } = await adminClient

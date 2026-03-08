@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { awardXP } from "@/lib/gamification";
 import { NextRequest, NextResponse } from "next/server";
+import { sanitizeFilterValue } from "@/lib/utils";
 
 // Retroactively check real data for one-time/onboarding challenges
 // so users who already completed actions before the challenge system see correct progress
@@ -87,7 +88,8 @@ export async function GET(req: NextRequest) {
     query = query.eq("period", period);
   }
   if (audience) {
-    query = query.or(`audience.eq.${audience},audience.eq.all`);
+    const a = sanitizeFilterValue(audience);
+    query = query.or(`audience.eq.${a},audience.eq.all`);
   }
 
   const { data: challenges } = await query;
@@ -196,12 +198,13 @@ export async function GET(req: NextRequest) {
                 // Award XP for retroactively completed challenges (only if newly completed)
                 if (isCompleted && !wasAlreadyCompleted && c.xp > 0) {
                   // Check xp_events to avoid double-crediting
+                  const expectedDesc = `Completed challenge: ${c.title}`;
                   const { count: alreadyAwarded } = await admin
                     .from("xp_events")
                     .select("id", { count: "exact", head: true })
                     .eq("user_id", userId)
                     .eq("action", "challenge_completed")
-                    .ilike("description", `%${c.title}%`);
+                    .eq("description", expectedDesc);
 
                   if (!alreadyAwarded || alreadyAwarded === 0) {
                     await awardXP({

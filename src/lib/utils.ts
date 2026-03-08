@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Format price in AED (fils to AED display)
+// Format price in AED (input is already in AED, not fils)
 export function formatPrice(price: number): string {
   return `AED ${price.toFixed(2)}`;
 }
@@ -143,6 +143,18 @@ export function truncate(str: string, length: number): string {
 // Generate random ID
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 15);
+}
+
+// Sanitize input for PostgREST filter strings to prevent filter injection
+export function sanitizeFilterValue(value: string): string {
+  // Escape characters that have special meaning in PostgREST filters:
+  // commas (,), periods (.), parentheses, and percent signs
+  return value.replace(/[,().\\]/g, "");
+}
+
+// Validate UUID format
+export function isValidUUID(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
 // Debounce function

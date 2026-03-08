@@ -10,8 +10,10 @@ import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
 import {
   Palette, Lock, Check, Sparkles, Crown, Star,
-  RefreshCw, Save, ChevronRight, Shuffle
+  RefreshCw, Save, ChevronRight, Shuffle, Loader2
 } from "lucide-react";
+import { useAuthStore } from "@/store/useAuthStore";
+import { toast } from "sonner";
 
 const AVATAR_STYLES = [
   { id: "lorelei", name: "Lorelei", unlockLevel: 1, premium: false },
@@ -50,14 +52,38 @@ const ACCESSORIES = [
 ];
 
 export default function AvatarCustomizerPage() {
-  const userLevel = 5; // Mock user level
-  const [selectedStyle, setSelectedStyle] = React.useState("lorelei");
+  const { user, updateProfile } = useAuthStore();
+  const userLevel = user?.level || 1;
+  const [selectedStyle, setSelectedStyle] = React.useState(user?.avatar?.style || "lorelei");
   const [selectedBg, setSelectedBg] = React.useState("gold");
   const [selectedAccessory, setSelectedAccessory] = React.useState("none");
-  const [seed, setSeed] = React.useState("my-avatar");
+  const [seed, setSeed] = React.useState(user?.avatar?.seed || "my-avatar");
+  const [isSaving, setIsSaving] = React.useState(false);
 
   const randomizeSeed = () => {
     setSeed(`avatar-${Math.random().toString(36).substring(7)}`);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const res = await fetch("/api/settings/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatarStyle: selectedStyle, avatarSeed: seed }),
+      });
+      if (res.ok) {
+        updateProfile({ avatar: { style: selectedStyle, seed } });
+        toast.success("Avatar saved!");
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to save avatar");
+      }
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -114,9 +140,9 @@ export default function AvatarCustomizerPage() {
                   <Shuffle className="w-4 h-4 me-1" />
                   Randomize
                 </Button>
-                <Button size="sm" className="bg-moulna-gold hover:bg-moulna-gold-dark">
-                  <Save className="w-4 h-4 me-1" />
-                  Save
+                <Button size="sm" className="bg-moulna-gold hover:bg-moulna-gold-dark" onClick={handleSave} disabled={isSaving}>
+                  {isSaving ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Save className="w-4 h-4 me-1" />}
+                  {isSaving ? "Saving..." : "Save"}
                 </Button>
               </div>
 

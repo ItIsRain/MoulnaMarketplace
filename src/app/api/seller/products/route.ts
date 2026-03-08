@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import { mapDbProduct } from "@/lib/mappers";
 import { awardXP, awardBadge } from "@/lib/gamification";
+import { sanitizeFilterValue } from "@/lib/utils";
 
 // GET /api/seller/products — list seller's own products
 export async function GET(request: NextRequest) {
@@ -33,7 +34,8 @@ export async function GET(request: NextRequest) {
   }
 
   if (search) {
-    query = query.or(`title.ilike.%${search}%,sku.ilike.%${search}%`);
+    const s = sanitizeFilterValue(search);
+    query = query.or(`title.ilike.%${s}%,sku.ilike.%${s}%`);
   }
 
   query = query.order("created_at", { ascending: false }).range(offset, offset + limit - 1);
@@ -245,11 +247,29 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!body.priceFils || body.priceFils <= 0) {
+  if (!body.priceFils || typeof body.priceFils !== "number" || body.priceFils <= 0) {
     return NextResponse.json(
       { error: "Price must be greater than 0" },
       { status: 400 }
     );
+  }
+
+  if (body.compareAtPriceFils !== undefined && body.compareAtPriceFils !== null) {
+    if (typeof body.compareAtPriceFils !== "number" || body.compareAtPriceFils <= 0) {
+      return NextResponse.json(
+        { error: "Compare-at price must be greater than 0" },
+        { status: 400 }
+      );
+    }
+  }
+
+  if (body.costFils !== undefined && body.costFils !== null) {
+    if (typeof body.costFils !== "number" || body.costFils <= 0) {
+      return NextResponse.json(
+        { error: "Cost must be greater than 0" },
+        { status: 400 }
+      );
+    }
   }
 
   const slug = await generateUniqueSlug(supabase, body.title);

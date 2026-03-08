@@ -199,6 +199,11 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "reportId and status are required" }, { status: 400 });
   }
 
+  const validStatuses = ["pending", "investigating", "resolved", "dismissed"];
+  if (!validStatuses.includes(status)) {
+    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  }
+
   const admin = createAdminClient();
 
   const updateData: Record<string, unknown> = {

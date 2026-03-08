@@ -39,37 +39,47 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Admin routes: require authentication + admin role
-  if (pathname.startsWith("/admin")) {
-    if (!user) {
-      // Not logged in — show 404 (don't reveal admin panel exists)
-      return NextResponse.redirect(new URL("/", request.url));
-    }
+  // Single profile query for role + status checks on protected routes
+  const needsProfileCheck = user && (
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/seller") ||
+    pathname.startsWith("/admin")
+  );
 
+  if (needsProfileCheck) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, status")
       .eq("id", user.id)
       .maybeSingle();
 
-    if (!profile || profile.role !== "admin") {
-      // Logged in but not admin — redirect to home (don't reveal admin exists)
-      return NextResponse.redirect(new URL("/", request.url));
+    // Block suspended users
+    if (profile?.status === "suspended") {
+      await supabase.auth.signOut();
+      const suspendedUrl = new URL("/login", request.url);
+      suspendedUrl.searchParams.set("error", "account_suspended");
+      return NextResponse.redirect(suspendedUrl);
+    }
+
+    // Admin routes: require admin role
+    if (pathname.startsWith("/admin")) {
+      if (!profile || profile.role !== "admin") {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+    }
+
+    // Seller routes: require seller, both, or admin role
+    if (pathname.startsWith("/seller")) {
+      const allowedRoles = ["seller", "both", "admin"];
+      if (!profile || !allowedRoles.includes(profile.role)) {
+        return NextResponse.redirect(new URL("/dashboard", request.url));
+      }
     }
   }
 
-  // Seller routes: allow admin role to access
-  if (pathname.startsWith("/seller") && user) {
-    const { data: sellerProfile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    // Admin can access seller routes without being a seller
-    if (sellerProfile?.role === "admin") {
-      return response;
-    }
+  // Admin routes: redirect unauthenticated users (don't reveal admin exists)
+  if (pathname.startsWith("/admin") && !user) {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   // Protected routes: redirect to login if no session

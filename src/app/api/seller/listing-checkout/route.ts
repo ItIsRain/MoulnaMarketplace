@@ -259,7 +259,7 @@ export async function POST(request: NextRequest) {
 
   // Create Stripe Checkout Session
   const stripe = getStripe();
-  const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || "";
+  const origin = process.env.NEXT_PUBLIC_APP_URL || "";
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",

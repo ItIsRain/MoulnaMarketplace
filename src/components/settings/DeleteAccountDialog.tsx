@@ -29,21 +29,29 @@ export function DeleteAccountDialog({
   const { logout } = useAuthStore();
   const confirmPhrase = shopName || "delete my account";
   const [input, setInput] = React.useState("");
+  const [password, setPassword] = React.useState("");
   const [isDeleting, setIsDeleting] = React.useState(false);
 
   const matches = input.trim().toLowerCase() === confirmPhrase.toLowerCase();
 
   // Reset input when dialog closes
   React.useEffect(() => {
-    if (!open) setInput("");
+    if (!open) {
+      setInput("");
+      setPassword("");
+    }
   }, [open]);
 
   const handleDelete = async () => {
-    if (!matches) return;
+    if (!matches || !password) return;
 
     setIsDeleting(true);
     try {
-      const res = await fetch("/api/settings/delete-account", { method: "DELETE" });
+      const res = await fetch("/api/settings/delete-account", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
       if (res.ok) {
         await logout();
         toast.success("Account deleted successfully");
@@ -93,6 +101,14 @@ export function DeleteAccountDialog({
             autoComplete="off"
             spellCheck={false}
           />
+
+          <Input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password to confirm"
+            autoComplete="current-password"
+          />
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
@@ -107,7 +123,7 @@ export function DeleteAccountDialog({
             variant="outline"
             className="border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 disabled:opacity-40"
             onClick={handleDelete}
-            disabled={!matches || isDeleting}
+            disabled={!matches || !password || isDeleting}
           >
             {isDeleting ? (
               <Loader2 className="w-4 h-4 me-2 animate-spin" />

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { sendNotification } from "@/lib/notifications";
 import { awardXP } from "@/lib/gamification";
+import { isValidUUID } from "@/lib/utils";
 
 // GET /api/messages — list user's conversations
 export async function GET(req: NextRequest) {
@@ -216,6 +217,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "recipientId or conversationId required" }, { status: 400 });
     }
 
+    if (!isValidUUID(recipientId)) {
+      return NextResponse.json({ error: "Invalid recipientId" }, { status: 400 });
+    }
+
+    if (recipientId === user.id) {
+      return NextResponse.json({ error: "Cannot message yourself" }, { status: 400 });
+    }
+
     // Check for existing conversation between these two users for this product
     let existingQuery = supabase
       .from("conversations")
@@ -261,7 +270,7 @@ export async function POST(req: NextRequest) {
     .eq("id", convId)
     .single();
 
-  if (!conv) {
+  if (!conv || (conv.participant_1 !== user.id && conv.participant_2 !== user.id)) {
     return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
   }
 
@@ -307,14 +316,16 @@ export async function POST(req: NextRequest) {
     link: `/dashboard/messages/${convId}`,
   });
 
-  // Award XP for first message in a new conversation (inquiry)
+  // Award XP for first message in a new conversation (inquiry) — deduplicated per recipient+product
   if (!conversationId) {
+    const dedupKey = `inquiry_${user.id}_${recipientId}_${productId || "general"}`;
     await awardXP({
       userId: user.id,
       amount: 50,
       action: "send_inquiry",
       category: "inquiry",
       description: "Contacted a seller about a listing",
+      metadata: { recipientId, productId, dedup: dedupKey },
     }).catch(() => {});
   }
 

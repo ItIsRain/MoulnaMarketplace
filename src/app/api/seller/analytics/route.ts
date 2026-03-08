@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { isValidUUID } from "@/lib/utils";
 
 // GET /api/seller/analytics — seller analytics data
 export async function GET(req: NextRequest) {
@@ -369,8 +370,8 @@ export async function GET(req: NextRequest) {
   // ==================== SINGLE CUSTOMER DETAIL ====================
   if (section === "customer") {
     const customerId = searchParams.get("customerId");
-    if (!customerId) {
-      return NextResponse.json({ error: "customerId required" }, { status: 400 });
+    if (!customerId || !isValidUUID(customerId)) {
+      return NextResponse.json({ error: "Valid customerId required" }, { status: 400 });
     }
 
     // Get customer profile

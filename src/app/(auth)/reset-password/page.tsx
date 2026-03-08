@@ -5,11 +5,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lock, Eye, EyeOff, CheckCircle, Shield, ArrowRight } from "lucide-react";
+import { Lock, Eye, EyeOff, CheckCircle, Shield, ArrowRight, AlertCircle } from "lucide-react";
+import { createBrowserClient } from "@supabase/ssr";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = React.useState("");
@@ -18,6 +18,7 @@ export default function ResetPasswordPage() {
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
 
   const passwordRequirements = [
     { label: "At least 8 characters", met: password.length >= 8 },
@@ -34,9 +35,24 @@ export default function ResetPasswordPage() {
     if (!isPasswordValid || !doPasswordsMatch) return;
 
     setIsLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    setError("");
+
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    const { error: updateError } = await supabase.auth.updateUser({
+      password,
+    });
+
     setIsLoading(false);
+
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+
     setIsSubmitted(true);
   };
 
@@ -68,6 +84,12 @@ export default function ResetPasswordPage() {
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-6">
+                {error && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 text-red-700 text-sm">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    {error}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="password">New Password</Label>
                   <div className="relative">

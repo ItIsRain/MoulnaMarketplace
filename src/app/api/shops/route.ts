@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { mapDbShop } from "@/lib/mappers";
 import { generateSlug, isSlugForbidden } from "@/lib/forbidden-slugs";
+import { sanitizeFilterValue } from "@/lib/utils";
 
 // GET /api/shops — list shops (public)
 export async function GET(request: NextRequest) {
@@ -18,13 +19,15 @@ export async function GET(request: NextRequest) {
   let query = supabase.from("shops").select("*", { count: "exact" });
 
   if (search) {
-    query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+    const s = sanitizeFilterValue(search);
+    query = query.or(`name.ilike.%${s}%,description.ilike.%${s}%`);
   }
   if (category && category !== "All") {
     query = query.eq("category", category);
   }
   if (location && location !== "All Emirates") {
-    query = query.ilike("location", `%${location}%`);
+    const loc = sanitizeFilterValue(location);
+    query = query.ilike("location", `%${loc}%`);
   }
 
   switch (sort) {

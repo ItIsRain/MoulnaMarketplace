@@ -10,117 +10,74 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Layers, Search, ArrowRight, Sparkles, TrendingUp,
-  Clock, Star, Filter, ChevronRight
+  Clock, Star, Filter, ChevronRight, Loader2
 } from "lucide-react";
 
-const COLLECTIONS = [
-  {
-    id: "ramadan-essentials",
-    name: "Ramadan Essentials",
-    description: "Everything you need for the holy month",
-    image: "/collections/ramadan.jpg",
-    itemCount: 156,
-    featured: true,
-    gradient: "from-purple-600 to-indigo-600",
-  },
-  {
-    id: "eid-gifts",
-    name: "Eid Gift Guide",
-    description: "Perfect presents for your loved ones",
-    image: "/collections/eid.jpg",
-    itemCount: 89,
-    featured: true,
-    gradient: "from-moulna-gold to-amber-500",
-  },
-  {
-    id: "uae-artisans",
-    name: "UAE Artisan Spotlight",
-    description: "Handcrafted treasures from local makers",
-    image: "/collections/artisans.jpg",
-    itemCount: 234,
-    featured: true,
-    gradient: "from-emerald-600 to-teal-600",
-  },
-  {
-    id: "arabian-fragrances",
-    name: "Arabian Fragrances",
-    description: "Oud, bakhoor, and traditional scents",
-    image: "/collections/fragrances.jpg",
-    itemCount: 178,
-    gradient: "from-rose-600 to-pink-600",
-  },
-  {
-    id: "home-decor",
-    name: "Arabic Home Décor",
-    description: "Transform your space with traditional touches",
-    image: "/collections/home.jpg",
-    itemCount: 312,
-    gradient: "from-orange-600 to-red-600",
-  },
-  {
-    id: "fashion-modest",
-    name: "Modest Fashion",
-    description: "Elegant and stylish modest wear",
-    image: "/collections/fashion.jpg",
-    itemCount: 267,
-    gradient: "from-violet-600 to-purple-600",
-  },
-  {
-    id: "handmade-jewelry",
-    name: "Handmade Jewelry",
-    description: "Unique pieces crafted with love",
-    image: "/collections/jewelry.jpg",
-    itemCount: 145,
-    gradient: "from-yellow-500 to-orange-500",
-  },
-  {
-    id: "traditional-foods",
-    name: "Traditional Foods",
-    description: "Authentic flavors from the region",
-    image: "/collections/food.jpg",
-    itemCount: 98,
-    gradient: "from-green-600 to-emerald-600",
-  },
-  {
-    id: "kids-toys",
-    name: "Kids & Toys",
-    description: "Fun and educational items for children",
-    image: "/collections/kids.jpg",
-    itemCount: 187,
-    gradient: "from-cyan-500 to-blue-500",
-  },
-  {
-    id: "wellness-beauty",
-    name: "Wellness & Beauty",
-    description: "Natural and traditional beauty products",
-    image: "/collections/beauty.jpg",
-    itemCount: 203,
-    gradient: "from-pink-500 to-rose-500",
-  },
-  {
-    id: "calligraphy-art",
-    name: "Calligraphy & Art",
-    description: "Beautiful Arabic calligraphy and artwork",
-    image: "/collections/art.jpg",
-    itemCount: 124,
-    gradient: "from-slate-600 to-gray-700",
-  },
-  {
-    id: "sustainable-eco",
-    name: "Sustainable & Eco",
-    description: "Environmentally conscious products",
-    image: "/collections/eco.jpg",
-    itemCount: 76,
-    gradient: "from-lime-500 to-green-500",
-  },
+interface CategoryItem {
+  name: string;
+  slug: string;
+  productCount: number;
+  gradient: string;
+  description: string;
+  featured: boolean;
+}
+
+// Rotate through gradient colors for categories
+const GRADIENT_POOL = [
+  "from-purple-600 to-indigo-600",
+  "from-moulna-gold to-amber-500",
+  "from-emerald-600 to-teal-600",
+  "from-rose-600 to-pink-600",
+  "from-orange-600 to-red-600",
+  "from-violet-600 to-purple-600",
+  "from-yellow-500 to-orange-500",
+  "from-green-600 to-emerald-600",
+  "from-cyan-500 to-blue-500",
+  "from-pink-500 to-rose-500",
+  "from-slate-600 to-gray-700",
+  "from-lime-500 to-green-500",
+  "from-indigo-500 to-blue-500",
+  "from-red-500 to-rose-500",
 ];
 
 export default function CollectionsPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
-  const featuredCollections = COLLECTIONS.filter(c => c.featured);
-  const allCollections = COLLECTIONS.filter(c =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const [collections, setCollections] = React.useState<CategoryItem[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function fetchCategories() {
+      setIsLoading(true);
+      try {
+        const res = await fetch("/api/categories");
+        if (res.ok) {
+          const data = await res.json();
+          const mapped: CategoryItem[] = (data.categories || []).map(
+            (cat: { name: string; slug: string; productCount: number }, index: number) => ({
+              name: cat.name,
+              slug: cat.slug,
+              productCount: cat.productCount,
+              gradient: GRADIENT_POOL[index % GRADIENT_POOL.length],
+              description: `Explore ${cat.productCount} product${cat.productCount !== 1 ? "s" : ""} in ${cat.name}`,
+              featured: index < 3,
+            })
+          );
+          setCollections(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch categories:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchCategories();
+  }, []);
+
+  const featuredCollections = collections.filter((c) => c.featured);
+  const allCollections = collections.filter(
+    (c) =>
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -148,7 +105,7 @@ export default function CollectionsPage() {
             </h1>
             <p className="text-lg text-gray-300 mb-6">
               Explore handpicked selections of authentic Arabian products,
-              carefully curated to help you find exactly what you're looking for.
+              carefully curated to help you find exactly what you&apos;re looking for.
             </p>
             <div className="relative max-w-md">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -164,105 +121,159 @@ export default function CollectionsPage() {
       </section>
 
       <div className="container mx-auto px-4 py-12">
-        {/* Featured Collections */}
-        {!searchQuery && (
-          <section className="mb-16">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-2xl font-bold flex items-center gap-2">
-                  <Sparkles className="w-6 h-6 text-moulna-gold" />
-                  Featured Collections
-                </h2>
-                <p className="text-muted-foreground">
-                  Our most popular curated selections
-                </p>
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="space-y-16">
+            {/* Featured skeleton */}
+            <section>
+              <div className="mb-8">
+                <div className="h-7 w-56 bg-muted rounded animate-pulse mb-2" />
+                <div className="h-4 w-72 bg-muted rounded animate-pulse" />
               </div>
-            </div>
-            <div className="grid md:grid-cols-3 gap-6">
-              {featuredCollections.map((collection, index) => (
-                <motion.div
-                  key={collection.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Link href={`/explore/collections/${collection.id}`}>
-                    <Card className="group relative h-64 overflow-hidden cursor-pointer">
-                      <div className={cn(
-                        "absolute inset-0 bg-gradient-to-br",
-                        collection.gradient
-                      )} />
-                      <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
-                      <div className="absolute inset-0 p-6 flex flex-col justify-end text-white">
-                        <Badge className="w-fit mb-2 bg-white/20 text-white border-0">
-                          <Star className="w-3 h-3 me-1" />
-                          Featured
-                        </Badge>
-                        <h3 className="text-2xl font-bold mb-2">{collection.name}</h3>
-                        <p className="text-white/80 mb-3">{collection.description}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">{collection.itemCount} items</span>
-                          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                        </div>
-                      </div>
-                    </Card>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* All Collections */}
-        <section>
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl font-bold">
-                {searchQuery ? `Search Results` : `All Collections`}
-              </h2>
-              <p className="text-muted-foreground">
-                {allCollections.length} collections found
-              </p>
-            </div>
-            <Button variant="outline">
-              <Filter className="w-4 h-4 me-2" />
-              Filter
-            </Button>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {allCollections.map((collection, index) => (
-              <motion.div
-                key={collection.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Link href={`/explore/collections/${collection.id}`}>
-                  <Card className="group overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
-                    <div className={cn(
-                      "h-32 bg-gradient-to-br",
-                      collection.gradient
-                    )} />
-                    <div className="p-4">
-                      <h3 className="font-semibold mb-1 group-hover:text-moulna-gold transition-colors">
-                        {collection.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                        {collection.description}
-                      </p>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">
-                          {collection.itemCount} items
-                        </span>
-                        <ChevronRight className="w-4 h-4 text-moulna-gold group-hover:translate-x-1 transition-transform" />
-                      </div>
+              <div className="grid md:grid-cols-3 gap-6">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Card key={i} className="h-64 animate-pulse bg-muted" />
+                ))}
+              </div>
+            </section>
+            {/* All collections skeleton */}
+            <section>
+              <div className="mb-8">
+                <div className="h-7 w-40 bg-muted rounded animate-pulse mb-2" />
+                <div className="h-4 w-48 bg-muted rounded animate-pulse" />
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <Card key={i} className="overflow-hidden animate-pulse">
+                    <div className="h-32 bg-muted" />
+                    <div className="p-4 space-y-2">
+                      <div className="h-4 w-3/4 bg-muted rounded" />
+                      <div className="h-3 w-full bg-muted rounded" />
+                      <div className="h-3 w-1/3 bg-muted rounded" />
                     </div>
                   </Card>
-                </Link>
-              </motion.div>
-            ))}
+                ))}
+              </div>
+            </section>
           </div>
-        </section>
+        ) : collections.length === 0 ? (
+          <div className="text-center py-16">
+            <Layers className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No collections yet</h3>
+            <p className="text-muted-foreground">
+              Collections will appear as products are added to the marketplace.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Featured Collections */}
+            {!searchQuery && featuredCollections.length > 0 && (
+              <section className="mb-16">
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h2 className="text-2xl font-bold flex items-center gap-2">
+                      <Sparkles className="w-6 h-6 text-moulna-gold" />
+                      Featured Collections
+                    </h2>
+                    <p className="text-muted-foreground">
+                      Our most popular curated selections
+                    </p>
+                  </div>
+                </div>
+                <div className="grid md:grid-cols-3 gap-6">
+                  {featuredCollections.map((collection, index) => (
+                    <motion.div
+                      key={collection.slug}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <Link href={`/explore?category=${encodeURIComponent(collection.name)}`}>
+                        <Card className="group relative h-64 overflow-hidden cursor-pointer">
+                          <div className={cn(
+                            "absolute inset-0 bg-gradient-to-br",
+                            collection.gradient
+                          )} />
+                          <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
+                          <div className="absolute inset-0 p-6 flex flex-col justify-end text-white">
+                            <Badge className="w-fit mb-2 bg-white/20 text-white border-0">
+                              <Star className="w-3 h-3 me-1" />
+                              Featured
+                            </Badge>
+                            <h3 className="text-2xl font-bold mb-2">{collection.name}</h3>
+                            <p className="text-white/80 mb-3">{collection.description}</p>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm">{collection.productCount} items</span>
+                              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </div>
+                          </div>
+                        </Card>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* All Collections */}
+            <section>
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-2xl font-bold">
+                    {searchQuery ? `Search Results` : `All Collections`}
+                  </h2>
+                  <p className="text-muted-foreground">
+                    {allCollections.length} collections found
+                  </p>
+                </div>
+                <Button variant="outline">
+                  <Filter className="w-4 h-4 me-2" />
+                  Filter
+                </Button>
+              </div>
+              {allCollections.length === 0 ? (
+                <div className="text-center py-12">
+                  <Search className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground">No collections match your search.</p>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {allCollections.map((collection, index) => (
+                    <motion.div
+                      key={collection.slug}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      <Link href={`/explore?category=${encodeURIComponent(collection.name)}`}>
+                        <Card className="group overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
+                          <div className={cn(
+                            "h-32 bg-gradient-to-br",
+                            collection.gradient
+                          )} />
+                          <div className="p-4">
+                            <h3 className="font-semibold mb-1 group-hover:text-moulna-gold transition-colors">
+                              {collection.name}
+                            </h3>
+                            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                              {collection.description}
+                            </p>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">
+                                {collection.productCount} items
+                              </span>
+                              <ChevronRight className="w-4 h-4 text-moulna-gold group-hover:translate-x-1 transition-transform" />
+                            </div>
+                          </div>
+                        </Card>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
+        )}
 
         {/* Create Your Collection CTA */}
         <motion.section

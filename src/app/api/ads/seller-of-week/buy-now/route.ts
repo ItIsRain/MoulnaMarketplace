@@ -73,6 +73,18 @@ export async function POST(request: NextRequest) {
   let resolvedSetupIntentId: string;
 
   if (paymentMethodId && customerId) {
+    // Verify the customerId belongs to the authenticated user
+    const { data: stripeRecord } = await admin
+      .from("stripe_customers")
+      .select("stripe_customer_id")
+      .eq("user_id", user.id)
+      .eq("stripe_customer_id", customerId)
+      .maybeSingle();
+
+    if (!stripeRecord) {
+      return NextResponse.json({ error: "Invalid customer" }, { status: 403 });
+    }
+
     // Using a saved card
     const pm = await stripe.paymentMethods.retrieve(paymentMethodId);
     if (pm.customer !== customerId) {
@@ -90,6 +102,18 @@ export async function POST(request: NextRequest) {
     resolvedPaymentMethodId = setupIntent.payment_method as string;
     resolvedCustomerId = setupIntent.customer as string;
     resolvedSetupIntentId = setupIntentId;
+
+    // Verify the setup intent's customer belongs to the authenticated user
+    const { data: stripeRecord } = await admin
+      .from("stripe_customers")
+      .select("stripe_customer_id")
+      .eq("user_id", user.id)
+      .eq("stripe_customer_id", resolvedCustomerId)
+      .maybeSingle();
+
+    if (!stripeRecord) {
+      return NextResponse.json({ error: "Invalid payment setup" }, { status: 403 });
+    }
 
     try {
       await stripe.paymentMethods.attach(resolvedPaymentMethodId, { customer: resolvedCustomerId });

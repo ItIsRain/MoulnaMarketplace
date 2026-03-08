@@ -253,7 +253,10 @@ export async function PATCH(req: NextRequest) {
   }
 
   const updateData: Record<string, unknown> = { status };
-  if (status === "sold" && salePriceFils) {
+  if (status === "sold" && salePriceFils !== undefined) {
+    if (typeof salePriceFils !== "number" || salePriceFils <= 0 || !Number.isInteger(salePriceFils)) {
+      return NextResponse.json({ error: "salePriceFils must be a positive integer" }, { status: 400 });
+    }
     updateData.sale_price_fils = salePriceFils;
   }
 

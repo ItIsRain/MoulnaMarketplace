@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
+import { sanitizeFilterValue } from "@/lib/utils";
 
 // GET /api/admin/products — list all products for moderation
 export async function GET(req: NextRequest) {
@@ -42,7 +43,8 @@ export async function GET(req: NextRequest) {
     .range(offset, offset + limit - 1);
 
   if (search) {
-    query = query.or(`title.ilike.%${search}%,slug.ilike.%${search}%,category.ilike.%${search}%`);
+    const s = sanitizeFilterValue(search);
+    query = query.or(`title.ilike.%${s}%,slug.ilike.%${s}%,category.ilike.%${s}%`);
   }
 
   if (status && status !== "all") {

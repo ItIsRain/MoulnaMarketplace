@@ -22,11 +22,8 @@ export async function GET() {
     return NextResponse.json({ seller: null });
   }
 
-  // Increment impressions
-  await admin
-    .from("seller_of_week")
-    .update({ impressions: (sotw.impressions || 0) + 1 })
-    .eq("id", sotw.id);
+  // Increment impressions atomically via RPC
+  void admin.rpc("increment_sotw_impressions", { sotw_id: sotw.id }).then();
 
   return NextResponse.json({
     seller: {

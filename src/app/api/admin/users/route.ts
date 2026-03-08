@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
+import { sanitizeFilterValue } from "@/lib/utils";
 
 // GET /api/admin/users — list all users with profiles
 export async function GET(req: NextRequest) {
@@ -42,7 +43,8 @@ export async function GET(req: NextRequest) {
     .range(offset, offset + limit - 1);
 
   if (search) {
-    query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,username.ilike.%${search}%`);
+    const s = sanitizeFilterValue(search);
+    query = query.or(`full_name.ilike.%${s}%,email.ilike.%${s}%,username.ilike.%${s}%`);
   }
 
   if (filter === "active") {
@@ -139,6 +141,13 @@ export async function PATCH(req: NextRequest) {
   if (!userId || !["suspend", "reactivate"].includes(action)) {
     return NextResponse.json(
       { error: "Invalid request. Provide userId and action ('suspend' | 'reactivate')." },
+      { status: 400 }
+    );
+  }
+
+  if (userId === user.id) {
+    return NextResponse.json(
+      { error: "You cannot suspend your own account" },
       { status: 400 }
     );
   }

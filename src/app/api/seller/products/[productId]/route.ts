@@ -138,6 +138,7 @@ export async function PATCH(
     .from("products")
     .update(updates)
     .eq("id", productId)
+    .eq("owner_id", user.id)
     .select(`*, ${SHOP_JOIN}`)
     .single();
 

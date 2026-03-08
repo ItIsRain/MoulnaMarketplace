@@ -88,7 +88,8 @@ export async function POST(req: NextRequest) {
       amount: 5,
       action: "save_listing",
       category: "engagement",
-      description: "Saved a listing to wishlist",
+      description: `Saved listing ${productId} to wishlist`,
+      metadata: { productId, dedup: `save_listing_${productId}` },
     }).catch(() => {});
   }
 

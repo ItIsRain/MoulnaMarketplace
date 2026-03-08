@@ -29,9 +29,8 @@ interface AuthState {
   initialize: () => Promise<void>;
   fetchProfile: () => Promise<User | null>;
   updateProfile: (data: Partial<User>) => void;
-  addXP: (amount: number, action: string) => void;
+  addXP: (amount: number, action: string) => Promise<void>;
   completeChallenge: (challengeId: string) => void;
-  setRole: (role: UserRole) => void;
   markNotificationRead: (id: string) => void;
 }
 
@@ -186,26 +185,11 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      addXP: (amount: number, action: string) => {
-        const { user, notifications } = get();
-        if (user) {
-          const newXP = user.xp + amount;
-
-          const notification: Notification = {
-            id: `notif_${Date.now()}`,
-            type: "xp",
-            title: "XP Earned!",
-            message: `+${amount} XP for ${action}`,
-            read: false,
-            createdAt: new Date().toISOString(),
-            xpAmount: amount,
-          };
-
-          set({
-            user: { ...user, xp: newXP },
-            notifications: [notification, ...notifications],
-          });
-        }
+      addXP: async (amount: number) => {
+        const { user } = get();
+        if (!user) return;
+        // XP is awarded server-side only; this just updates the local display optimistically
+        set({ user: { ...user, xp: user.xp + amount } });
       },
 
       completeChallenge: (challengeId: string) => {
@@ -219,13 +203,6 @@ export const useAuthStore = create<AuthState>()(
 
           set({ challenges: updatedChallenges });
           addXP(challenge.xp, `completing "${challenge.task}"`);
-        }
-      },
-
-      setRole: (role: UserRole) => {
-        const { user } = get();
-        if (user) {
-          set({ user: { ...user, role } });
         }
       },
 

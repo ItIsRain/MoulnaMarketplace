@@ -47,6 +47,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
+  if (typeof amountFils !== "number" || amountFils < 100 || !Number.isInteger(amountFils)) {
+    return NextResponse.json({ error: "Invalid bid amount" }, { status: 400 });
+  }
+
   if (!setupIntentId && !paymentMethodId) {
     return NextResponse.json({ error: "Payment method or setup intent required" }, { status: 400 });
   }
@@ -95,6 +99,18 @@ export async function POST(request: NextRequest) {
   let resolvedSetupIntentId: string;
 
   if (paymentMethodId && customerId) {
+    // Verify the customerId belongs to the authenticated user
+    const { data: stripeRecord } = await admin
+      .from("stripe_customers")
+      .select("stripe_customer_id")
+      .eq("user_id", user.id)
+      .eq("stripe_customer_id", customerId)
+      .maybeSingle();
+
+    if (!stripeRecord) {
+      return NextResponse.json({ error: "Invalid customer" }, { status: 403 });
+    }
+
     // Using a saved card — verify it belongs to this customer
     const pm = await stripe.paymentMethods.retrieve(paymentMethodId);
     if (pm.customer !== customerId) {
@@ -112,6 +128,18 @@ export async function POST(request: NextRequest) {
     resolvedPaymentMethodId = setupIntent.payment_method as string;
     resolvedCustomerId = setupIntent.customer as string;
     resolvedSetupIntentId = setupIntentId;
+
+    // Verify the setup intent's customer belongs to the authenticated user
+    const { data: stripeRecord } = await admin
+      .from("stripe_customers")
+      .select("stripe_customer_id")
+      .eq("user_id", user.id)
+      .eq("stripe_customer_id", resolvedCustomerId)
+      .maybeSingle();
+
+    if (!stripeRecord) {
+      return NextResponse.json({ error: "Invalid payment setup" }, { status: 403 });
+    }
 
     // Attach PM to customer if needed
     try {

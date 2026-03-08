@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-import { updateLoginStreak } from "@/lib/gamification";
+import { updateLoginStreak, awardXP } from "@/lib/gamification";
 
 // GET /api/gamification — returns user's gamification data
 export async function GET(req: NextRequest) {

@@ -10,9 +10,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import {
   Mail, Phone, MapPin, Clock, MessageCircle, Send,
-  Building2, Users, Headphones, ChevronRight
+  Building2, Users, Headphones, ChevronRight, Loader2
 } from "lucide-react";
 
 const CONTACT_OPTIONS = [
@@ -65,11 +66,39 @@ export default function ContactPage() {
     department: "general",
     message: "",
   });
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log("Form submitted:", formData);
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Failed to send message");
+        return;
+      }
+
+      toast.success("Message sent successfully! We'll get back to you soon.");
+      setFormData({
+        name: "",
+        email: "",
+        subject: "",
+        department: "general",
+        message: "",
+      });
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -145,6 +174,7 @@ export default function ContactPage() {
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         placeholder="John Doe"
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                     <div>
@@ -157,6 +187,7 @@ export default function ContactPage() {
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         placeholder="john@example.com"
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                   </div>
@@ -171,6 +202,7 @@ export default function ContactPage() {
                         onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                         placeholder="How can we help?"
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                     <div>
@@ -181,6 +213,7 @@ export default function ContactPage() {
                         value={formData.department}
                         onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                         className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-moulna-gold"
+                        disabled={isSubmitting}
                       >
                         <option value="general">General Inquiries</option>
                         <option value="support">Customer Support</option>
@@ -202,12 +235,22 @@ export default function ContactPage() {
                       placeholder="Tell us more about your inquiry..."
                       className="w-full rounded-lg border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-moulna-gold"
                       required
+                      disabled={isSubmitting}
                     />
                   </div>
 
-                  <Button type="submit" variant="gold" className="w-full md:w-auto">
-                    <Send className="w-4 h-4 me-2" />
-                    Send Message
+                  <Button type="submit" variant="gold" className="w-full md:w-auto" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 me-2" />
+                        Send Message
+                      </>
+                    )}
                   </Button>
                 </form>
               </Card>

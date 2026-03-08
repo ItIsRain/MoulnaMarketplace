@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url);
-  const limit = parseInt(searchParams.get("limit") || "50");
+  const limit = Math.min(parseInt(searchParams.get("limit") || "50") || 50, 100);
   const offset = parseInt(searchParams.get("offset") || "0");
   const unreadOnly = searchParams.get("unread") === "true";
 
@@ -77,7 +77,12 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json();
+  let body: { notificationId?: string; markAllRead?: boolean };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   const { notificationId, markAllRead } = body;
 
   if (markAllRead) {

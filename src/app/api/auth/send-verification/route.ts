@@ -51,6 +51,14 @@ export async function POST() {
     }
   }
 
+  // Invalidate all previous unused codes for this user
+  await adminClient
+    .from("verification_codes")
+    .update({ used_at: new Date().toISOString() })
+    .eq("user_id", user.id)
+    .eq("type", "email")
+    .is("used_at", null);
+
   // Generate OTP
   const code = generateOTP();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 min

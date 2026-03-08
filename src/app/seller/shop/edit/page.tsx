@@ -11,10 +11,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
+import { useAuthStore } from "@/store/useAuthStore";
+import { toast } from "sonner";
 import {
   Store, Camera, Save, Globe, MapPin, Phone, Mail,
   Clock, Instagram, Facebook, Twitter, Youtube, ChevronRight,
-  Palette, FileText, Image, ExternalLink
+  Palette, FileText, Image, ExternalLink, Loader2
 } from "lucide-react";
 
 const EMIRATES = [
@@ -28,31 +30,133 @@ const EMIRATES = [
 ];
 
 export default function EditShopPage() {
+  const { shop: authShop } = useAuthStore();
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [loadError, setLoadError] = React.useState<string | null>(null);
+
   const [formData, setFormData] = React.useState({
-    name: "Arabian Scents Boutique",
-    slug: "arabian-scents",
-    tagline: "Authentic Arabian Fragrances Since 2010",
-    description: "We specialize in premium Arabian oud, bakhoor, and traditional perfumes. Each product is carefully sourced and crafted to bring you the finest scents from the Arabian Peninsula.",
-    email: "contact@arabianscents.ae",
-    phone: "+971 50 123 4567",
-    emirate: "Dubai",
-    location: "Al Barsha, Dubai, UAE",
-    website: "https://arabianscents.ae",
-    instagram: "@arabianscents_uae",
-    facebook: "arabianscentsUAE",
-    twitter: "@arabian_scents",
+    name: "",
+    slug: "",
+    tagline: "",
+    description: "",
+    email: "",
+    phone: "",
+    emirate: "",
+    location: "",
+    website: "",
+    instagram: "",
+    facebook: "",
+    twitter: "",
     youtube: "",
-    operatingHours: "9:00 AM - 9:00 PM",
-    operatingDays: "Sunday - Thursday",
+    operatingHours: "",
+    operatingDays: "",
   });
 
   const [isSaving, setIsSaving] = React.useState(false);
 
+  // Fetch shop data on mount
+  React.useEffect(() => {
+    const fetchShop = async () => {
+      try {
+        const res = await fetch("/api/seller/shop");
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || "Failed to load shop data");
+        }
+        const { shop } = await res.json();
+        const opHours = shop.operatingHours || {};
+        // Try to extract emirate from location
+        const locationStr = shop.location || "";
+        const matchedEmirate = EMIRATES.find((e) => locationStr.includes(e));
+        setFormData({
+          name: shop.name || "",
+          slug: shop.slug || "",
+          tagline: shop.tagline || "",
+          description: shop.description || "",
+          email: shop.email || "",
+          phone: shop.phone || "",
+          emirate: matchedEmirate || "",
+          location: shop.location || "",
+          website: shop.website || "",
+          instagram: shop.instagram || "",
+          facebook: shop.facebook || "",
+          twitter: shop.twitter || "",
+          youtube: shop.youtube || "",
+          operatingHours: opHours.hours || "",
+          operatingDays: opHours.days || "",
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to load shop data";
+        setLoadError(message);
+        toast.error(message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchShop();
+  }, []);
+
   const handleSave = async () => {
     setIsSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsSaving(false);
+    try {
+      const res = await fetch("/api/seller/shop", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          tagline: formData.tagline,
+          description: formData.description,
+          email: formData.email,
+          phone: formData.phone,
+          location: formData.location,
+          website: formData.website,
+          instagram: formData.instagram,
+          facebook: formData.facebook,
+          twitter: formData.twitter,
+          youtube: formData.youtube,
+          operatingHours: {
+            hours: formData.operatingHours,
+            days: formData.operatingDays,
+          },
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to save changes");
+      }
+      toast.success("Shop profile updated successfully");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to save changes";
+      toast.error(message);
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  const avatarSeed = authShop?.avatarSeed || formData.slug || "shop";
+  const avatarStyle = authShop?.avatarStyle || "adventurer";
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-moulna-gold" />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <p className="text-destructive font-medium">{loadError}</p>
+        <Button
+          onClick={() => { setLoadError(null); setIsLoading(true); window.location.reload(); }}
+          variant="outline"
+        >
+          Try Again
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -69,7 +173,7 @@ export default function EditShopPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" asChild>
-            <Link href="/shops/arabian-scents" target="_blank">
+            <Link href={`/shops/${formData.slug}`} target="_blank">
               <ExternalLink className="w-4 h-4 me-2" />
               View Shop
             </Link>
@@ -143,7 +247,7 @@ export default function EditShopPage() {
           <h2 className="font-semibold mb-4">Shop Preview</h2>
           <div className="text-center">
             <div className="relative inline-block mb-4">
-              <DiceBearAvatar seed="arabian-scents" size="xl" className="w-32 h-32 mx-auto" />
+              <DiceBearAvatar seed={avatarSeed} style={avatarStyle} size="xl" className="w-32 h-32 mx-auto" />
               <button className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-moulna-gold text-white flex items-center justify-center shadow-lg">
                 <Camera className="w-5 h-5" />
               </button>

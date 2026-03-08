@@ -10,122 +10,106 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   MapPin, Search, Navigation, Store, Star, Clock,
-  Heart, Filter, ChevronRight, Building2
+  Heart, Filter, ChevronRight, Building2, Loader2
 } from "lucide-react";
 import { ShopAvatar } from "@/components/avatar/ShopAvatar";
+import type { Shop, Product } from "@/lib/types";
 
 const EMIRATES = [
-  { id: "dubai", name: "Dubai", shops: 234, color: "from-blue-500 to-cyan-500" },
-  { id: "abu-dhabi", name: "Abu Dhabi", shops: 156, color: "from-emerald-500 to-teal-500" },
-  { id: "sharjah", name: "Sharjah", shops: 89, color: "from-purple-500 to-violet-500" },
-  { id: "ajman", name: "Ajman", shops: 45, color: "from-orange-500 to-amber-500" },
-  { id: "rak", name: "Ras Al Khaimah", shops: 32, color: "from-rose-500 to-pink-500" },
-  { id: "fujairah", name: "Fujairah", shops: 28, color: "from-indigo-500 to-blue-500" },
-  { id: "uaq", name: "Umm Al Quwain", shops: 18, color: "from-lime-500 to-green-500" },
+  { id: "dubai", name: "Dubai", color: "from-blue-500 to-cyan-500" },
+  { id: "abu-dhabi", name: "Abu Dhabi", color: "from-emerald-500 to-teal-500" },
+  { id: "sharjah", name: "Sharjah", color: "from-purple-500 to-violet-500" },
+  { id: "ajman", name: "Ajman", color: "from-orange-500 to-amber-500" },
+  { id: "rak", name: "Ras Al Khaimah", color: "from-rose-500 to-pink-500" },
+  { id: "fujairah", name: "Fujairah", color: "from-indigo-500 to-blue-500" },
+  { id: "uaq", name: "Umm Al Quwain", color: "from-lime-500 to-green-500" },
 ];
 
-const NEARBY_SHOPS = [
-  {
-    id: "1",
-    name: "Arabian Scents Boutique",
-    slug: "arabian-scents",
-    category: "Fragrances",
-    distance: "0.8 km",
-    rating: 4.9,
-    reviews: 234,
-    location: "Al Barsha, Dubai",
-    openNow: true,
-    responseTime: "Within 1 hour",
-    featured: true,
-  },
-  {
-    id: "2",
-    name: "Heritage Crafts",
-    slug: "heritage-crafts",
-    category: "Home Décor",
-    distance: "1.2 km",
-    rating: 4.8,
-    reviews: 156,
-    location: "Jumeirah, Dubai",
-    openNow: true,
-    responseTime: "Within 4 hours",
-  },
-  {
-    id: "3",
-    name: "Modest Elegance",
-    slug: "modest-elegance",
-    category: "Fashion",
-    distance: "2.1 km",
-    rating: 4.7,
-    reviews: 189,
-    location: "Dubai Mall, Dubai",
-    openNow: true,
-    responseTime: "Within 1 hour",
-  },
-  {
-    id: "4",
-    name: "Gulf Jewels",
-    slug: "gulf-jewels",
-    category: "Jewelry",
-    distance: "2.5 km",
-    rating: 4.9,
-    reviews: 312,
-    location: "Gold Souq, Dubai",
-    openNow: false,
-    responseTime: "Within 24 hours",
-  },
-  {
-    id: "5",
-    name: "Spice Souq Treasures",
-    slug: "spice-souq",
-    category: "Food & Spices",
-    distance: "3.2 km",
-    rating: 4.8,
-    reviews: 445,
-    location: "Deira, Dubai",
-    openNow: true,
-    responseTime: "Within 1 hour",
-  },
-];
-
-const LOCAL_PRODUCTS = [
-  {
-    id: "1",
-    name: "Dubai Honey Collection",
-    price: 95,
-    shop: "Local Harvest",
-    distance: "1.5 km",
-    rating: 4.9,
-  },
-  {
-    id: "2",
-    name: "Handmade Camel Leather Bag",
-    price: 450,
-    shop: "Desert Artisans",
-    distance: "2.3 km",
-    rating: 4.8,
-  },
-  {
-    id: "3",
-    name: "Arabic Coffee Blend",
-    price: 65,
-    shop: "Coffee Culture",
-    distance: "0.9 km",
-    rating: 5.0,
-  },
-  {
-    id: "4",
-    name: "Traditional Khanjar",
-    price: 280,
-    shop: "Heritage Crafts",
-    distance: "1.2 km",
-    rating: 4.7,
-  },
-];
+// Helper: format price from fils to AED
+function formatPrice(fils: number) {
+  return (fils / 100).toFixed(fils % 100 === 0 ? 0 : 2);
+}
 
 export default function LocalPage() {
   const [selectedEmirate, setSelectedEmirate] = React.useState("dubai");
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [shops, setShops] = React.useState<Shop[]>([]);
+  const [shopCounts, setShopCounts] = React.useState<Record<string, number>>({});
+  const [shopsTotal, setShopsTotal] = React.useState(0);
+  const [isLoadingShops, setIsLoadingShops] = React.useState(true);
+  const [products, setProducts] = React.useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = React.useState(true);
+
+  // Fetch shops whenever selected emirate changes
+  React.useEffect(() => {
+    async function fetchShops() {
+      setIsLoadingShops(true);
+      try {
+        const emirateData = EMIRATES.find((e) => e.id === selectedEmirate);
+        const locationParam = emirateData ? emirateData.name : "Dubai";
+        const params = new URLSearchParams({
+          location: locationParam,
+          limit: "10",
+          sort: "popular",
+        });
+        if (searchQuery) {
+          params.set("search", searchQuery);
+        }
+        const res = await fetch(`/api/shops?${params.toString()}`);
+        if (res.ok) {
+          const data = await res.json();
+          setShops(data.shops || []);
+          setShopsTotal(data.total || 0);
+        }
+      } catch (err) {
+        console.error("Failed to fetch shops:", err);
+      } finally {
+        setIsLoadingShops(false);
+      }
+    }
+    fetchShops();
+  }, [selectedEmirate, searchQuery]);
+
+  // Fetch shop counts per emirate on mount
+  React.useEffect(() => {
+    async function fetchEmirateShopCounts() {
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        EMIRATES.map(async (emirate) => {
+          try {
+            const res = await fetch(`/api/shops?location=${encodeURIComponent(emirate.name)}&limit=1`);
+            if (res.ok) {
+              const data = await res.json();
+              counts[emirate.id] = data.total || 0;
+            }
+          } catch {
+            counts[emirate.id] = 0;
+          }
+        })
+      );
+      setShopCounts(counts);
+    }
+    fetchEmirateShopCounts();
+  }, []);
+
+  // Fetch popular products for sidebar
+  React.useEffect(() => {
+    async function fetchProducts() {
+      setIsLoadingProducts(true);
+      try {
+        const res = await fetch("/api/products?limit=4&sort=trending");
+        if (res.ok) {
+          const data = await res.json();
+          setProducts(data.products || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch products:", err);
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    }
+    fetchProducts();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background">
@@ -200,7 +184,9 @@ export default function LocalPage() {
                   <Building2 className="w-5 h-5 text-white" />
                 </div>
                 <p className="font-medium text-sm">{emirate.name}</p>
-                <p className="text-xs text-muted-foreground">{emirate.shops} shops</p>
+                <p className="text-xs text-muted-foreground">
+                  {shopCounts[emirate.id] !== undefined ? shopCounts[emirate.id] : "--"} shops
+                </p>
               </motion.button>
             ))}
           </div>
@@ -213,7 +199,7 @@ export default function LocalPage() {
               <div>
                 <h2 className="text-xl font-bold">Shops Near You</h2>
                 <p className="text-muted-foreground">
-                  Based on your location in Dubai
+                  Based on your selection: {EMIRATES.find((e) => e.id === selectedEmirate)?.name || "Dubai"}
                 </p>
               </div>
               <Button variant="outline" size="sm">
@@ -222,80 +208,113 @@ export default function LocalPage() {
               </Button>
             </div>
 
-            <div className="space-y-4">
-              {NEARBY_SHOPS.map((shop, index) => (
-                <motion.div
-                  key={shop.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card className={cn(
-                    "p-4 hover:shadow-lg transition-all",
-                    shop.featured && "ring-2 ring-moulna-gold ring-offset-2"
-                  )}>
+            {isLoadingShops ? (
+              <div className="space-y-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Card key={i} className="p-4 animate-pulse">
                     <div className="flex gap-4">
-                      <div className="relative">
-                        <ShopAvatar avatarSeed={shop.slug} name={shop.name} size="lg" className="w-20 h-20" />
-                        {shop.featured && (
-                          <Badge className="absolute -top-2 -right-2 bg-moulna-gold text-xs">
-                            Featured
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <Link href={`/shops/${shop.slug}`}>
-                              <h3 className="font-semibold hover:text-moulna-gold transition-colors">
-                                {shop.name}
-                              </h3>
-                            </Link>
-                            <p className="text-sm text-muted-foreground">{shop.category}</p>
-                          </div>
-                          <Button size="icon" variant="ghost">
-                            <Heart className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-3 mt-2 text-sm">
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-moulna-gold" />
-                            {shop.distance}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                            {shop.rating} ({shop.reviews})
-                          </span>
-                          <Badge variant={shop.openNow ? "default" : "secondary"} className={cn(
-                            shop.openNow && "bg-green-500"
-                          )}>
-                            {shop.openNow ? "Open Now" : "Closed"}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center justify-between mt-3">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Clock className="w-4 h-4" />
-                            Responds {shop.responseTime}
-                          </div>
-                          <Button size="sm" variant="outline" asChild>
-                            <Link href={`/shops/${shop.slug}`}>
-                              Visit Shop
-                              <ChevronRight className="w-4 h-4 ms-1" />
-                            </Link>
-                          </Button>
-                        </div>
+                      <div className="w-20 h-20 rounded-full bg-muted flex-shrink-0" />
+                      <div className="flex-1 space-y-3">
+                        <div className="h-4 w-1/3 bg-muted rounded" />
+                        <div className="h-3 w-1/4 bg-muted rounded" />
+                        <div className="h-3 w-2/3 bg-muted rounded" />
                       </div>
                     </div>
                   </Card>
-                </motion.div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : shops.length === 0 ? (
+              <div className="text-center py-12">
+                <Store className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No shops found</h3>
+                <p className="text-muted-foreground">
+                  No shops found in {EMIRATES.find((e) => e.id === selectedEmirate)?.name || "this area"}.
+                  Try another emirate or adjust your search.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {shops.map((shop, index) => (
+                  <motion.div
+                    key={shop.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Card className={cn(
+                      "p-4 hover:shadow-lg transition-all",
+                      index === 0 && "ring-2 ring-moulna-gold ring-offset-2"
+                    )}>
+                      <div className="flex gap-4">
+                        <div className="relative">
+                          <ShopAvatar avatarSeed={shop.avatarSeed || shop.slug} name={shop.name} size="lg" className="w-20 h-20" />
+                          {index === 0 && (
+                            <Badge className="absolute -top-2 -right-2 bg-moulna-gold text-xs">
+                              Featured
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <Link href={`/shops/${shop.slug}`}>
+                                <h3 className="font-semibold hover:text-moulna-gold transition-colors">
+                                  {shop.name}
+                                </h3>
+                              </Link>
+                              <p className="text-sm text-muted-foreground">{shop.category || "General"}</p>
+                            </div>
+                            <Button size="icon" variant="ghost">
+                              <Heart className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-3 mt-2 text-sm">
+                            {shop.location && (
+                              <span className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3 text-moulna-gold" />
+                                {shop.location}
+                              </span>
+                            )}
+                            {shop.isVerified && (
+                              <Badge variant="default" className="bg-green-500">
+                                Verified
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between mt-3">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              {shop.responseTime && (
+                                <>
+                                  <Clock className="w-4 h-4" />
+                                  Responds {shop.responseTime}
+                                </>
+                              )}
+                              {shop.totalListings > 0 && (
+                                <span className="ms-2">{shop.totalListings} listings</span>
+                              )}
+                            </div>
+                            <Button size="sm" variant="outline" asChild>
+                              <Link href={`/shops/${shop.slug}`}>
+                                Visit Shop
+                                <ChevronRight className="w-4 h-4 ms-1" />
+                              </Link>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            )}
 
-            <div className="text-center mt-8">
-              <Button variant="outline" size="lg">
-                Load More Shops
-              </Button>
-            </div>
+            {!isLoadingShops && shops.length > 0 && (
+              <div className="text-center mt-8">
+                <Button variant="outline" size="lg">
+                  Load More Shops
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -306,26 +325,55 @@ export default function LocalPage() {
                 <Store className="w-5 h-5 text-moulna-gold" />
                 Popular Local Products
               </h3>
-              <div className="space-y-4">
-                {LOCAL_PRODUCTS.map((product) => (
-                  <div key={product.id} className="flex gap-3">
-                    <div className="w-16 h-16 rounded-lg bg-muted flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm truncate">{product.name}</h4>
-                      <p className="text-xs text-muted-foreground">{product.shop}</p>
-                      <div className="flex items-center justify-between mt-1">
-                        <span className="font-bold text-sm">AED {product.price}</span>
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {product.distance}
-                        </span>
+              {isLoadingProducts ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="flex gap-3 animate-pulse">
+                      <div className="w-16 h-16 rounded-lg bg-muted flex-shrink-0" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-3 w-3/4 bg-muted rounded" />
+                        <div className="h-3 w-1/2 bg-muted rounded" />
+                        <div className="h-3 w-1/3 bg-muted rounded" />
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-              <Button variant="outline" className="w-full mt-4">
-                View All Products
+                  ))}
+                </div>
+              ) : products.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No products available yet.</p>
+              ) : (
+                <div className="space-y-4">
+                  {products.map((product) => (
+                    <Link key={product.id} href={`/products/${product.slug || product.id}`} className="flex gap-3 group">
+                      <div className="w-16 h-16 rounded-lg bg-muted flex-shrink-0 overflow-hidden">
+                        {product.images && product.images[0] && (
+                          <img
+                            src={product.images[0]}
+                            alt={product.title}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm truncate group-hover:text-moulna-gold transition-colors">
+                          {product.title}
+                        </h4>
+                        <p className="text-xs text-muted-foreground">{product.seller.name}</p>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="font-bold text-sm">AED {formatPrice(product.priceFils)}</span>
+                          {product.seller.location && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {product.seller.location}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+              <Button variant="outline" className="w-full mt-4" asChild>
+                <Link href="/explore">View All Products</Link>
               </Button>
             </Card>
 
@@ -354,7 +402,7 @@ export default function LocalPage() {
             <Card className="p-6 bg-gradient-to-br from-moulna-gold/10 to-amber-50 border-moulna-gold/20">
               <h3 className="font-semibold mb-2">Support Local Artisans</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Every deal with a local artisan helps support UAE's creative community and preserves traditional craftsmanship.
+                Every deal with a local artisan helps support UAE&apos;s creative community and preserves traditional craftsmanship.
               </p>
               <div className="grid grid-cols-2 gap-4 text-center">
                 <div>

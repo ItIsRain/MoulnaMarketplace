@@ -16,54 +16,15 @@ import {
 } from "lucide-react";
 
 const SIDEBAR_ITEMS = [
-  {
-    label: "Dashboard",
-    href: "/seller",
-    icon: LayoutDashboard,
-  },
-  {
-    label: "Listings",
-    href: "/seller/products",
-    icon: Package,
-    badge: "28",
-  },
-  {
-    label: "Inquiries",
-    href: "/seller/orders",
-    icon: Inbox,
-    badge: "5",
-  },
-  {
-    label: "Messages",
-    href: "/seller/messages",
-    icon: MessageSquare,
-    badge: "3",
-  },
-  {
-    label: "Customers",
-    href: "/seller/customers",
-    icon: Users,
-  },
-  {
-    label: "Promotions",
-    href: "/seller/promotions",
-    icon: Tag,
-  },
-  {
-    label: "Analytics",
-    href: "/seller/analytics",
-    icon: BarChart3,
-  },
-  {
-    label: "Shop Profile",
-    href: "/seller/shop",
-    icon: Store,
-  },
-  {
-    label: "Settings",
-    href: "/seller/settings",
-    icon: Settings,
-  },
+  { label: "Dashboard", href: "/seller", icon: LayoutDashboard },
+  { label: "Listings", href: "/seller/products", icon: Package },
+  { label: "Inquiries", href: "/seller/orders", icon: Inbox },
+  { label: "Messages", href: "/seller/messages", icon: MessageSquare },
+  { label: "Customers", href: "/seller/customers", icon: Users },
+  { label: "Promotions", href: "/seller/promotions", icon: Tag },
+  { label: "Analytics", href: "/seller/analytics", icon: BarChart3 },
+  { label: "Shop Profile", href: "/seller/shop", icon: Store },
+  { label: "Settings", href: "/seller/settings", icon: Settings },
 ];
 
 interface SellerLayoutProps {
@@ -73,18 +34,16 @@ interface SellerLayoutProps {
 export function SellerLayout({ children }: SellerLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout } = useAuthStore();
+  const { user, shop, logout } = useAuthStore();
 
-  // Mock seller data
   const seller = {
-    shopName: "Scent of Arabia",
-    name: "Ahmed Al Rashid",
-    avatar: "seller-ahmed",
-    level: 8,
-    xp: 4520,
-    rating: 4.9,
-    pendingInquiries: 5,
-    unreadMessages: 3,
+    shopName: shop?.name || "My Shop",
+    name: user?.name || "Seller",
+    avatarStyle: shop?.avatarStyle || user?.avatar?.style || "adventurer",
+    avatarSeed: shop?.avatarSeed || user?.avatar?.seed || "default",
+    level: user?.level || 1,
+    xp: user?.xp || 0,
+    rating: 0,
   };
 
   return (
@@ -99,14 +58,11 @@ export function SellerLayout({ children }: SellerLayoutProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="relative p-2 hover:bg-muted rounded-lg">
+          <Link href="/seller/notifications" className="relative p-2 hover:bg-muted rounded-lg">
             <Bell className="w-5 h-5" />
-            {seller.unreadMessages > 0 && (
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-            )}
-          </button>
+          </Link>
           <div className="flex items-center gap-3">
-            <DiceBearAvatar seed={seller.avatar} size="sm" />
+            <DiceBearAvatar seed={seller.avatarSeed} style={seller.avatarStyle} size="sm" />
             <div className="hidden md:block">
               <p className="text-sm font-medium">{seller.shopName}</p>
               <p className="text-xs text-muted-foreground">{seller.name}</p>
@@ -150,16 +106,6 @@ export function SellerLayout({ children }: SellerLayoutProps) {
                   >
                     <item.icon className="w-5 h-5" />
                     <span className="flex-1">{item.label}</span>
-                    {item.badge && (
-                      <span className={cn(
-                        "px-2 py-0.5 text-xs rounded-full",
-                        isActive
-                          ? "bg-moulna-gold text-white"
-                          : "bg-muted text-muted-foreground"
-                      )}>
-                        {item.badge}
-                      </span>
-                    )}
                   </Link>
                 );
               })}
@@ -175,7 +121,7 @@ export function SellerLayout({ children }: SellerLayoutProps) {
               </Link>
 
               <button
-                onClick={() => { logout(); router.push("/"); }}
+                onClick={async () => { await logout(); router.push("/"); }}
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors"
               >
                 <LogOut className="w-5 h-5" />

@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function DELETE() {
+export async function DELETE(req: NextRequest) {
   const supabase = await createClient();
 
   const {
@@ -12,6 +12,28 @@ export async function DELETE() {
 
   if (authError || !user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  // Require password re-authentication before account deletion
+  let body: { password?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Password is required to delete account" }, { status: 400 });
+  }
+
+  const { password } = body;
+  if (!password) {
+    return NextResponse.json({ error: "Password is required to delete account" }, { status: 400 });
+  }
+
+  const { error: verifyError } = await supabase.auth.signInWithPassword({
+    email: user.email!,
+    password,
+  });
+
+  if (verifyError) {
+    return NextResponse.json({ error: "Incorrect password" }, { status: 403 });
   }
 
   const admin = createAdminClient();

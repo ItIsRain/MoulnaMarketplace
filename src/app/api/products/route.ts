@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import { mapDbProduct } from "@/lib/mappers";
+import { sanitizeFilterValue } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 
 const SHOP_SELECT = "id, owner_id, name, slug, avatar_style, avatar_seed, logo_url, rating, total_listings, location, is_verified, response_time";
@@ -74,7 +75,8 @@ export async function GET(request: NextRequest) {
   }
 
   if (search) {
-    query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+    const s = sanitizeFilterValue(search);
+    query = query.or(`title.ilike.%${s}%,description.ilike.%${s}%`);
   }
 
   if (category) {

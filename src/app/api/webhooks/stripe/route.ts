@@ -25,6 +25,27 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
+  // Atomic idempotency: insert event, skip if already exists (ON CONFLICT DO NOTHING)
+  const admin = createAdminClient();
+  const { data: inserted, error: idempotencyError } = await admin
+    .from("webhook_events")
+    .upsert(
+      { event_id: event.id, event_type: event.type },
+      { onConflict: "event_id", ignoreDuplicates: true }
+    )
+    .select("event_id");
+
+  // If the row already existed, upsert with ignoreDuplicates returns empty array
+  if (idempotencyError) {
+    console.error("Idempotency check failed:", idempotencyError);
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+  }
+
+  if (!inserted || inserted.length === 0) {
+    // Already processed — skip
+    return NextResponse.json({ received: true });
+  }
+
   // Handle off-session payment failures for SOTW auction bids
   if (event.type === "payment_intent.payment_failed") {
     const paymentIntent = event.data.object;
@@ -32,8 +53,6 @@ export async function POST(request: NextRequest) {
     const auctionId = paymentIntent.metadata?.auction_id;
 
     if (bidId && auctionId && paymentIntent.metadata?.type === "sotw_auction") {
-      const admin = createAdminClient();
-
       // Mark bid as charge_failed
       await admin
         .from("sotw_bids")
@@ -93,8 +112,6 @@ export async function POST(request: NextRequest) {
       console.error("Missing metadata in Stripe session:", session.id);
       return NextResponse.json({ received: true });
     }
-
-    const admin = createAdminClient();
 
     // Update ad_payments to completed
     const { error: paymentError } = await admin

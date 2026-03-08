@@ -69,7 +69,7 @@ export function DiceBearAvatar({
           }}
         />
       )}
-      <Avatar className={cn(sizeClasses[size], showLevelRing && `m-[${ringWidth}px]`)}>
+      <Avatar className={cn(sizeClasses[size])} style={showLevelRing ? { margin: ringWidth } : undefined}>
         <AvatarImage src={avatarUrl} alt={`Avatar for ${seed}`} />
         <AvatarFallback className="bg-moulna-gold-light text-moulna-charcoal font-semibold">
           {seed.slice(0, 2).toUpperCase()}

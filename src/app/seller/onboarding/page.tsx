@@ -82,6 +82,11 @@ export default function SellerOnboardingPage() {
   const [uploadingField, setUploadingField] = React.useState<string | null>(null);
   const [listingDuration, setListingDuration] = React.useState("30 days");
   const [autoRenew, setAutoRenew] = React.useState(true);
+  const [meetupLocations, setMeetupLocations] = React.useState<Record<string, string>>({
+    "My Shop/Office": "",
+    "Public Meeting Point": "",
+    "Mall or Café": "",
+  });
 
   // Slug availability check
   const [slugStatus, setSlugStatus] = React.useState<{
@@ -223,6 +228,9 @@ export default function SellerOnboardingPage() {
             listingPreferences: {
               duration: listingDuration,
               autoRenew,
+              meetupLocations: Object.fromEntries(
+                Object.entries(meetupLocations).filter(([, v]) => v.trim())
+              ),
             },
           }),
         });
@@ -658,6 +666,13 @@ export default function SellerOnboardingPage() {
                           <Input
                             placeholder={spot.note}
                             className="w-40 text-right"
+                            value={meetupLocations[spot.location] || ""}
+                            onChange={(e) =>
+                              setMeetupLocations((prev) => ({
+                                ...prev,
+                                [spot.location]: e.target.value,
+                              }))
+                            }
                           />
                         </div>
                       ))}

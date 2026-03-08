@@ -55,6 +55,7 @@ export default function SettingsPage() {
   });
 
   // Password
+  const [currentPassword, setCurrentPassword] = React.useState("");
   const [newPassword, setNewPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
@@ -98,6 +99,10 @@ export default function SettingsPage() {
     setPasswordError("");
     setPasswordSuccess(false);
 
+    if (!currentPassword) {
+      setPasswordError("Current password is required");
+      return;
+    }
     if (newPassword.length < 8) {
       setPasswordError("Password must be at least 8 characters");
       return;
@@ -112,11 +117,12 @@ export default function SettingsPage() {
       const res = await fetch("/api/settings/password", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newPassword }),
+        body: JSON.stringify({ currentPassword, newPassword }),
       });
       const data = await res.json();
       if (res.ok) {
         setPasswordSuccess(true);
+        setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
       } else {
@@ -354,6 +360,15 @@ export default function SettingsPage() {
           </h2>
           <div className="space-y-4 max-w-md">
             <div>
+              <label className="text-sm font-medium mb-1.5 block">Current Password</label>
+              <Input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+              />
+            </div>
+            <div>
               <label className="text-sm font-medium mb-1.5 block">New Password</label>
               <div className="relative">
                 <Input
@@ -392,7 +407,7 @@ export default function SettingsPage() {
             <Button
               variant="gold"
               onClick={handleChangePassword}
-              disabled={saving || !newPassword || !confirmPassword}
+              disabled={saving || !currentPassword || !newPassword || !confirmPassword}
             >
               {saving ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : null}
               Update Password

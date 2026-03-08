@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
+import { sanitizeFilterValue } from "@/lib/utils";
 
 // GET /api/admin/sellers — list all sellers (shops) with owner profiles
 export async function GET(req: NextRequest) {
@@ -42,7 +43,8 @@ export async function GET(req: NextRequest) {
     .range(offset, offset + limit - 1);
 
   if (search) {
-    query = query.or(`name.ilike.%${search}%,slug.ilike.%${search}%`);
+    const s = sanitizeFilterValue(search);
+    query = query.or(`name.ilike.%${s}%,slug.ilike.%${s}%`);
   }
 
   if (status && status !== "all") {

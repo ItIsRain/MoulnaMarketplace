@@ -1,16 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { motion } from "framer-motion";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import {
-  Upload, Download, FileSpreadsheet, AlertCircle, CheckCircle,
-  XCircle, RefreshCw, HelpCircle, Package, Trash2, Eye
+  Upload, Download, FileSpreadsheet, CheckCircle,
+  HelpCircle, Package, Clock, Plus
 } from "lucide-react";
 
 const UPLOAD_STEPS = [
@@ -20,63 +18,8 @@ const UPLOAD_STEPS = [
   { step: 4, title: "Review & Publish", description: "Verify and go live" },
 ];
 
-const RECENT_IMPORTS = [
-  {
-    id: "1",
-    filename: "products_march_2024.xlsx",
-    date: "Mar 10, 2024",
-    status: "completed",
-    productsAdded: 45,
-    errors: 0,
-  },
-  {
-    id: "2",
-    filename: "oud_collection.xlsx",
-    date: "Mar 5, 2024",
-    status: "completed",
-    productsAdded: 12,
-    errors: 2,
-  },
-  {
-    id: "3",
-    filename: "perfumes_bulk.xlsx",
-    date: "Feb 28, 2024",
-    status: "failed",
-    productsAdded: 0,
-    errors: 15,
-  },
-];
-
-const VALIDATION_RESULTS = [
-  { row: 2, field: "price", message: "Price must be a positive number", status: "error" },
-  { row: 5, field: "category", message: "Category 'Fragrance' not found, using 'Perfumes'", status: "warning" },
-  { row: 8, field: "condition", message: "Condition not specified, defaulting to 'New'", status: "warning" },
-  { row: 12, field: "image", message: "Image URL is invalid or inaccessible", status: "error" },
-];
-
 export default function BulkProductsPage() {
-  const [currentStep, setCurrentStep] = React.useState(1);
-  const [uploadProgress, setUploadProgress] = React.useState(0);
-  const [isUploading, setIsUploading] = React.useState(false);
-  const [showValidation, setShowValidation] = React.useState(false);
-
-  const handleUpload = () => {
-    setIsUploading(true);
-    setCurrentStep(3);
-
-    // Simulate upload progress
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setUploadProgress(progress);
-      if (progress >= 100) {
-        clearInterval(interval);
-        setIsUploading(false);
-        setShowValidation(true);
-        setCurrentStep(4);
-      }
-    }, 300);
-  };
+  const [currentStep] = React.useState(1);
 
   return (
     <div className="space-y-8">
@@ -89,7 +32,7 @@ export default function BulkProductsPage() {
           </p>
         </div>
         <Button variant="outline" asChild>
-          <a href="#" download>
+          <a href="/templates/bulk-upload-template.csv" download>
             <Download className="w-4 h-4 me-2" />
             Download Template
           </a>
@@ -132,142 +75,36 @@ export default function BulkProductsPage() {
         ))}
       </div>
 
-      {/* Upload Area */}
+      {/* Coming Soon Upload Area */}
       <Card className="p-8">
-        {!isUploading && !showValidation ? (
-          <div
-            className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-12 text-center hover:border-moulna-gold/50 transition-colors cursor-pointer"
-            onClick={handleUpload}
-          >
-            <Upload className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-semibold text-lg mb-2">
-              Drag and drop your file here
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              or click to browse from your computer
-            </p>
-            <div className="flex items-center justify-center gap-4">
-              <Badge variant="outline">
-                <FileSpreadsheet className="w-4 h-4 me-1" />
-                .xlsx
-              </Badge>
-              <Badge variant="outline">
-                <FileSpreadsheet className="w-4 h-4 me-1" />
-                .csv
-              </Badge>
-            </div>
+        <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-12 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-moulna-gold/10 mb-6">
+            <Clock className="w-8 h-8 text-moulna-gold" />
           </div>
-        ) : isUploading ? (
-          <div className="py-12 text-center">
-            <RefreshCw className="w-12 h-12 mx-auto text-moulna-gold mb-4 animate-spin" />
-            <h3 className="font-semibold text-lg mb-2">Uploading & Processing...</h3>
-            <p className="text-muted-foreground mb-6">
-              Please wait while we validate your listings
-            </p>
-            <div className="max-w-md mx-auto">
-              <Progress value={uploadProgress} className="h-3 mb-2" />
-              <p className="text-sm text-muted-foreground">{uploadProgress}% complete</p>
-            </div>
+          <h3 className="font-semibold text-lg mb-2">
+            Bulk Upload is Coming Soon
+          </h3>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            We are working on a powerful bulk import tool. For now, please add your products one by one using the product creation page.
+          </p>
+          <div className="flex items-center justify-center gap-4">
+            <Button variant="gold" asChild>
+              <Link href="/seller/products/new">
+                <Plus className="w-4 h-4 me-2" />
+                Add Single Product
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <a href="/templates/bulk-upload-template.csv" download>
+                <Download className="w-4 h-4 me-2" />
+                Download Template
+              </a>
+            </Button>
           </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b">
-              <div className="flex items-center gap-3">
-                <FileSpreadsheet className="w-8 h-8 text-green-600" />
-                <div>
-                  <p className="font-medium">products_new_collection.xlsx</p>
-                  <p className="text-sm text-muted-foreground">24 listings found</p>
-                </div>
-              </div>
-              <Badge className="bg-green-100 text-green-700">
-                <CheckCircle className="w-4 h-4 me-1" />
-                Validated
-              </Badge>
-            </div>
-
-            {/* Validation Summary */}
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="p-4 rounded-lg bg-green-50 border border-green-200">
-                <div className="flex items-center gap-2 text-green-700 mb-1">
-                  <CheckCircle className="w-5 h-5" />
-                  <span className="font-medium">Ready to Import</span>
-                </div>
-                <p className="text-2xl font-bold text-green-700">20</p>
-              </div>
-              <div className="p-4 rounded-lg bg-yellow-50 border border-yellow-200">
-                <div className="flex items-center gap-2 text-yellow-700 mb-1">
-                  <AlertCircle className="w-5 h-5" />
-                  <span className="font-medium">Warnings</span>
-                </div>
-                <p className="text-2xl font-bold text-yellow-700">2</p>
-              </div>
-              <div className="p-4 rounded-lg bg-red-50 border border-red-200">
-                <div className="flex items-center gap-2 text-red-700 mb-1">
-                  <XCircle className="w-5 h-5" />
-                  <span className="font-medium">Errors</span>
-                </div>
-                <p className="text-2xl font-bold text-red-700">2</p>
-              </div>
-            </div>
-
-            {/* Validation Details */}
-            <div className="border rounded-lg overflow-hidden">
-              <div className="bg-muted px-4 py-2 font-medium text-sm">
-                Issues to Review
-              </div>
-              <div className="divide-y">
-                {VALIDATION_RESULTS.map((result, index) => (
-                  <div
-                    key={index}
-                    className={cn(
-                      "px-4 py-3 flex items-center gap-4",
-                      result.status === "error" ? "bg-red-50/50" : "bg-yellow-50/50"
-                    )}
-                  >
-                    {result.status === "error" ? (
-                      <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                    ) : (
-                      <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0" />
-                    )}
-                    <div className="flex-1">
-                      <p className="text-sm">
-                        <span className="font-medium">Row {result.row}</span> - {result.field}
-                      </p>
-                      <p className="text-sm text-muted-foreground">{result.message}</p>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      Fix
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center justify-between pt-4">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowValidation(false);
-                  setCurrentStep(1);
-                }}
-              >
-                <Trash2 className="w-4 h-4 me-2" />
-                Cancel
-              </Button>
-              <div className="flex gap-3">
-                <Button variant="outline">
-                  <Eye className="w-4 h-4 me-2" />
-                  Preview Listings
-                </Button>
-                <Button className="bg-moulna-gold hover:bg-moulna-gold-dark">
-                  <Package className="w-4 h-4 me-2" />
-                  Import 20 Listings
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+          <p className="text-xs text-muted-foreground mt-4">
+            You can download the template now and prepare your data for when bulk upload launches.
+          </p>
+        </div>
       </Card>
 
       {/* Help Section */}
@@ -293,51 +130,6 @@ export default function BulkProductsPage() {
           </div>
         </div>
       </Card>
-
-      {/* Recent Imports */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Recent Imports</h2>
-        <Card>
-          <div className="divide-y">
-            {RECENT_IMPORTS.map((item) => (
-              <div
-                key={item.id}
-                className="p-4 flex items-center justify-between"
-              >
-                <div className="flex items-center gap-4">
-                  <FileSpreadsheet className="w-8 h-8 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">{item.filename}</p>
-                    <p className="text-sm text-muted-foreground">{item.date}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-end">
-                    <p className="font-medium">{item.productsAdded} listings</p>
-                    {item.errors > 0 && (
-                      <p className="text-sm text-red-500">{item.errors} errors</p>
-                    )}
-                  </div>
-                  <Badge
-                    className={cn(
-                      item.status === "completed"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    )}
-                  >
-                    {item.status === "completed" ? (
-                      <CheckCircle className="w-3 h-3 me-1" />
-                    ) : (
-                      <XCircle className="w-3 h-3 me-1" />
-                    )}
-                    {item.status}
-                  </Badge>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
     </div>
   );
 }
