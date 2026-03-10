@@ -157,7 +157,7 @@ async function checkBadgeMilestones(
     if (count === 1) {
       await awardBadge({
         userId,
-        badgeId: "first_inquiry",
+        badgeId: "first-inquiry",
         xpReward: 50,
         badgeName: "First Inquiry",
       });
@@ -181,7 +181,7 @@ async function checkBadgeMilestones(
     if (count === 1) {
       await awardBadge({
         userId,
-        badgeId: "first_review",
+        badgeId: "first-review",
         xpReward: 30,
         badgeName: "Reviewer",
       });

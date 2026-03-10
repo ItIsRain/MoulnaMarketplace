@@ -168,11 +168,16 @@ export interface Category {
 }
 
 // Shop Types
+export type ShopPlan = 'free' | 'growth' | 'pro';
+
 export interface Shop {
   id: string;
   ownerId: string;
   name: string;
   slug: string;
+  plan: ShopPlan;
+  planPeriodEnd?: string;
+  planCancelAtPeriodEnd?: boolean;
   tagline?: string;
   description?: string;
   category?: string;

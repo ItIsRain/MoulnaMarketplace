@@ -9,6 +9,14 @@ import { CheckCircle, Rocket, Trophy, ArrowRight, BarChart3, Package, Plus } fro
 import confetti from "canvas-confetti";
 
 export default function PromotionSuccessPage() {
+  return (
+    <React.Suspense fallback={<div className="flex items-center justify-center min-h-[40vh]"><CheckCircle className="w-8 h-8 animate-pulse text-moulna-gold" /></div>}>
+      <PromotionSuccessContent />
+    </React.Suspense>
+  );
+}
+
+function PromotionSuccessContent() {
   const searchParams = useSearchParams();
   const type = searchParams.get("type");
   const isBoost = type === "boost";

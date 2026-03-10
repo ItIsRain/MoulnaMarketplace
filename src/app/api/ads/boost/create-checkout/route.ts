@@ -130,28 +130,37 @@ export async function POST(request: NextRequest) {
   const stripe = getStripe();
   const origin = process.env.NEXT_PUBLIC_APP_URL || "";
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    line_items: [
-      {
-        price_data: {
-          currency: "aed",
-          product_data: {
-            name: `Product Boost — ${durationDays} days`,
-            description: `Boost "${product.title}" to the top of explore & search`,
+  let session;
+  try {
+    session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: "aed",
+            product_data: {
+              name: `Product Boost — ${durationDays} days`,
+              description: `Boost "${product.title}" to the top of explore & search`,
+            },
+            unit_amount: totalFils, // fils is already the smallest AED unit
           },
-          unit_amount: totalFils, // fils is already the smallest AED unit
+          quantity: 1,
         },
-        quantity: 1,
+      ],
+      metadata: {
+        ad_payment_id: adPayment.id,
+        ad_type: "product_boost",
       },
-    ],
-    metadata: {
-      ad_payment_id: adPayment.id,
-      ad_type: "product_boost",
-    },
-    success_url: `${origin}/seller/promotions/success?session_id={CHECKOUT_SESSION_ID}&type=boost`,
-    cancel_url: `${origin}/seller/promotions/new`,
-  });
+      success_url: `${origin}/seller/promotions/success?session_id={CHECKOUT_SESSION_ID}&type=boost`,
+      cancel_url: `${origin}/seller/promotions/new`,
+    });
+  } catch (err) {
+    console.error("Stripe checkout creation failed:", err);
+    // Clean up orphaned records
+    await admin.from("product_boosts").delete().eq("payment_id", adPayment.id);
+    await admin.from("ad_payments").delete().eq("id", adPayment.id);
+    return NextResponse.json({ error: "Payment service error. Please try again." }, { status: 502 });
+  }
 
   // Store checkout session ID
   await admin

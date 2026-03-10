@@ -15,6 +15,7 @@ import { DailyChallengePanel } from "@/components/gamification/DailyChallenge";
 import { StreakCard } from "@/components/gamification/StreakCounter";
 import { useAuthStore } from "@/store/useAuthStore";
 import type { DailyChallenge } from "@/lib/types";
+import { FollowedMomentsStrip } from "@/components/moments/FollowedMomentsStrip";
 import {
   MessageSquare, Heart, Star, Trophy, Sparkles,
   ChevronRight, Check, Loader2, Inbox
@@ -131,6 +132,9 @@ export default function DashboardPage() {
           Here&apos;s what&apos;s happening with your account today
         </p>
       </div>
+
+      {/* Followed Sellers' Moments */}
+      <FollowedMomentsStrip />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

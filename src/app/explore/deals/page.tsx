@@ -277,7 +277,7 @@ export default function DealsPage() {
                       <Percent className="w-8 h-8 mb-3" />
                       <h3 className="font-bold text-lg">{category.name}</h3>
                       <p className="text-white/80">Up to {category.maxDiscount}%</p>
-                      <p className="text-white/60 text-sm mt-1">
+                      <p className="text-white/80 text-sm mt-1">
                         {category.dealCount} {category.dealCount === 1 ? "deal" : "deals"}
                       </p>
                     </Card>

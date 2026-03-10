@@ -9,9 +9,11 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"];
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB raw upload limit
-const VALID_FOLDERS = ["logos", "banners", "story", "products", "gallery", "workshop", "admin"];
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB for videos
+const VALID_FOLDERS = ["logos", "banners", "story", "products", "gallery", "workshop", "admin", "moments"];
 
 // Max dimensions per folder type — Cloudinary will resize on upload
 const FOLDER_LIMITS: Record<string, { width: number; height: number }> = {
@@ -22,6 +24,7 @@ const FOLDER_LIMITS: Record<string, { width: number; height: number }> = {
   story: { width: 1200, height: 800 },
   workshop: { width: 1600, height: 1200 },
   admin: { width: 1920, height: 800 },
+  moments: { width: 1080, height: 1920 },
 };
 
 export async function POST(request: NextRequest) {
@@ -44,16 +47,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
-  if (!ALLOWED_TYPES.includes(file.type)) {
+  const isVideo = ALLOWED_VIDEO_TYPES.includes(file.type);
+  const isImage = ALLOWED_IMAGE_TYPES.includes(file.type);
+
+  if (!isImage && !isVideo) {
     return NextResponse.json(
-      { error: "Invalid file type. Only JPEG, PNG, and WebP are allowed." },
+      { error: "Invalid file type. Allowed: JPEG, PNG, WebP, MP4, MOV, WebM." },
       { status: 400 }
     );
   }
 
-  if (file.size > MAX_SIZE) {
+  const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_SIZE;
+  if (file.size > maxSize) {
     return NextResponse.json(
-      { error: "File too large. Maximum size is 10MB." },
+      { error: `File too large. Maximum size is ${isVideo ? "50MB" : "10MB"}.` },
       { status: 400 }
     );
   }
@@ -99,21 +106,45 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
     const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
 
-    const result = await cloudinary.uploader.upload(base64, {
+    const uploadOptions: Record<string, unknown> = {
       folder: cloudinaryFolder,
-      resource_type: "image",
-      transformation: [
+      resource_type: isVideo ? "video" : "image",
+    };
+
+    if (isVideo) {
+      // Video: limit duration to 60s, auto quality
+      uploadOptions.transformation = [
+        { duration: "60", quality: "auto" },
+      ];
+    } else {
+      uploadOptions.transformation = [
         {
           width: limits.width,
           height: limits.height,
-          crop: "limit", // Resize only if larger, preserving aspect ratio
+          crop: "limit",
           quality: "auto:good",
           fetch_format: "auto",
         },
-      ],
-    });
+      ];
+    }
 
-    return NextResponse.json({ url: result.secure_url });
+    const result = await cloudinary.uploader.upload(base64, uploadOptions);
+
+    // For video, also return a thumbnail (jpg poster frame)
+    const response: Record<string, string> = { url: result.secure_url };
+    if (isVideo && result.public_id) {
+      // Build thumbnail URL: replace /video/upload/ with /video/upload/c_fill,w_600,h_800,so_0/
+      // and append .jpg to force image format
+      const thumbUrl = result.secure_url
+        .replace("/video/upload/", "/video/upload/c_fill,w_600,h_800,so_0/")
+        .replace(/\.[^.]+$/, ".jpg");
+      response.thumbnail = thumbUrl;
+      response.mediaType = "video";
+    } else {
+      response.mediaType = "image";
+    }
+
+    return NextResponse.json(response);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Upload failed";
     console.error("Cloudinary upload error:", message);

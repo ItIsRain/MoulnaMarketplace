@@ -117,18 +117,18 @@ export function StreakCard({
       </h4>
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-white/80">Login Streak</span>
+          <span className="text-sm text-white/90">Login Streak</span>
           <StreakCounter days={loginStreak} size="sm" className="text-white" />
         </div>
         {purchaseStreak > 0 && (
           <div className="flex items-center justify-between">
-            <span className="text-sm text-white/80">Deal Streak</span>
+            <span className="text-sm text-white/90">Deal Streak</span>
             <span className="text-sm font-semibold">{purchaseStreak} weeks</span>
           </div>
         )}
         {reviewStreak > 0 && (
           <div className="flex items-center justify-between">
-            <span className="text-sm text-white/80">Review Streak</span>
+            <span className="text-sm text-white/90">Review Streak</span>
             <span className="text-sm font-semibold">{reviewStreak} weeks</span>
           </div>
         )}

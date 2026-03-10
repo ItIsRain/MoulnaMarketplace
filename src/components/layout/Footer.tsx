@@ -13,7 +13,7 @@ const FOOTER_LINKS = {
       { name: "All Categories", href: "/explore/categories" },
       { name: "Trending Now", href: "/explore/trending" },
       { name: "New Listings", href: "/explore/new-arrivals" },
-      { name: "Gift Cards", href: "/gift-cards" },
+      { name: "Deals", href: "/explore/deals" },
     ],
   },
   sell: {
@@ -28,7 +28,7 @@ const FOOTER_LINKS = {
     links: [
       { name: "About Moulna", href: "/about" },
       { name: "How It Works", href: "/how-it-works" },
-      { name: "Press", href: "/press" },
+      { name: "Contact", href: "/contact" },
     ],
   },
   help: {

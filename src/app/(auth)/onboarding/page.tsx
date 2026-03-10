@@ -96,7 +96,7 @@ export default function OnboardingPage() {
                   "w-12 h-12 rounded-full flex items-center justify-center transition-all",
                   currentStep >= step.id
                     ? "bg-moulna-gold text-white"
-                    : "bg-white/10 text-white/50"
+                    : "bg-white/10 text-white/60"
                 )}>
                   {currentStep > step.id ? (
                     <Check className="w-6 h-6" />

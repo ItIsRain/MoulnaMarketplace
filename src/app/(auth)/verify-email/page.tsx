@@ -11,6 +11,14 @@ import { Mail, ArrowLeft, CheckCircle, RefreshCw, Sparkles, Loader2 } from "luci
 import { useAuthStore } from "@/store/useAuthStore";
 
 export default function VerifyEmailPage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-moulna-gold" /></div>}>
+      <VerifyEmailForm />
+    </React.Suspense>
+  );
+}
+
+function VerifyEmailForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuthStore();

@@ -64,8 +64,10 @@ export default function CookiePolicyPage() {
   };
 
   const handleSavePreferences = () => {
-    // Save to localStorage/cookies
-    console.log("Saving preferences:", preferences);
+    // Save to localStorage
+    try {
+      localStorage.setItem("moulna-cookie-preferences", JSON.stringify(preferences));
+    } catch {}
   };
 
   return (

@@ -88,11 +88,11 @@ export async function POST(request: NextRequest) {
     // Map common errors to user-friendly messages
     if (createError.message.includes("already been registered")) {
       return NextResponse.json(
-        { error: "An account with this email already exists" },
+        { error: "Registration failed. Please try again or use a different email." },
         { status: 400 }
       );
     }
-    return NextResponse.json({ error: createError.message }, { status: 400 });
+    return NextResponse.json({ error: "Registration failed. Please try again." }, { status: 400 });
   }
 
   // Sign the user in (admin.createUser doesn't create a session)

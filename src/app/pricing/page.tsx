@@ -13,8 +13,9 @@ import {
   Check, X, Sparkles, Store, Users, BarChart3,
   Headphones, Zap, Crown, ChevronDown, HelpCircle,
   Rocket, Shield, Gift, Percent, Globe, Tag,
-  TrendingUp, Star, MessageCircle, Eye
+  TrendingUp, Star, MessageCircle, Eye, Loader2
 } from "lucide-react";
+import { toast } from "sonner";
 
 const SELLER_PLANS = [
   {
@@ -26,6 +27,7 @@ const SELLER_PLANS = [
     gradient: "",
     features: [
       { text: "3 active listings", included: true, highlight: false },
+      { text: "3 moments (stories)", included: true, highlight: false },
       { text: "Basic shop profile & avatar", included: true, highlight: false },
       { text: "Views & inquiry analytics", included: true, highlight: false },
       { text: "XP leveling & badge system", included: true, highlight: false },
@@ -52,6 +54,7 @@ const SELLER_PLANS = [
     gradient: "",
     features: [
       { text: "30 active listings", included: true, highlight: true },
+      { text: "10 moments (stories)", included: true, highlight: true },
       { text: "10 free listings/month (no fee)", included: true, highlight: true },
       { text: "20% off all boosts", included: true, highlight: true },
       { text: "Coupon codes & flash sales", included: true, highlight: true },
@@ -78,6 +81,7 @@ const SELLER_PLANS = [
     gradient: "bg-gradient-to-b from-moulna-charcoal to-moulna-charcoal-dark text-white",
     features: [
       { text: "Unlimited active listings", included: true, highlight: true },
+      { text: "Unlimited moments (stories)", included: true, highlight: true },
       { text: "No per-listing fees ever", included: true, highlight: true },
       { text: "50% off all boosts & SOTW", included: true, highlight: true },
       { text: "1 free 7-day boost every month", included: true, highlight: true },
@@ -98,6 +102,7 @@ const SELLER_PLANS = [
 
 const COMPARISON_ROWS = [
   { feature: "Active Listings", free: "3", growth: "30", pro: "Unlimited" },
+  { feature: "Moments (Stories)", free: "3", growth: "10", pro: "Unlimited" },
   { feature: "Per-Listing Fee", free: "AED 5 after limit", growth: "10 free/mo, then AED 5", pro: "None" },
   { feature: "Boost Discount", free: "—", growth: "20% off", pro: "50% off" },
   { feature: "Free Monthly Boost", free: "—", growth: "—", pro: "7-day boost" },
@@ -171,6 +176,51 @@ export default function PricingPage() {
   const [billingPeriod, setBillingPeriod] = React.useState<"monthly" | "annual">("monthly");
   const [expandedFaq, setExpandedFaq] = React.useState<number | null>(null);
   const [showComparison, setShowComparison] = React.useState(false);
+  const [loadingPlan, setLoadingPlan] = React.useState<string | null>(null);
+
+  const handleSubscribe = async (plan: string) => {
+    if (plan === "free") {
+      window.location.href = "/register?type=seller";
+      return;
+    }
+    setLoadingPlan(plan);
+    try {
+      const res = await fetch("/api/seller/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan, period: billingPeriod, promo: "launch3" }),
+      });
+
+      if (res.status === 401) {
+        window.location.href = "/register?type=seller";
+        return;
+      }
+
+      const text = await res.text();
+      if (!text) {
+        toast.error("Something went wrong. Please try again later.");
+        return;
+      }
+
+      const data = JSON.parse(text);
+
+      if (res.status === 403) {
+        toast.error("Seller plans are for sellers only. Apply to become a seller first at Sell With Us.");
+        window.location.href = "/sell-with-us";
+        return;
+      }
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else if (data.error) {
+        toast.error(data.error);
+      }
+    } catch {
+      toast.error("Something went wrong. Please try again later.");
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -181,8 +231,9 @@ export default function PricingPage() {
         <section className="bg-gradient-to-b from-moulna-gold/10 to-transparent py-20">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto">
-              <Badge className="bg-moulna-gold text-white mb-4">
-                Simple, Transparent Pricing
+              <Badge className="bg-emerald-500 text-white mb-4 text-sm px-3 py-1">
+                <Sparkles className="w-3.5 h-3.5 me-1" />
+                Launch Offer: 50% off for 3 months!
               </Badge>
               <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
                 Choose Your Path to Success
@@ -198,8 +249,8 @@ export default function PricingPage() {
                   className={cn(
                     "px-6 py-2 rounded-full text-sm font-medium transition-colors",
                     billingPeriod === "monthly"
-                      ? "bg-white dark:bg-moulna-charcoal shadow text-foreground"
-                      : "text-muted-foreground"
+                      ? "bg-moulna-gold text-white shadow"
+                      : "text-moulna-charcoal dark:text-moulna-charcoal"
                   )}
                 >
                   Monthly
@@ -209,8 +260,8 @@ export default function PricingPage() {
                   className={cn(
                     "px-6 py-2 rounded-full text-sm font-medium transition-colors",
                     billingPeriod === "annual"
-                      ? "bg-white dark:bg-moulna-charcoal shadow text-foreground"
-                      : "text-muted-foreground"
+                      ? "bg-moulna-gold text-white shadow"
+                      : "text-moulna-charcoal dark:text-moulna-charcoal"
                   )}
                 >
                   Annual
@@ -310,13 +361,13 @@ export default function PricingPage() {
                           <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 bg-muted">
                             <X className={cn(
                               "w-3 h-3",
-                              plan.highlighted ? "text-white/30" : "text-muted-foreground/50"
+                              plan.highlighted ? "text-white/50" : "text-muted-foreground/50"
                             )} />
                           </div>
                         )}
                         <span className={cn(
                           !feature.included
-                            ? (plan.highlighted ? "text-white/40" : "text-muted-foreground/60")
+                            ? (plan.highlighted ? "text-white/50" : "text-muted-foreground/60")
                             : feature.highlight ? "font-medium" : ""
                         )}>
                           {feature.text}
@@ -325,7 +376,33 @@ export default function PricingPage() {
                     ))}
                   </ul>
 
-                  <div className="pt-6 mt-auto">
+                  {/* Promo pricing */}
+                  {plan.price !== "Free" && (
+                    <div className="pt-2 mb-2">
+                      <div className="flex items-center justify-center gap-2">
+                        <Badge className="bg-emerald-500 text-white text-[10px]">
+                          50% off x 3 months
+                        </Badge>
+                      </div>
+                      <p className="text-center text-sm mt-1">
+                        <span className={cn(
+                          "line-through",
+                          plan.highlighted ? "text-white/60" : "text-muted-foreground"
+                        )}>
+                          AED {billingPeriod === "annual" ? Math.round(parseInt(plan.price) * 10) : plan.price}
+                        </span>
+                        {" "}
+                        <span className="font-bold text-emerald-500">
+                          AED {billingPeriod === "annual" ? Math.round(parseInt(plan.price) * 10 / 2) : Math.round(parseInt(plan.price) / 2)}
+                        </span>
+                        <span className={plan.highlighted ? "text-white/70" : "text-muted-foreground"}>
+                          /{billingPeriod === "annual" ? "year" : "month"} for 3 months
+                        </span>
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="pt-4 mt-auto">
                     <Button
                       variant={plan.ctaVariant}
                       className={cn(
@@ -333,16 +410,19 @@ export default function PricingPage() {
                         plan.highlighted && plan.ctaVariant === "gold" && "shadow-lg shadow-moulna-gold/25"
                       )}
                       size="lg"
-                      asChild
+                      disabled={loadingPlan === plan.name.toLowerCase()}
+                      onClick={() => handleSubscribe(plan.name.toLowerCase() === "starter" ? "free" : plan.name.toLowerCase())}
                     >
-                      <Link href="/register?type=seller">
-                        {plan.cta}
-                      </Link>
+                      {loadingPlan === plan.name.toLowerCase() ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        plan.cta
+                      )}
                     </Button>
                     {plan.price === "Free" && (
                       <p className={cn(
                         "text-xs text-center mt-2",
-                        plan.highlighted ? "text-white/50" : "text-muted-foreground"
+                        plan.highlighted ? "text-white/70" : "text-muted-foreground"
                       )}>
                         No credit card required
                       </p>

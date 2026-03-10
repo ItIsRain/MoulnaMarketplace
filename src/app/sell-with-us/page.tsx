@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Store, Sparkles, TrendingUp, Users, Shield, Zap,
   DollarSign, BarChart3, Headphones, Package, ArrowRight,
-  Check, Star, Award, Gift
+  Check, Star, Award, Gift, Loader2
 } from "lucide-react";
 
 const FEATURES = [
@@ -150,6 +150,31 @@ const STEPS = [
 ];
 
 export default function SellWithUsPage() {
+  const [loadingPlan, setLoadingPlan] = React.useState<string | null>(null);
+
+  const handleSubscribe = async (plan: string) => {
+    if (plan === "free") {
+      window.location.href = "/register?type=seller";
+      return;
+    }
+    setLoadingPlan(plan);
+    try {
+      const res = await fetch("/api/seller/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan, period: "monthly", promo: "launch3" }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else if (res.status === 401 || res.status === 403) {
+        window.location.href = "/register?type=seller";
+      }
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -338,14 +363,23 @@ export default function SellWithUsPage() {
                       ))}
                     </ul>
 
+                    {tier.price !== "Free" && (
+                      <div className="mb-3 text-center">
+                        <Badge className="bg-emerald-500 text-white text-[10px]">
+                          <Sparkles className="w-3 h-3 me-1" />
+                          50% off for 3 months
+                        </Badge>
+                      </div>
+                    )}
                     <Button
                       variant={tier.popular ? "gold" : "outline"}
                       className="w-full"
-                      asChild
+                      disabled={loadingPlan === tier.name.toLowerCase()}
+                      onClick={() => handleSubscribe(tier.name.toLowerCase() === "starter" ? "free" : tier.name.toLowerCase())}
                     >
-                      <Link href="/register?type=seller">
-                        {tier.cta}
-                      </Link>
+                      {loadingPlan === tier.name.toLowerCase() ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : tier.cta}
                     </Button>
                   </Card>
                 </motion.div>

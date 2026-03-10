@@ -16,6 +16,8 @@ import {
   ShieldAlert, ShieldCheck, Loader2
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
+import { UpgradeBanner } from "@/components/subscription/UpgradeBanner";
+import { FollowedMomentsStrip } from "@/components/moments/FollowedMomentsStrip";
 import type { DailyChallenge } from "@/lib/types";
 
 interface Inquiry {
@@ -41,7 +43,7 @@ interface DashStats {
 }
 
 export default function SellerDashboard() {
-  const { user, fetchProfile } = useAuthStore();
+  const { user, shop, fetchProfile } = useAuthStore();
   const [kycLoading, setKycLoading] = React.useState(false);
   const [dashStats, setDashStats] = React.useState<DashStats>({ totalListings: 0, unreadMessages: 0, totalViews: 0, totalFollowers: 0 });
   const [challenges, setChallenges] = React.useState<DailyChallenge[]>([]);
@@ -224,6 +226,9 @@ export default function SellerDashboard() {
         </p>
       </div>
 
+      {/* Followed Sellers' Moments */}
+      <FollowedMomentsStrip />
+
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
@@ -372,6 +377,11 @@ export default function SellerDashboard() {
               </div>
             </div>
           </Card>
+
+          {/* Upgrade Banner */}
+          {shop && shop.plan !== "pro" && (
+            <UpgradeBanner currentPlan={shop.plan} context="sidebar" />
+          )}
 
           {/* Tips */}
           <Card className="p-6">

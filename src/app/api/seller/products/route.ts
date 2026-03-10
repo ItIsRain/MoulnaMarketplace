@@ -278,6 +278,10 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // Validate arrays
+  const tags = Array.isArray(body.tags) ? body.tags.filter((t: unknown) => typeof t === "string").slice(0, 20) : [];
+  const images = Array.isArray(body.images) ? body.images.filter((u: unknown) => typeof u === "string" && u.startsWith("https://")).slice(0, 15) : [];
+
   const slug = await generateUniqueSlug(supabase, body.title);
 
   const insertData: Record<string, unknown> = {
@@ -288,8 +292,8 @@ export async function POST(request: NextRequest) {
     description: body.description || null,
     short_description: body.shortDescription || null,
     category: body.category || null,
-    tags: body.tags || [],
-    images: body.images || [],
+    tags,
+    images,
     video_url: body.videoUrl || null,
     price_fils: body.priceFils,
     compare_at_price_fils: body.compareAtPriceFils || null,
@@ -355,7 +359,7 @@ export async function POST(request: NextRequest) {
     if (totalProducts === 1) {
       await awardBadge({
         userId: user.id,
-        badgeId: "first_listing",
+        badgeId: "first-listing",
         xpReward: 50,
         badgeName: "First Listing",
       });

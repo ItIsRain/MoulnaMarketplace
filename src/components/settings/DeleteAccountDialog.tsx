@@ -84,7 +84,7 @@ export function DeleteAccountDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20 p-4">
+          <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/50 p-4">
             <p className="text-sm text-red-700 dark:text-red-300 mb-1">
               To confirm, type your {shopName ? "shop name" : "confirmation phrase"}:
             </p>

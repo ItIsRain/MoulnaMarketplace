@@ -22,6 +22,14 @@ interface SellerInfo {
 }
 
 export default function NewMessagePage() {
+  return (
+    <React.Suspense fallback={<div className="flex items-center justify-center min-h-[40vh]"><Loader2 className="w-8 h-8 animate-spin text-moulna-gold" /></div>}>
+      <NewMessageForm />
+    </React.Suspense>
+  );
+}
+
+function NewMessageForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sellerSlug = searchParams.get("seller");

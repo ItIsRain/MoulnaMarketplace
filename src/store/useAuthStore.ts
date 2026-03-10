@@ -24,12 +24,12 @@ interface AuthState {
 
   // Actions
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   register: (data: RegisterData) => Promise<boolean>;
   initialize: () => Promise<void>;
   fetchProfile: () => Promise<User | null>;
   updateProfile: (data: Partial<User>) => void;
-  addXP: (amount: number, action: string) => Promise<void>;
+  addXP: (amount: number, action?: string) => Promise<void>;
   completeChallenge: (challengeId: string) => void;
   markNotificationRead: (id: string) => void;
 }
@@ -185,7 +185,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      addXP: async (amount: number) => {
+      addXP: async (amount: number, _action?: string) => {
         const { user } = get();
         if (!user) return;
         // XP is awarded server-side only; this just updates the local display optimistically
@@ -202,7 +202,7 @@ export const useAuthStore = create<AuthState>()(
           );
 
           set({ challenges: updatedChallenges });
-          addXP(challenge.xp, `completing "${challenge.task}"`);
+          addXP(challenge.xp);
         }
       },
 

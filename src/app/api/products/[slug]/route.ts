@@ -27,9 +27,11 @@ export async function GET(
 
   const product = mapDbProduct(row);
 
-  // Increment view count atomically (fire-and-forget with admin client to bypass RLS)
+  // Increment view count atomically (admin client to bypass RLS)
   const admin = createAdminClient();
-  void admin.rpc("increment_view_count", { product_id: row.id });
+  admin.rpc("increment_view_count", { product_id: row.id }).then(({ error }) => {
+    if (error) console.error("increment_view_count error:", error.message);
+  });
 
   return NextResponse.json({ product });
 }

@@ -325,7 +325,9 @@ export async function POST(req: NextRequest) {
       category: "inquiry",
       description: "Contacted a seller about a listing",
       metadata: { recipientId, productId, dedup: dedupKey },
-    }).catch(() => {});
+    }).catch((err) => {
+      console.error("XP award error (inquiry):", err);
+    });
   }
 
   return NextResponse.json({

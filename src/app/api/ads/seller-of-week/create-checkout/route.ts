@@ -128,28 +128,36 @@ export async function POST(request: NextRequest) {
   const stripe = getStripe();
   const origin = process.env.NEXT_PUBLIC_APP_URL || "";
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    line_items: [
-      {
-        price_data: {
-          currency: "aed",
-          product_data: {
-            name: "Seller of the Week",
-            description: `Featured homepage placement for the week of ${weekStart}`,
+  let session;
+  try {
+    session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: "aed",
+            product_data: {
+              name: "Seller of the Week",
+              description: `Featured homepage placement for the week of ${weekStart}`,
+            },
+            unit_amount: priceFils, // fils is already the smallest AED unit
           },
-          unit_amount: priceFils, // fils is already the smallest AED unit
+          quantity: 1,
         },
-        quantity: 1,
+      ],
+      metadata: {
+        ad_payment_id: adPayment.id,
+        ad_type: "seller_of_week",
       },
-    ],
-    metadata: {
-      ad_payment_id: adPayment.id,
-      ad_type: "seller_of_week",
-    },
-    success_url: `${origin}/seller/promotions/success?session_id={CHECKOUT_SESSION_ID}&type=sotw`,
-    cancel_url: `${origin}/seller/promotions/seller-of-week`,
-  });
+      success_url: `${origin}/seller/promotions/success?session_id={CHECKOUT_SESSION_ID}&type=sotw`,
+      cancel_url: `${origin}/seller/promotions/seller-of-week`,
+    });
+  } catch (err) {
+    console.error("Stripe checkout creation failed:", err);
+    await admin.from("seller_of_week").delete().eq("payment_id", adPayment.id);
+    await admin.from("ad_payments").delete().eq("id", adPayment.id);
+    return NextResponse.json({ error: "Payment service error. Please try again." }, { status: 502 });
+  }
 
   await admin
     .from("ad_payments")

@@ -158,7 +158,7 @@ export default function ExplorePage() {
                 <Link href="/explore/search" className="block">
                   <Input
                     placeholder="Search for products, shops, or categories..."
-                    className="h-12 ps-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 cursor-pointer"
+                    className="h-12 ps-12 bg-white/10 border-white/20 text-white placeholder:text-white/70 cursor-pointer"
                     readOnly
                   />
                   <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />

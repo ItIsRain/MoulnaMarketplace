@@ -266,16 +266,26 @@ export async function POST(request: NextRequest) {
   const stripe = getStripe();
   const origin = process.env.NEXT_PUBLIC_APP_URL || "";
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    line_items: lineItems,
-    metadata: {
-      ad_payment_id: adPayment.id,
-      ad_type: "listing_fee",
-    },
-    success_url: `${origin}/seller/promotions/success?session_id={CHECKOUT_SESSION_ID}&type=listing`,
-    cancel_url: `${origin}/seller/products/${productId}/activate`,
-  });
+  let session;
+  try {
+    session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: lineItems,
+      metadata: {
+        ad_payment_id: adPayment.id,
+        ad_type: "listing_fee",
+      },
+      success_url: `${origin}/seller/promotions/success?session_id={CHECKOUT_SESSION_ID}&type=listing`,
+      cancel_url: `${origin}/seller/products/${productId}/activate`,
+    });
+  } catch (err) {
+    console.error("Stripe checkout creation failed:", err);
+    // Clean up orphaned records
+    await admin.from("product_boosts").delete().eq("payment_id", adPayment.id);
+    await admin.from("seller_of_week").delete().eq("payment_id", adPayment.id);
+    await admin.from("ad_payments").delete().eq("id", adPayment.id);
+    return NextResponse.json({ error: "Payment service error. Please try again." }, { status: 502 });
+  }
 
   // Store checkout session ID
   await admin

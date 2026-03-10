@@ -76,7 +76,7 @@ export function DeactivateShopDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          <div className="rounded-lg border border-orange-200 dark:border-orange-900 bg-orange-50 dark:bg-orange-950/20 p-4">
+          <div className="rounded-lg border border-orange-200 dark:border-orange-900 bg-orange-50 dark:bg-orange-950/50 p-4">
             <p className="text-sm text-orange-700 dark:text-orange-300 mb-1">
               To confirm, type your shop name:
             </p>

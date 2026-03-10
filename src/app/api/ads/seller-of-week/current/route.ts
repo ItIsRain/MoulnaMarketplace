@@ -23,7 +23,9 @@ export async function GET() {
   }
 
   // Increment impressions atomically via RPC
-  void admin.rpc("increment_sotw_impressions", { sotw_id: sotw.id }).then();
+  admin.rpc("increment_sotw_impressions", { sotw_id: sotw.id }).then(({ error }) => {
+    if (error) console.error("increment_sotw_impressions error:", error.message);
+  });
 
   return NextResponse.json({
     seller: {

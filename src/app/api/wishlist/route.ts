@@ -95,7 +95,9 @@ export async function POST(req: NextRequest) {
       category: "engagement",
       description: `Saved listing ${productId} to wishlist`,
       metadata: { productId, dedup: `save_listing_${productId}` },
-    }).catch(() => {});
+    }).catch((err) => {
+      console.error("XP award error (wishlist):", err);
+    });
   }
 
   return NextResponse.json({ success: true, wishlistId: data.id });

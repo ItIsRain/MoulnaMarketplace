@@ -37,14 +37,14 @@ export default function DashboardLayout({
   const router = useRouter();
   const { user, logout } = useAuthStore();
 
-  // Default mock user if not logged in
+  // Fallback user for layout rendering before auth loads
   const defaultUser = {
-    name: "Guest User",
+    name: "Guest",
     username: "guest",
-    xp: 1250,
-    level: 3,
-    levelTitle: "Regular",
-    streakDays: 7,
+    xp: 0,
+    level: 1,
+    levelTitle: "Newcomer",
+    streakDays: 0,
     avatar: {
       style: "adventurer",
       seed: "guest",

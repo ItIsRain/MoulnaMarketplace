@@ -51,8 +51,10 @@ export async function GET(request: NextRequest) {
         sponsoredProducts = boostedRows.map((row) => mapDbProduct(row, undefined, true));
         boostedProductIds.push(...boostedRows.map((r) => r.id));
 
-        // Increment impressions via RPC (fire-and-forget)
-        void admin.rpc("increment_boost_impressions", { boost_product_ids: boostIds });
+        // Increment impressions via RPC
+        admin.rpc("increment_boost_impressions", { boost_product_ids: boostIds }).then(({ error }) => {
+          if (error) console.error("increment_boost_impressions error:", error.message);
+        });
       }
     }
   }
@@ -104,6 +106,12 @@ export async function GET(request: NextRequest) {
     case "trending":
       query = query.order("view_count", { ascending: false });
       break;
+    case "new_listings":
+      // Only products from the last 7 days — randomized server-side after fetch
+      query = query
+        .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .order("created_at", { ascending: false });
+      break;
     case "price_low":
       query = query.order("price_fils", { ascending: true });
       break;
@@ -130,6 +138,14 @@ export async function GET(request: NextRequest) {
   // Products are grouped into tiers and shuffled within each tier
   if (sort === "trending" && regularProducts.length > 3) {
     regularProducts = shuffleTiers(regularProducts);
+  }
+
+  // Full shuffle for new_listings so every seller gets fair exposure
+  if (sort === "new_listings") {
+    for (let i = regularProducts.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [regularProducts[i], regularProducts[j]] = [regularProducts[j], regularProducts[i]];
+    }
   }
 
   const products = offset === 0 ? [...sponsoredProducts, ...regularProducts] : regularProducts;

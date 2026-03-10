@@ -28,6 +28,7 @@ import { LevelBadge } from "@/components/gamification/LevelBadge";
 import { formatAED } from "@/lib/utils";
 import { useAuthStore } from "@/store/useAuthStore";
 import { getCurrentCampaign } from "@/lib/campaigns";
+import { MomentsStrip } from "@/components/moments/MomentsStrip";
 import type { Product, Shop } from "@/lib/types";
 
 // Animation variants
@@ -271,6 +272,125 @@ function TrendingSection() {
                       </div>
 
                       {/* Price */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-moulna-gold">
+                          {formatAED(product.priceFils)}
+                        </span>
+                        {product.compareAtPriceFils && (
+                          <span className="text-sm text-muted-foreground line-through">
+                            {formatAED(product.compareAtPriceFils)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function NewListingsSection() {
+  const [products, setProducts] = React.useState<Product[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch("/api/products?sort=new_listings&limit=8")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.products) setProducts(data.products);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (!loading && products.length === 0) return null;
+
+  return (
+    <section className="py-16 lg:py-24 bg-muted/30">
+      <div className="container-app">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="flex items-end justify-between mb-8"
+        >
+          <div>
+            <motion.div variants={fadeInUp} className="flex items-center gap-2 mb-2">
+              <Package className="w-5 h-5 text-emerald-500" />
+              <span className="text-sm font-medium text-emerald-500">Just Added</span>
+            </motion.div>
+            <motion.h2 variants={fadeInUp} className="text-3xl lg:text-4xl font-display font-bold">
+              New Listings
+            </motion.h2>
+          </div>
+          <motion.div variants={fadeInUp}>
+            <Link href="/explore?sort=newest">
+              <Button variant="ghost" className="gap-1">
+                View All <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </motion.div>
+        </motion.div>
+
+        {loading ? (
+          <div className="py-12 text-center">
+            <Loader2 className="w-8 h-8 mx-auto animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
+          >
+            {products.map((product) => (
+              <motion.div key={product.id} variants={scaleIn}>
+                <Link href={`/products/${product.slug}`}>
+                  <Card hover className="overflow-hidden group">
+                    <div className="relative aspect-square overflow-hidden">
+                      {product.images[0] ? (
+                        <Image
+                          src={product.images[0]}
+                          alt={product.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-sm">
+                          No image
+                        </div>
+                      )}
+                      <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center hover:bg-white transition-colors">
+                        <Heart className="w-4 h-4" />
+                      </button>
+                      <div className="absolute top-3 left-3 flex flex-col items-start gap-1">
+                        <Badge variant="new">New</Badge>
+                        {product.isHandmade && (
+                          <Badge variant="handmade">Handmade</Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="p-4">
+                      <h3 className="font-semibold mb-1 truncate">{product.title}</h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <ShopAvatar
+                          avatarSeed={product.seller.avatarSeed || product.seller.name}
+                          avatarStyle={product.seller.avatarStyle}
+                          name={product.seller.name}
+                          size="xs"
+                        />
+                        <span className="text-xs text-muted-foreground truncate">
+                          {product.seller.name}
+                        </span>
+                        <LevelBadge level={product.seller.level} size="sm" />
+                      </div>
                       <div className="flex items-center gap-2">
                         <span className="text-lg font-bold text-moulna-gold">
                           {formatAED(product.priceFils)}
@@ -810,14 +930,20 @@ export default function HomePage() {
         {/* Social Proof Bar */}
         <SocialProofBar />
 
-        {/* Seasonal Campaign Banner */}
-        <SeasonalBanner />
-
         {/* Seller of the Week */}
         <SellerOfTheWeekSection />
 
+        {/* Seasonal Campaign Banner */}
+        <SeasonalBanner />
+
+        {/* Seller Moments (Stories) */}
+        <MomentsStrip />
+
         {/* Trending Products */}
         <TrendingSection />
+
+        {/* New Listings */}
+        <NewListingsSection />
 
         {/* Sellers You Follow */}
         <FollowedSellersSection />

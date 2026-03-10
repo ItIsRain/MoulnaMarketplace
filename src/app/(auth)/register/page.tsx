@@ -29,6 +29,14 @@ const AVATAR_STYLES = [
 type Step = 1 | 2 | 3 | 4;
 
 export default function RegisterPage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-moulna-gold" /></div>}>
+      <RegisterForm />
+    </React.Suspense>
+  );
+}
+
+function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { register } = useAuthStore();

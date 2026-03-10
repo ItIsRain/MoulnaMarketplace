@@ -102,6 +102,18 @@ export async function POST(request: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
+
+    // Skip if payment wasn't actually collected
+    if (session.payment_status !== "paid") {
+      console.warn("Checkout completed but payment_status is:", session.payment_status);
+      return NextResponse.json({ received: true });
+    }
+
+    // Subscription checkouts don't have ad metadata — handled by subscription events
+    if (session.mode === "subscription") {
+      return NextResponse.json({ received: true });
+    }
+
     const adPaymentId = session.metadata?.ad_payment_id;
     const adType = session.metadata?.ad_type;
 
@@ -241,6 +253,105 @@ export async function POST(request: NextRequest) {
             }
           }
         }
+      }
+    }
+  }
+
+  // ─── Subscription Events ───
+  if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const subscription = event.data.object as any;
+    const shopId = subscription.metadata?.shop_id;
+    const plan = subscription.metadata?.plan;
+
+    if (shopId && plan) {
+      const isActive = ["active", "trialing"].includes(subscription.status);
+      const cancelAtPeriodEnd = subscription.cancel_at_period_end;
+      const periodEnd = subscription.current_period_end;
+
+      await admin
+        .from("shops")
+        .update({
+          plan: isActive ? plan : "free",
+          stripe_subscription_id: subscription.id,
+          plan_period_end: periodEnd
+            ? new Date(periodEnd * 1000).toISOString()
+            : null,
+          plan_cancel_at_period_end: cancelAtPeriodEnd,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", shopId);
+    }
+  }
+
+  if (event.type === "customer.subscription.deleted") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const subscription = event.data.object as any;
+    const shopId = subscription.metadata?.shop_id;
+
+    if (shopId) {
+      await admin
+        .from("shops")
+        .update({
+          plan: "free",
+          stripe_subscription_id: null,
+          plan_period_end: null,
+          plan_cancel_at_period_end: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", shopId);
+    }
+  }
+
+  // ─── Refund Events ───
+  if (event.type === "charge.refunded") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const charge = event.data.object as any;
+    const paymentIntentId = charge.payment_intent;
+
+    if (paymentIntentId) {
+      // Mark any ad_payments linked to this payment intent as refunded
+      const { error: refundError } = await admin
+        .from("ad_payments")
+        .update({ status: "refunded", updated_at: new Date().toISOString() })
+        .eq("stripe_payment_intent_id", paymentIntentId);
+
+      if (refundError) {
+        console.error("Failed to mark ad_payment as refunded:", refundError.message);
+      }
+
+      // Deactivate any boosts linked to refunded payments
+      await admin
+        .from("product_boosts")
+        .update({ status: "cancelled", updated_at: new Date().toISOString() })
+        .eq("stripe_payment_intent_id", paymentIntentId)
+        .eq("status", "active");
+
+      // Deactivate any SOTW linked to refunded payments
+      await admin
+        .from("seller_of_week")
+        .update({ status: "cancelled", updated_at: new Date().toISOString() })
+        .eq("stripe_payment_intent_id", paymentIntentId)
+        .eq("status", "active");
+    }
+  }
+
+  // ─── Invoice Payment Failed (subscription renewal failure) ───
+  if (event.type === "invoice.payment_failed") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const invoice = event.data.object as any;
+    const subscriptionId = invoice.subscription;
+
+    if (subscriptionId && invoice.attempt_count >= 3) {
+      // After 3 failed attempts, downgrade to free
+      const { data: shop } = await admin
+        .from("shops")
+        .select("id")
+        .eq("stripe_subscription_id", subscriptionId)
+        .maybeSingle();
+
+      if (shop) {
+        console.error(`Subscription ${subscriptionId} failed ${invoice.attempt_count} times, downgrading shop ${shop.id}`);
       }
     }
   }

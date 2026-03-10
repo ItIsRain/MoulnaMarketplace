@@ -7,17 +7,19 @@ import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/layout/Navbar";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { DiceBearAvatar } from "@/components/avatar/DiceBearAvatar";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
 import { StreakCounter } from "@/components/gamification/StreakCounter";
 import { XPBar } from "@/components/gamification/XPBar";
 import {
   LayoutDashboard, Package, Inbox, BarChart3,
-  Settings, MessageCircle,
+  Settings, MessageCircle, Camera,
   Users, Megaphone, Loader2, Store, BookOpen, Hammer, Pencil, ExternalLink, Plus
 } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuthStore } from "@/store/useAuthStore";
+import { UpgradeBanner } from "@/components/subscription/UpgradeBanner";
 
 const SIDEBAR_LINKS = [
   { href: "/seller", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -26,6 +28,7 @@ const SIDEBAR_LINKS = [
   { href: "/seller/customers", label: "Customers", icon: Users },
   { href: "/seller/messages", label: "Messages", icon: MessageCircle },
   { href: "/seller/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/seller/moments", label: "Moments", icon: Camera },
   { href: "/seller/promotions", label: "Promotions", icon: Megaphone },
   { href: "/seller/settings", label: "Settings", icon: Settings },
 ];
@@ -121,7 +124,17 @@ export default function SellerLayout({
                         />
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold truncate">{shop?.name || user?.name || "My Shop"}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold truncate">{shop?.name || user?.name || "My Shop"}</p>
+                          {shop?.plan && shop.plan !== "free" && (
+                            <Badge className={cn(
+                              "text-[10px] px-1.5 py-0",
+                              shop.plan === "pro" ? "bg-moulna-gold text-white" : "bg-blue-500 text-white"
+                            )}>
+                              {shop.plan === "pro" ? "Pro" : "Growth"}
+                            </Badge>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2">
                           <LevelBadge level={user?.level ?? 1} size="sm" />
                           <StreakCounter days={user?.streakDays ?? 0} size="sm" />
@@ -199,6 +212,11 @@ export default function SellerLayout({
                       </Link>
                     </nav>
                   </Card>
+
+                  {/* Plan Upgrade */}
+                  {shop && shop.plan !== "pro" && (
+                    <UpgradeBanner currentPlan={shop.plan} context="sidebar" />
+                  )}
 
                   {/* Quick Action */}
                   <Link
