@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Instagram, Twitter, Facebook, Youtube, Mail, Phone, MapPin } from "lucide-react";
+import { Instagram, Mail, Phone, MapPin } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 const FOOTER_LINKS = {
@@ -42,10 +42,7 @@ const FOOTER_LINKS = {
 };
 
 const SOCIAL_LINKS = [
-  { name: "Instagram", icon: Instagram, href: "https://instagram.com/moulna_uae" },
-  { name: "Twitter", icon: Twitter, href: "https://twitter.com/moulna_uae" },
-  { name: "Facebook", icon: Facebook, href: "https://facebook.com/moulna" },
-  { name: "YouTube", icon: Youtube, href: "https://youtube.com/@moulna" },
+  { name: "Instagram", icon: Instagram, href: "https://instagram.com/moulna.ae" },
 ];
 
 export function Footer() {
