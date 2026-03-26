@@ -19,7 +19,9 @@
       "mcp__supabase__list_tables",
       "mcp__supabase__execute_sql",
       "Bash(npm ls:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(rm \"C:/Users/dared/Documents/Moulna/moulna-marketplace/src/app/favicon.ico\")",
+      "Bash(cp \"C:/Users/dared/Documents/Moulna/moulna-marketplace/public/moulna-favicon.svg\" \"C:/Users/dared/Documents/Moulna/moulna-marketplace/src/app/icon.svg\")"
     ]
   }
 }
